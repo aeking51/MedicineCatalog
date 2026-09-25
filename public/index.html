@@ -1,0 +1,2988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AyurGuide — Clinical Administration Portal</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0D281C" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/js/qrcode.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#10B981',
+              50: '#ECFDF5',
+              100: '#D1FAE5',
+              200: '#A7F3D0',
+              300: '#6EE7B7',
+              400: '#34D399',
+              500: '#10B981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065F46',
+              900: '#064E3B',
+            },
+            moss: {
+              50: '#ECFDF5',
+              100: '#D1FAE5',
+              500: '#10B981',
+              700: '#059669',
+              800: '#047857',
+              900: '#0B120E',
+            },
+            parchment: {
+              50: '#F8FAFC',
+              100: '#F1F5F9',
+              200: '#E2E8F0',
+              300: '#CBD5E1',
+            },
+            terracotta: '#10B981',
+            amberGold: '#34D399',
+            sage: '#059669'
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Cinzel"', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --glass-motion-duration: 0.15s;
+      --glass-motion-timing: cubic-bezier(0.2, 0.9, 0.3, 1);
+      --glass-shadow-duration: 0.2s;
+      --glass-tilt-magnitude: 7.5deg;
+      --glass-magnetic-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --glass-magnetic-duration: 0.32s;
+    }
+
+    body[data-motion="default"] {
+      --glass-motion-duration: 0.15s;
+      --glass-motion-timing: cubic-bezier(0.2, 0.9, 0.3, 1);
+      --glass-shadow-duration: 0.2s;
+      --glass-magnetic-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --glass-magnetic-duration: 0.32s;
+    }
+
+    body[data-motion="snappy"] {
+      --glass-motion-duration: 0.08s;
+      --glass-motion-timing: cubic-bezier(0.1, 0.9, 0.2, 1);
+      --glass-shadow-duration: 0.12s;
+      --glass-magnetic-timing: cubic-bezier(0.2, 1.6, 0.4, 1);
+      --glass-magnetic-duration: 0.22s;
+    }
+
+    body[data-motion="fluid"] {
+      --glass-motion-duration: 0.35s;
+      --glass-motion-timing: cubic-bezier(0.25, 1, 0.5, 1);
+      --glass-shadow-duration: 0.45s;
+      --glass-magnetic-timing: cubic-bezier(0.25, 1.25, 0.4, 1);
+      --glass-magnetic-duration: 0.45s;
+    }
+
+    body {
+      background-color: #081C13;
+      background-image: 
+        radial-gradient(ellipse 90% 70% at 85% 10%, rgba(255, 255, 255, 0.15), transparent 60%),
+        radial-gradient(ellipse 80% 60% at 15% 90%, rgba(16, 185, 129, 0.18), transparent 55%),
+        linear-gradient(180deg, rgba(8, 28, 19, 0.45) 0%, rgba(6, 22, 15, 0.55) 100%),
+        url('/img/ayurveda_glass_bg.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: #062414;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(16, 185, 129, 0.35);
+      border-radius: 9999px;
+    }
+
+    .liquid-glass-panel {
+      background: rgba(255, 255, 255, 0.82) !important;
+      backdrop-filter: blur(48px) saturate(180%) contrast(105%) brightness(102%);
+      -webkit-backdrop-filter: blur(48px) saturate(180%) contrast(105%) brightness(102%);
+      border: 1px solid rgba(255, 255, 255, 0.95) !important;
+      box-shadow: 
+        inset 0 1.5px 2px 0 rgba(255, 255, 255, 1),
+        inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.04),
+        0 20px 45px -10px rgba(0, 20, 10, 0.18),
+        0 4px 16px 0 rgba(0, 0, 0, 0.04) !important;
+      color: #062414 !important;
+    }
+
+    .liquid-glass-card {
+      position: relative;
+      background: rgba(255, 255, 255, 0.85) !important;
+      backdrop-filter: blur(40px) saturate(180%) contrast(105%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%) contrast(105%);
+      border: 1px solid rgba(255, 255, 255, 0.96) !important;
+      box-shadow: 
+        var(--glass-inner-shadow, inset 0 1.5px 2px 0 rgba(255, 255, 255, 1)),
+        inset 0 -1px 1.5px 0 rgba(0, 0, 0, 0.04),
+        0 14px 32px -6px rgba(0, 20, 10, 0.14),
+        0 2px 10px 0 rgba(0, 0, 0, 0.03) !important;
+      color: #062414 !important;
+      transition: transform var(--glass-motion-duration, 0.15s) var(--glass-motion-timing, ease-out),
+                  box-shadow var(--glass-shadow-duration, 0.2s) var(--glass-motion-timing, ease-out),
+                  border-color 0.35s ease;
+      will-change: transform, box-shadow;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+      overflow: hidden;
+    }
+
+    /* Tactile magnetic snapping state when cursor first enters the card perimeter */
+    .liquid-glass-card.is-magnetic-snapping {
+      transition: transform var(--glass-magnetic-duration, 0.32s) var(--glass-magnetic-timing, cubic-bezier(0.34, 1.56, 0.64, 1)),
+                  box-shadow var(--glass-shadow-duration, 0.2s) var(--glass-motion-timing, ease-out),
+                  border-color 0.35s ease !important;
+    }
+
+    .liquid-glass-card.is-magnetic-snapping > * {
+      transition: transform var(--glass-magnetic-duration, 0.32s) var(--glass-magnetic-timing, cubic-bezier(0.34, 1.56, 0.64, 1)) !important;
+    }
+
+    /* 3D Flip Capability for .liquid-glass-card */
+    .liquid-glass-card.has-flip {
+      overflow: visible !important;
+      transform-style: preserve-3d;
+      perspective: 1200px;
+    }
+
+    .liquid-glass-card .glass-card-front,
+    .liquid-glass-card .glass-card-back {
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden !important;
+      -webkit-backface-visibility: hidden !important;
+      transform-style: preserve-3d;
+      transition: transform 0.65s cubic-bezier(0.34, 1.35, 0.64, 1) !important;
+      border-radius: inherit;
+      overflow: hidden;
+    }
+
+    .liquid-glass-card .glass-card-front {
+      transform: rotateY(0deg);
+      position: relative;
+      z-index: 2;
+    }
+
+    .liquid-glass-card .glass-card-back {
+      position: absolute;
+      inset: 0;
+      transform: rotateY(180deg);
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.95) !important;
+      backdrop-filter: blur(48px) saturate(200%);
+      -webkit-backdrop-filter: blur(48px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.98) !important;
+      box-shadow: inset 0 1.5px 2px 0 rgba(255, 255, 255, 1),
+                  0 14px 32px -6px rgba(0, 20, 10, 0.14) !important;
+    }
+
+    .liquid-glass-card.is-flipped .glass-card-front {
+      transform: rotateY(180deg) !important;
+      pointer-events: none;
+    }
+
+    .liquid-glass-card.is-flipped .glass-card-back {
+      transform: rotateY(0deg) !important;
+      z-index: 10;
+      pointer-events: auto;
+    }
+
+    /* Secondary 'Info' Action Button & Flip Return */
+    .secondary-info-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 0.625rem;
+      border: 1px solid rgba(27, 77, 62, 0.25);
+      background: rgba(255, 255, 255, 0.85);
+      color: #0F382C;
+      transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      user-select: none;
+    }
+
+    .secondary-info-btn:hover {
+      background: #1B4D3E;
+      color: #FFFFFF;
+      border-color: #1B4D3E;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(27, 77, 62, 0.25);
+    }
+
+    .secondary-info-btn:active {
+      transform: translateY(0);
+    }
+
+    .glass-card-flip-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.55rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      background: rgba(240, 245, 242, 0.9);
+      color: #0F382C;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+
+    .glass-card-flip-back-btn:hover {
+      background: #0F382C;
+      color: #FFFFFF;
+      border-color: #0F382C;
+    }
+
+    .liquid-glass-card > * {
+      position: relative;
+      z-index: 2;
+      transition: transform var(--glass-motion-duration, 0.15s) var(--glass-motion-timing, ease-out);
+      will-change: transform;
+      transform-style: preserve-3d;
+    }
+
+    /* Crisp High-Contrast Typography & Text-Shadow / Subtle Backdrop-Blur Enhancement in Liquid Glass Mode */
+    .liquid-glass-panel,
+    .liquid-glass-card,
+    .liquid-glass-pill,
+    [class*="liquid-glass"] {
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Universal text-shadow enhancement across text elements in liquid-glass containers */
+    .liquid-glass-panel h1,
+    .liquid-glass-panel h2,
+    .liquid-glass-panel h3,
+    .liquid-glass-panel h4,
+    .liquid-glass-panel h5,
+    .liquid-glass-panel h6,
+    .liquid-glass-panel p,
+    .liquid-glass-panel span,
+    .liquid-glass-panel a,
+    .liquid-glass-panel label,
+    .liquid-glass-panel button,
+    .liquid-glass-panel li,
+    .liquid-glass-panel th,
+    .liquid-glass-panel td {
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 0 1px rgba(0, 0, 0, 0.6);
+    }
+
+    .liquid-glass-card h1,
+    .liquid-glass-card h2,
+    .liquid-glass-card h3,
+    .liquid-glass-card h4,
+    .liquid-glass-card h5,
+    .liquid-glass-card h6,
+    .liquid-glass-card .font-serif,
+    .liquid-glass-card .font-bold {
+      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.95), 0 0 3px rgba(255, 255, 255, 0.7);
+    }
+
+    .liquid-glass-card p,
+    .liquid-glass-card span,
+    .liquid-glass-card a,
+    .liquid-glass-card label,
+    .liquid-glass-card div {
+      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.88);
+    }
+
+    /* Distinct luminous text-shadow for light text & pills */
+    .liquid-glass-panel .text-white,
+    .liquid-glass-panel .text-[#F8FAFC],
+    .liquid-glass-panel .text-[#A7F3D0],
+    .liquid-glass-panel .text-[#34D399],
+    .liquid-glass-pill {
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 2px rgba(0, 0, 0, 0.95) !important;
+    }
+
+    /* Subtle backdrop-blur enhancement on sub-containers, pills, badges, and interactive elements */
+    .liquid-glass-card .rounded-lg,
+    .liquid-glass-card .rounded-xl,
+    .liquid-glass-card .rounded-2xl,
+    .liquid-glass-card .rounded-full,
+    .liquid-glass-card button,
+    .liquid-glass-panel .rounded-lg,
+    .liquid-glass-panel .rounded-xl,
+    .liquid-glass-panel .rounded-full,
+    .liquid-glass-pill {
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+    }
+
+    .liquid-glass-card .text-gray-500,
+    .liquid-glass-card .text-gray-400 {
+      color: #1F382B !important;
+      font-weight: 600 !important;
+    }
+
+    .liquid-glass-card .text-moss-900 {
+      color: #041B0E !important;
+      font-weight: 800 !important;
+    }
+
+    .liquid-glass-card .text-moss-700 {
+      color: #0B3820 !important;
+      font-weight: 800 !important;
+    }
+
+    .liquid-glass-card .text-terracotta {
+      color: #B91C1C !important;
+      font-weight: 800 !important;
+    }
+
+    .liquid-glass-card .text-amberGold {
+      color: #854D0E !important;
+      font-weight: 800 !important;
+    }
+
+    .liquid-glass-card .text-emerald-600 {
+      color: #047857 !important;
+      font-weight: 700 !important;
+    }
+
+    /* Dynamic internal specular glare & frosted reflection */
+    .liquid-glass-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: radial-gradient(
+        circle 280px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.45),
+        rgba(255, 255, 255, 0.08) 45%,
+        transparent 70%
+      );
+      opacity: var(--glare-opacity, 0);
+      transition: opacity 0.3s ease;
+      mix-blend-mode: overlay;
+      z-index: 1;
+    }
+
+    /* Dynamic refractive counter-shadow opposite to tilt */
+    .liquid-glass-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: radial-gradient(
+        circle 320px at var(--shadow-x, 50%) var(--shadow-y, 50%),
+        rgba(6, 45, 25, 0.12),
+        transparent 65%
+      );
+      opacity: var(--glare-opacity, 0);
+      transition: opacity 0.3s ease;
+      mix-blend-mode: multiply;
+      z-index: 1;
+    }
+
+    .liquid-glass-card:hover {
+      border-color: rgba(255, 255, 255, 1) !important;
+    }
+
+    .liquid-glass-pill {
+      background: rgba(255, 255, 255, 0.85) !important;
+      backdrop-filter: blur(25px) saturate(200%);
+      -webkit-backdrop-filter: blur(25px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.98) !important;
+      box-shadow: 
+        inset 0 1px 1.5px 0 rgba(255, 255, 255, 1),
+        0 8px 24px -4px rgba(16, 185, 129, 0.28),
+        0 2px 6px 0 rgba(0, 0, 0, 0.05) !important;
+      color: #042614 !important;
+    }
+
+    .glow-green-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 8px #10B981, 0 0 16px rgba(16, 185, 129, 0.8);
+      display: inline-block;
+    }
+
+    /* Smooth Scaling Animation for Data Table Rows on Hover */
+    .medicine-table-row {
+      transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1),
+                  box-shadow 0.22s cubic-bezier(0.2, 0.9, 0.3, 1),
+                  background-color 0.18s ease;
+      will-change: transform, box-shadow;
+      transform-origin: center;
+      position: relative;
+    }
+    .medicine-table-row:hover {
+      transform: scale(1.006) translateZ(0);
+      z-index: 20;
+      background-color: #F4EFE6 !important;
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08), 0 0 1px rgba(16, 185, 129, 0.4);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans">
+
+  <!-- ========================================== -->
+  <!-- 1. AUTHENTICATION & LOGIN GATEWAY VIEW -->
+  <!-- ========================================== -->
+  <div id="login-view" class="min-h-screen flex items-center justify-center p-4 w-full relative overflow-hidden">
+    <!-- Ambient glow orbs -->
+    <div class="absolute -top-32 -left-32 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-md w-full liquid-glass-panel rounded-3xl shadow-2xl border border-white/20 overflow-hidden relative z-10 my-8">
+      
+      <!-- Sitaram Classical Header -->
+      <div class="bg-gradient-to-b from-[#081C13] to-[#0D281C] p-8 text-center text-white relative border-b border-emerald-500/20">
+        <div class="flex justify-center items-center mb-3">
+          <img src="/img/sitaram_luxury_logo.png?v=6" alt="Sitaram Luxury Logo" class="w-16 h-16 rounded-full shadow-xl border border-amber-400/40 object-contain mx-auto" />
+        </div>
+        <h1 class="font-serif text-2xl font-bold tracking-wider text-parchment-50">SITARAM AYURVEDA</h1>
+        <p class="text-[11px] uppercase tracking-widest text-emerald-400 mt-1 font-semibold">Therapeutic Index • Clinical Administration</p>
+        
+        <div class="mt-4 text-[11px] text-amber-200 bg-amber-500/15 py-1 px-3.5 rounded-full inline-flex items-center gap-1.5 border border-amber-500/30">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="font-semibold">Restricted Access • Verified Administrators Only</span>
+        </div>
+      </div>
+
+      <!-- Login Form -->
+      <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="p-8 space-y-5 bg-white/90">
+        
+        <!-- Error Alert Box -->
+        <div id="login-error-alert" class="hidden p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-start gap-2.5">
+          <span class="text-base leading-none">⚠️</span>
+          <div class="flex-1 font-medium" id="login-error-text"></div>
+        </div>
+
+        <!-- Success Alert Box -->
+        <div id="login-success-alert" class="hidden p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-start gap-2.5">
+          <span class="text-base leading-none">✓</span>
+          <div class="flex-1 font-semibold" id="login-success-text">Authorized. Unlocking Clinical Portal...</div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+            <span>Admin Username or Email</span>
+            <span class="text-[10px] text-emerald-700 font-semibold normal-case">Required</span>
+          </label>
+          <div class="relative">
+            <input 
+              type="text" 
+              id="login-input-identifier" 
+              required 
+              autocomplete="username"
+              class="w-full pl-10 pr-4 py-3 text-sm rounded-xl bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition" 
+              placeholder="e.g. sys.jerin@gmail.com or admin" 
+              value="sys.jerin@gmail.com">
+            <span class="absolute left-3.5 top-3.5 text-gray-400 text-sm">👤</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Password</label>
+            <button type="button" onclick="togglePasswordVisibility()" class="text-xs text-emerald-700 hover:text-emerald-800 font-semibold" id="btn-toggle-pw">Show</button>
+          </div>
+          <div class="relative">
+            <input 
+              type="password" 
+              id="login-input-password" 
+              required 
+              autocomplete="current-password"
+              class="w-full pl-10 pr-4 py-3 text-sm rounded-xl bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition" 
+              placeholder="••••••••" 
+              value="admin123">
+            <span class="absolute left-3.5 top-3.5 text-gray-400 text-sm">🔒</span>
+          </div>
+        </div>
+
+        <!-- Quick credentials helper badge -->
+        <div class="p-2.5 rounded-lg bg-emerald-50/80 border border-emerald-200/80 text-[11px] text-emerald-900 flex items-center justify-between">
+          <span class="text-gray-600">Default Superadmin:</span>
+          <button type="button" onclick="quickFillAdmin()" class="font-mono font-bold text-emerald-800 hover:underline">sys.jerin@gmail.com</button>
+        </div>
+
+        <button 
+          type="submit" 
+          id="btn-login-submit" 
+          class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white py-3.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-emerald-700/25 flex justify-center items-center gap-2 cursor-pointer">
+          <span id="btn-login-text">Sign In as Administrator</span>
+          <span id="btn-login-spinner" class="hidden">
+            <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </span>
+          <span>→</span>
+        </button>
+
+        <div class="pt-3 border-t border-gray-200 flex items-center justify-between text-[11px] text-gray-500">
+          <span>Server-side PBKDF2 SHA-256</span>
+          <span class="text-emerald-700 font-semibold">AyurGuide v3.2</span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 2. AUTHENTICATED ADMIN DASHBOARD VIEW      -->
+  <!-- ========================================== -->
+  <div id="dashboard-view" class="hidden min-h-screen flex-col w-full">
+
+  <!-- Top Navigation Header -->
+  <header class="bg-moss-900 text-parchment-50 border-b border-moss-700 sticky top-0 z-30 shadow-md">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <img src="/img/sitaram_luxury_logo.png?v=6" alt="Sitaram Ayurveda Logo" class="w-10 h-10 rounded-full border border-moss-500 object-contain shadow-sm" />
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-serif font-bold text-lg tracking-wider text-parchment-50">AyurGuide</span>
+            <span class="text-xs bg-moss-700 text-amber-300 font-semibold px-2 py-0.5 rounded-full border border-moss-500">Clinical Admin</span>
+          </div>
+          <p class="text-xs text-parchment-200 opacity-80">Desktop Medicine & Practitioner Registry</p>
+        </div>
+      </div>
+
+      <!-- Cloud Sync Indicator & Actions -->
+      <div class="flex items-center space-x-3">
+        <!-- Parallax Motion & Tilt Controls for .liquid-glass-card -->
+        <div class="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-moss-800 border border-moss-600 text-xs">
+          <!-- Motion Mode -->
+          <div class="flex items-center gap-1.5">
+            <span class="text-[11px] text-amber-300 font-semibold flex items-center gap-1">
+              <span>⚡</span>
+              <span class="hidden sm:inline">Motion:</span>
+            </span>
+            <div class="inline-flex rounded-lg bg-moss-900/80 p-0.5 border border-moss-700">
+              <button 
+                type="button"
+                id="admin-motion-toggle-default"
+                onclick="setParallaxMotionMode('default')"
+                class="px-2 py-0.5 text-xs font-semibold rounded text-parchment-200 hover:text-white transition flex items-center"
+                title="Balanced Natural physics (150ms)">
+                Default
+              </button>
+              <button 
+                type="button"
+                id="admin-motion-toggle-snappy"
+                onclick="setParallaxMotionMode('snappy')"
+                class="px-2 py-0.5 text-xs font-bold rounded bg-emerald-500 text-moss-900 shadow-sm transition flex items-center"
+                title="Fast Snappy hover response (80ms)">
+                Snappy
+              </button>
+              <button 
+                type="button"
+                id="admin-motion-toggle-fluid"
+                onclick="setParallaxMotionMode('fluid')"
+                class="px-2 py-0.5 text-xs font-semibold rounded text-parchment-200 hover:text-white transition flex items-center"
+                title="Smooth Fluid hover gliding (350ms)">
+                Fluid
+              </button>
+            </div>
+          </div>
+
+          <div class="h-4 w-px bg-moss-700"></div>
+
+          <!-- Tilt Magnitude Slider -->
+          <div class="flex items-center gap-1.5" title="Adjust the 3D rotation intensity on hover">
+            <span class="text-[11px] text-amber-300 font-semibold flex items-center gap-1">
+              <span>🔄</span>
+              <span class="hidden md:inline">Tilt:</span>
+              <span id="admin-tilt-display" class="font-mono text-white text-[11px] w-8 text-right">7.5°</span>
+            </span>
+            <input 
+              type="range" 
+              id="admin-tilt-slider"
+              min="0" 
+              max="20" 
+              step="0.5" 
+              value="7.5"
+              oninput="setTiltMagnitude(this.value)"
+              class="w-16 sm:w-20 h-1.5 bg-moss-900 rounded-lg appearance-none cursor-pointer accent-emerald-400 focus:outline-none"
+              title="Tilt magnitude: 0° (Flat) to 20° (Extreme 3D)"
+            />
+          </div>
+        </div>
+
+        <!-- Supabase Cloud Connection Status Badge -->
+        <button 
+          id="supabaseHeaderBadge" 
+          onclick="openModal('supabaseConfigModal')" 
+          class="flex items-center space-x-2 text-xs bg-moss-800 hover:bg-moss-750 border border-emerald-500/40 px-3 py-1.5 rounded-full transition cursor-pointer shadow-xs group"
+          title="Supabase PostgreSQL Cloud Database • Click to view connection status">
+          <span id="supabaseHeaderDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400"></span>
+          <span id="supabaseHeaderText" class="text-parchment-100 font-medium tracking-wide">Supabase: Checking...</span>
+        </button>
+
+        <button 
+          onclick="openModal('supabaseConfigModal')" 
+          class="text-xs bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 hover:text-white px-3 py-1.5 rounded-lg border border-emerald-500/40 transition flex items-center space-x-1.5 font-semibold cursor-pointer shadow-xs"
+          title="Manage Supabase Cloud Database Connection">
+          <span class="text-emerald-400">⚡</span>
+          <span>Supabase Cloud</span>
+        </button>
+
+        <div class="h-6 w-px bg-moss-700"></div>
+
+        <!-- User Profile & Settings Trigger Button -->
+        <button 
+          type="button"
+          onclick="openModal('userSettingsModal')" 
+          class="flex items-center space-x-2 px-2 py-1 rounded-xl bg-moss-800/80 hover:bg-moss-700/90 border border-moss-600/70 hover:border-emerald-400/50 transition text-left cursor-pointer group shadow-xs"
+          title="Open User Settings & Motion Profiles">
+          <div id="admin-user-initials" class="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-xs shadow group-hover:scale-105 transition-transform">
+            JA
+          </div>
+          <div class="text-left hidden md:block">
+            <div class="text-xs font-semibold leading-tight text-parchment-100 flex items-center gap-1.5">
+              <span id="admin-user-name">Jerin Administrator</span>
+              <span class="text-[10px] text-amber-300">⚙️</span>
+            </div>
+            <div class="text-[10px] text-amber-300 flex items-center gap-1 mt-0.5">
+              <span id="admin-user-role">SUPER ADMIN</span>
+              <span id="admin-user-active-motion-badge" class="px-1 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-950 text-emerald-400 border border-emerald-700/60 uppercase">snappy</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- Log Out Button -->
+        <button 
+          type="button" 
+          onclick="handleAdminLogout()" 
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600/80 hover:bg-red-600 border border-red-500/40 text-white text-xs font-bold transition shadow hover:shadow-red-500/30 cursor-pointer"
+          title="Sign out of Admin Session">
+          <span>🚪</span>
+          <span class="hidden sm:inline">Log Out</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="max-w-7xl mx-auto px-6 flex space-x-1 overflow-x-auto border-t border-moss-800">
+      <button onclick="switchTab('medicinesTab')" id="btn-medicinesTab" class="nav-tab px-4 py-2.5 text-sm font-semibold border-b-2 border-amber-400 text-amber-300 flex items-center space-x-2">
+        <span>💊</span>
+        <span>Medicine Catalogue</span>
+        <span id="tabMedCountBadge" class="bg-moss-800 text-xs px-2 py-0.5 rounded-full ml-1">8</span>
+      </button>
+
+      <button onclick="switchTab('usersTab')" id="btn-usersTab" class="nav-tab px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-parchment-200 hover:text-white flex items-center space-x-2">
+        <span>👥</span>
+        <span>Users & Practitioners</span>
+        <span id="tabUserCountBadge" class="bg-moss-800 text-xs px-2 py-0.5 rounded-full ml-1">3</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Canvas -->
+  <main class="max-w-7xl mx-auto px-6 py-8 flex-1 w-full">
+
+    <!-- TAB 1: MEDICINE CATALOGUE -->
+    <section id="medicinesTab" class="tab-content space-y-6">
+      
+      <!-- Top Metrics Overview -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="liquid-glass-card rounded-2xl p-4 shadow-sm">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Medicines</div>
+          <div class="text-2xl font-bold text-moss-900 mt-1" id="statTotalMedicines">8</div>
+          <div class="text-xs text-emerald-600 mt-1 font-medium">100% Classical Verified</div>
+        </div>
+
+        <div class="liquid-glass-card rounded-2xl p-4 shadow-sm">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Classical Lineage</div>
+          <div class="text-2xl font-bold text-moss-700 mt-1">AFI Standards</div>
+          <div class="text-xs text-emerald-600 mt-1 font-medium">Ayurvedic Formulary of India</div>
+        </div>
+
+        <div class="liquid-glass-card rounded-2xl p-4 shadow-sm">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Botanical Categories</div>
+          <div class="text-2xl font-bold text-moss-700 mt-1">7 Primary</div>
+          <div class="text-xs text-gray-500 mt-1">Asavas, Arishtas, Kwaths, etc.</div>
+        </div>
+
+        <div class="liquid-glass-card rounded-2xl p-4 shadow-sm">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Classical Reference</div>
+          <div class="text-2xl font-bold text-amberGold mt-1">Pharmacopeia</div>
+          <div class="text-xs text-gray-500 mt-1">Charaka & Sahasrayogam Verified</div>
+        </div>
+      </div>
+
+      <!-- Filter and Action Bar -->
+      <div class="bg-white rounded-2xl p-5 border border-parchment-200 shadow-sm space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <!-- Search Bar -->
+          <div class="relative flex-1">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">🔍</span>
+            <input 
+              type="text" 
+              id="medSearchInput"
+              oninput="filterMedicines()"
+              placeholder="Search by medicine name, Sanskrit title, category, classical text, or herbs..."
+              class="w-full pl-9 pr-8 py-2.5 rounded-xl border border-parchment-200 bg-parchment-50 text-sm focus:outline-none focus:ring-2 focus:ring-moss-500"
+            />
+            <button 
+              id="clearSearchBtn" 
+              onclick="clearSearch()" 
+              class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 font-bold text-sm cursor-pointer"
+              title="Clear search"
+            >✕</button>
+          </div>
+
+          <!-- Category Filter -->
+          <div class="w-full md:w-56 shrink-0">
+            <select 
+              id="medCategoryFilter" 
+              onchange="filterMedicines()" 
+              class="w-full px-3 py-2.5 rounded-xl border border-parchment-200 bg-parchment-50 text-sm font-semibold text-moss-900 focus:outline-none focus:ring-2 focus:ring-moss-500 cursor-pointer"
+            >
+              <option value="ALL">📦 All Categories</option>
+              <option value="CHURNA">Churna (Powder)</option>
+              <option value="VATI">Vati (Tablet)</option>
+              <option value="ARISHTA">Arishta / Asava (Elixir)</option>
+              <option value="TAILA">Taila (Oil)</option>
+              <option value="GHRITA">Ghrita (Ghee)</option>
+              <option value="RASAYANA">Rasayana (Jam)</option>
+              <option value="KWATHA">Kwatha (Decoction)</option>
+            </select>
+          </div>
+
+          <!-- Add Medicine Button -->
+          <button 
+            onclick="openAddMedicineModal()" 
+            class="bg-moss-700 hover:bg-moss-800 text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow transition flex items-center justify-center space-x-2 whitespace-nowrap cursor-pointer shrink-0"
+          >
+            <span>➕</span>
+            <span>Add Medicine</span>
+          </button>
+        </div>
+
+        <!-- Health Goals Filter Chips -->
+        <div>
+          <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Filter by Therapeutic Indication:</div>
+          <div class="flex flex-wrap gap-2" id="healthGoalChips">
+            <button onclick="setHealthGoalFilter('ALL')" class="goal-chip active-chip px-3 py-1 text-xs font-semibold rounded-full bg-moss-700 text-white shadow-sm transition cursor-pointer" data-goal="ALL">
+              🌿 All Indications
+            </button>
+            <button onclick="setHealthGoalFilter('DIGESTION')" class="goal-chip px-3 py-1 text-xs font-semibold rounded-full bg-parchment-100 text-moss-900 hover:bg-parchment-200 border border-parchment-200 transition cursor-pointer" data-goal="DIGESTION">
+              🌱 Digestion & Gut
+            </button>
+            <button onclick="setHealthGoalFilter('IMMUNITY')" class="goal-chip px-3 py-1 text-xs font-semibold rounded-full bg-parchment-100 text-moss-900 hover:bg-parchment-200 border border-parchment-200 transition cursor-pointer" data-goal="IMMUNITY">
+              🛡️ Immunity & Ojas
+            </button>
+            <button onclick="setHealthGoalFilter('STRESS_RELIEF')" class="goal-chip px-3 py-1 text-xs font-semibold rounded-full bg-parchment-100 text-moss-900 hover:bg-parchment-200 border border-parchment-200 transition cursor-pointer" data-goal="STRESS_RELIEF">
+              🧘 Stress Relief & Sleep
+            </button>
+            <button onclick="setHealthGoalFilter('COGNITION')" class="goal-chip px-3 py-1 text-xs font-semibold rounded-full bg-parchment-100 text-moss-900 hover:bg-parchment-200 border border-parchment-200 transition cursor-pointer" data-goal="COGNITION">
+              🧠 Memory & Focus
+            </button>
+            <button onclick="setHealthGoalFilter('SKIN_HEALTH')" class="goal-chip px-3 py-1 text-xs font-semibold rounded-full bg-parchment-100 text-moss-900 hover:bg-parchment-200 border border-parchment-200 transition cursor-pointer" data-goal="SKIN_HEALTH">
+              ✨ Skin Radiance
+            </button>
+            <button onclick="setHealthGoalFilter('JOINT_MOBILITY')" class="goal-chip px-3 py-1 text-xs font-semibold rounded-full bg-parchment-100 text-moss-900 hover:bg-parchment-200 border border-parchment-200 transition cursor-pointer" data-goal="JOINT_MOBILITY">
+              🦴 Joints & Mobility
+            </button>
+            <button onclick="setHealthGoalFilter('DETOX')" class="goal-chip px-3 py-1 text-xs font-semibold rounded-full bg-parchment-100 text-moss-900 hover:bg-parchment-200 border border-parchment-200 transition cursor-pointer" data-goal="DETOX">
+              💧 Detox & Cleanse
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Count and Reset Status -->
+        <div class="flex items-center justify-between text-xs text-gray-500 pt-1 border-t border-parchment-100">
+          <div class="flex items-center gap-2">
+            <span>Showing <strong id="filterMatchCount" class="text-moss-900">8</strong> of <span id="filterTotalCount">8</span> medicines in catalogue</span>
+            <span id="activeFilterBadge" class="hidden px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">Filtered</span>
+          </div>
+          <button id="resetFiltersBtn" onclick="resetAllFilters()" class="hidden text-amber-800 hover:text-amber-900 font-bold underline cursor-pointer">
+            ✕ Reset all filters
+          </button>
+        </div>
+
+        <!-- View Mode Switcher -->
+        <div class="flex items-center justify-between pt-2 border-t border-parchment-200">
+          <div class="text-xs text-gray-500 font-medium flex items-center gap-2">
+            <span>Display Format:</span>
+            <span class="text-[11px] bg-moss-50 text-moss-800 font-semibold px-2 py-0.5 rounded border border-moss-200">ℹ️ Click "Info" on any card to flip and inspect granular botanical details</span>
+          </div>
+          <div class="inline-flex rounded-xl p-1 bg-parchment-200 border border-parchment-300 shadow-2xs">
+            <button id="viewBtnCards" onclick="setMedicineViewMode('cards')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-moss-700 text-white shadow-xs">
+              <span>⊞</span> <span>3D Glass Cards (Flippable)</span>
+            </button>
+            <button id="viewBtnTable" onclick="setMedicineViewMode('table')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-moss-900 hover:text-moss-700 transition flex items-center gap-1.5">
+              <span>☰</span> <span>Data Table</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flippable 3D Glass Cards Container -->
+      <div id="medicinesCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Medicines Data Table Container -->
+      <div id="medicinesTableContainer" class="bg-white rounded-2xl border border-parchment-200 shadow-sm overflow-hidden hidden">
+        <div class="overflow-x-auto custom-scroll">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-parchment-100 text-moss-900 text-xs uppercase font-bold border-b border-parchment-200 tracking-wider">
+                <th class="py-3.5 px-4">Medicine Name</th>
+                <th class="py-3.5 px-4">Category</th>
+                <th class="py-3.5 px-4">Classical Reference</th>
+                <th class="py-3.5 px-4">Therapeutic Indications</th>
+                <th class="py-3.5 px-4">Dosage / Posology</th>
+                <th class="py-3.5 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="medicinesTableBody" class="divide-y divide-parchment-100 text-sm">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: USERS & PRACTITIONERS DIRECTORY -->
+    <section id="usersTab" class="tab-content hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="font-serif text-xl font-bold text-moss-900">User & Practitioner Governance</h2>
+          <p class="text-xs text-gray-500">Manage clinical access levels, role promotions, and practitioner verification</p>
+        </div>
+        <button onclick="openModal('addUserModal')" class="bg-moss-700 hover:bg-moss-800 text-white font-semibold text-sm px-4 py-2 rounded-xl shadow transition">
+          ➕ Register New Practitioner
+        </button>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-parchment-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto custom-scroll">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-parchment-100 text-moss-900 text-xs uppercase font-bold border-b border-parchment-200 tracking-wider">
+                <th class="py-3.5 px-4">User</th>
+                <th class="py-3.5 px-4">Role Designation</th>
+                <th class="py-3.5 px-4">Clinical Privileges</th>
+                <th class="py-3.5 px-4">Account Status</th>
+                <th class="py-3.5 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody" class="divide-y divide-parchment-100 text-sm">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: ADD / EDIT MEDICINE -->
+  <div id="medicineModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-parchment-200 overflow-hidden">
+      <!-- Modal Header -->
+      <div class="bg-moss-900 text-parchment-50 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">🌿</span>
+          <h3 class="font-serif font-bold text-lg" id="medModalTitle">Add Medicine to Catalogue</h3>
+        </div>
+        <button onclick="closeModal('medicineModal')" class="text-parchment-200 hover:text-white text-xl">✕</button>
+      </div>
+
+      <!-- Modal Body (Multi-section Form) -->
+      <form id="medicineForm" onsubmit="handleSaveMedicine(event)" class="p-6 overflow-y-auto custom-scroll space-y-6 flex-1">
+        <input type="hidden" id="formMedId" value="" />
+        
+        <!-- SECTION 1: General Info -->
+        <div>
+          <h4 class="text-xs font-bold text-moss-700 uppercase tracking-wider mb-3">1. Identification & Category</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Commercial English Name *</label>
+              <input type="text" id="formMedName" required placeholder="e.g. Ashwagandha Root" class="w-full px-3 py-2 rounded-xl border border-parchment-200 text-sm focus:ring-2 focus:ring-moss-500 outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Classical Sanskrit Name *</label>
+              <input type="text" id="formMedSanskrit" required placeholder="e.g. अश्वगंधा (Withania somnifera)" class="w-full px-3 py-2 rounded-xl border border-parchment-200 text-sm focus:ring-2 focus:ring-moss-500 outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Formulation Category *</label>
+              <select id="formMedCategory" class="w-full px-3 py-2 rounded-xl border border-parchment-200 text-sm focus:ring-2 focus:ring-moss-500 outline-none">
+                <option value="CHURNA">Churna (Herbal Powder)</option>
+                <option value="VATI">Vati (Ayurvedic Tablet)</option>
+                <option value="ARISHTA">Arishta / Asava (Fermented Elixir)</option>
+                <option value="TAILA">Taila (Medicated Oil)</option>
+                <option value="GHRITA">Ghrita (Medicated Ghee)</option>
+                <option value="RASAYANA">Rasayana (Rejuvenating Jam)</option>
+                <option value="KWATHA">Kwatha (Decoction)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Classical Reference Text</label>
+              <input type="text" id="formMedClassicalRef" placeholder="e.g. Charaka Samhita Chikitsa Sthana 1.1 / AFI" class="w-full px-3 py-2 rounded-xl border border-parchment-200 text-sm focus:ring-2 focus:ring-moss-500 outline-none" />
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: Health Goals & Therapeutic Indications -->
+        <div>
+          <h4 class="text-xs font-bold text-moss-700 uppercase tracking-wider mb-3">2. Therapeutic Indications & Health Goals</h4>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Select Target Health Goals (Multi-select)</label>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                <label class="flex items-center space-x-2 p-2 rounded-lg border border-parchment-200 hover:bg-parchment-50 cursor-pointer">
+                  <input type="checkbox" name="formGoals" value="DIGESTION" class="rounded text-moss-700" />
+                  <span>🌱 Digestion</span>
+                </label>
+                <label class="flex items-center space-x-2 p-2 rounded-lg border border-parchment-200 hover:bg-parchment-50 cursor-pointer">
+                  <input type="checkbox" name="formGoals" value="IMMUNITY" class="rounded text-moss-700" />
+                  <span>🛡️ Immunity</span>
+                </label>
+                <label class="flex items-center space-x-2 p-2 rounded-lg border border-parchment-200 hover:bg-parchment-50 cursor-pointer">
+                  <input type="checkbox" name="formGoals" value="STRESS_RELIEF" class="rounded text-moss-700" />
+                  <span>🧘 Stress Relief</span>
+                </label>
+                <label class="flex items-center space-x-2 p-2 rounded-lg border border-parchment-200 hover:bg-parchment-50 cursor-pointer">
+                  <input type="checkbox" name="formGoals" value="COGNITION" class="rounded text-moss-700" />
+                  <span>🧠 Focus</span>
+                </label>
+                <label class="flex items-center space-x-2 p-2 rounded-lg border border-parchment-200 hover:bg-parchment-50 cursor-pointer">
+                  <input type="checkbox" name="formGoals" value="SKIN_HEALTH" class="rounded text-moss-700" />
+                  <span>✨ Skin Glow</span>
+                </label>
+                <label class="flex items-center space-x-2 p-2 rounded-lg border border-parchment-200 hover:bg-parchment-50 cursor-pointer">
+                  <input type="checkbox" name="formGoals" value="JOINT_MOBILITY" class="rounded text-moss-700" />
+                  <span>🦴 Joints</span>
+                </label>
+                <label class="flex items-center space-x-2 p-2 rounded-lg border border-parchment-200 hover:bg-parchment-50 cursor-pointer">
+                  <input type="checkbox" name="formGoals" value="DETOX" class="rounded text-moss-700" />
+                  <span>💧 Detox</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Primary Clinical Benefit</label>
+              <input type="text" id="formMedBenefit" placeholder="e.g. Somatic vitality and adrenal support" class="w-full px-3 py-2 rounded-xl border border-parchment-200 text-sm focus:ring-2 focus:ring-moss-500 outline-none" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Short Description / Monograph Summary</label>
+              <textarea id="formMedDesc" rows="2" placeholder="Brief therapeutic summary for seekers and patients..." class="w-full px-3 py-2 rounded-xl border border-parchment-200 text-sm focus:ring-2 focus:ring-moss-500 outline-none"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: Dosage & Administration -->
+        <div>
+          <h4 class="text-xs font-bold text-moss-700 uppercase tracking-wider mb-3">3. Posology & Administration</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Dosage Summary</label>
+              <input type="text" id="formMedDosageSummary" placeholder="e.g. 500mg • After Breakfast" class="w-full px-3 py-2 rounded-xl border border-parchment-200 text-sm focus:ring-2 focus:ring-moss-500 outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Anupana (Adjuvant Vehicle)</label>
+              <input type="text" id="formMedAnupana" placeholder="e.g. Warm water, Honey, or Cow Milk" class="w-full px-3 py-2 rounded-xl border border-parchment-200 text-sm focus:ring-2 focus:ring-moss-500 outline-none" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer Buttons -->
+        <div class="pt-4 border-t border-parchment-200 flex items-center justify-end space-x-3">
+          <button type="button" onclick="closeModal('medicineModal')" class="px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-100 transition cursor-pointer">Cancel</button>
+          <button type="submit" id="medSubmitBtn" class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-moss-700 hover:bg-moss-800 text-white shadow transition cursor-pointer">Save to Catalogue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: SAFE MEDICINE DELETION CONFIRMATION DIALOG -->
+  <div id="deleteMedicineConfirmModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-parchment-200 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-red-100 border border-red-200 text-red-600 flex items-center justify-center text-2xl shrink-0">
+          ⚠️
+        </div>
+        <div class="flex-1 min-w-0">
+          <h3 id="deleteModalTitle" class="font-serif font-bold text-xl text-moss-900 leading-snug">Delete Medicine?</h3>
+          <p class="text-sm text-gray-600 mt-1">Are you sure you want to permanently delete this medicine?</p>
+          
+          <div id="deleteModalMedicinePreview" class="mt-3 p-3 bg-red-50/60 rounded-xl border border-red-100 flex items-center gap-3">
+            <img id="deleteModalMedImg" src="" class="w-10 h-10 rounded-lg object-cover border border-parchment-200 shrink-0" alt="Medicine" onerror="this.src='https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=150&q=80'" />
+            <div class="min-w-0">
+              <p id="deleteModalMedName" class="font-serif font-bold text-xs text-moss-900 truncate">Medicine Name</p>
+              <p id="deleteModalMedCategory" class="text-[11px] text-gray-500 truncate">Category</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Database Restriction Error Box -->
+      <div id="deleteMedicineErrorAlert" class="hidden p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-start gap-2.5">
+        <span class="text-base shrink-0">🚫</span>
+        <div class="flex-1">
+          <p class="font-bold text-red-900">Database Restriction</p>
+          <p id="deleteMedicineErrorMessage" class="text-[11px] text-red-700 mt-0.5 leading-relaxed">The medicine cannot be deleted because of database restrictions.</p>
+        </div>
+      </div>
+
+      <!-- Modal Action Buttons -->
+      <div class="flex items-center justify-end space-x-3 pt-3 border-t border-parchment-200">
+        <button 
+          type="button" 
+          id="cancelDeleteMedicineBtn"
+          onclick="closeDeleteMedicineModal()" 
+          class="px-4 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-parchment-100 border border-parchment-300 transition cursor-pointer">
+          Cancel
+        </button>
+        <button 
+          type="button" 
+          id="confirmDeleteMedicineBtn" 
+          onclick="executeDeleteMedicine()" 
+          class="px-5 py-2.5 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 active:bg-red-800 text-white shadow-md transition cursor-pointer flex items-center gap-2">
+          <span id="confirmDeleteMedicineSpinner" class="hidden text-xs">⏳</span>
+          <span id="confirmDeleteMedicineText">Delete Medicine</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SUPABASE CLOUD DATABASE CONFIGURATION & STATUS -->
+  <div id="supabaseConfigModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-md">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 shadow-2xl border border-parchment-200 space-y-5 animate-fade-in custom-scrollbar max-h-[92vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 flex items-center justify-center text-xl font-bold shadow-inner">
+            ⚡
+          </div>
+          <div>
+            <h3 class="font-serif font-bold text-lg text-moss-900 leading-tight">Supabase Cloud Database</h3>
+            <p class="text-[11px] text-gray-500 font-medium">PostgreSQL Database & PostgREST API Integration</p>
+          </div>
+        </div>
+        <button onclick="closeModal('supabaseConfigModal')" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center text-sm font-bold transition">✕</button>
+      </div>
+
+      <!-- Real-Time Connection Status Card -->
+      <div id="sb-modal-status-card" class="p-4 rounded-2xl bg-gradient-to-br from-emerald-950/90 to-[#072418] text-white border border-emerald-500/30 space-y-3 shadow-inner">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span id="sb-modal-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-md shadow-emerald-400"></span>
+            <span id="sb-modal-status-text" class="text-xs font-bold uppercase tracking-wider text-emerald-300">Connected to Cloud Database</span>
+          </div>
+          <span id="sb-modal-ping" class="text-[10px] font-mono bg-emerald-900/80 px-2 py-0.5 rounded text-emerald-300 border border-emerald-700/50">200 OK • 118ms</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-emerald-900/60">
+          <div>
+            <span class="text-gray-400 block text-[10px] uppercase">Active Endpoint:</span>
+            <span id="sb-modal-endpoint" class="font-mono text-emerald-200 text-[11px] truncate block" title="https://ksnsfilauqzxsegpjpdt.supabase.co">https://ksnsfilauqzxsegpjpdt.supabase.co</span>
+          </div>
+          <div>
+            <span class="text-gray-400 block text-[10px] uppercase">API PostgREST Layer:</span>
+            <span class="font-mono text-emerald-400 text-[11px] font-semibold">/rest/v1/ Healthy</span>
+          </div>
+        </div>
+
+        <!-- Verified Tables Badge Row -->
+        <div class="pt-2 border-t border-emerald-900/60 flex flex-wrap items-center gap-1.5 text-[10px]">
+          <span class="text-gray-300">Tables:</span>
+          <span class="px-2 py-0.5 rounded-md bg-emerald-900/70 text-emerald-300 border border-emerald-700/50 font-mono">✓ products (medicines)</span>
+          <span class="px-2 py-0.5 rounded-md bg-emerald-900/70 text-emerald-300 border border-emerald-700/50 font-mono">✓ categories</span>
+          <span class="px-2 py-0.5 rounded-md bg-emerald-900/70 text-emerald-300 border border-emerald-700/50 font-mono">✓ admins</span>
+        </div>
+      </div>
+
+      <!-- Action Feedback Alert -->
+      <div id="sb-feedback-alert" class="hidden p-3 rounded-xl text-xs flex items-center gap-2"></div>
+
+      <!-- Credentials Form -->
+      <form id="supabase-config-form" onsubmit="handleSaveSupabaseConfig(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+            <span>Supabase Project URL</span>
+            <span class="text-[10px] font-normal text-gray-500">PostgreSQL Cloud URL</span>
+          </label>
+          <input 
+            type="url" 
+            id="sb-config-url" 
+            required
+            placeholder="https://your-project-ref.supabase.co" 
+            class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs font-mono text-gray-800 focus:ring-2 focus:ring-emerald-600 focus:border-transparent outline-none transition" 
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+            <span>Supabase API Key (Anon / Service Role)</span>
+            <span class="text-[10px] font-normal text-gray-500">JWT Token</span>
+          </label>
+          <div class="relative">
+            <input 
+              type="password" 
+              id="sb-config-key" 
+              required
+              placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
+              class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs font-mono text-gray-800 focus:ring-2 focus:ring-emerald-600 focus:border-transparent outline-none transition pr-16" 
+            />
+            <button 
+              type="button" 
+              onclick="toggleSbKeyVisibility()" 
+              id="btn-toggle-sb-key"
+              class="absolute right-2 top-2 px-2 py-1 text-[10px] font-semibold text-gray-600 hover:text-emerald-700 rounded bg-gray-100 hover:bg-gray-200 transition">
+              Show
+            </button>
+          </div>
+        </div>
+
+        <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs text-gray-600 space-y-1">
+          <div class="font-semibold text-gray-800 flex items-center gap-1.5">
+            <span>ℹ️</span>
+            <span>Cloud Database Sync Information:</span>
+          </div>
+          <p class="text-[11px] leading-relaxed text-gray-600">
+            When connected, all additions, edits, and deletions in the Medicine Catalogue synchronize automatically with Supabase PostgreSQL and the Android application.
+          </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="pt-3 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <button 
+              type="button" 
+              onclick="testSupabaseConnectionNow()" 
+              class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 transition flex items-center gap-1.5 cursor-pointer">
+              <span>🔄</span>
+              <span>Test Connection</span>
+            </button>
+            <a 
+              href="/api/supabase/schema" 
+              download="supabase_schema.sql" 
+              class="px-3 py-2 text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:underline flex items-center gap-1">
+              <span>📄</span>
+              <span>Download SQL Schema</span>
+            </a>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button 
+              type="button" 
+              onclick="closeModal('supabaseConfigModal')" 
+              class="px-3.5 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition">
+              Close
+            </button>
+            <button 
+              type="submit" 
+              id="btn-save-sb"
+              class="px-5 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer">
+              <span>💾</span>
+              <span>Save & Connect</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: USER SETTINGS & LIQUID GLASS MOTION PANEL -->
+  <div id="userSettingsModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-md">
+    <div class="bg-[#0B1E15]/95 text-parchment-50 rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-emerald-500/20 space-y-5 animate-fade-in custom-scrollbar max-h-[90vh] overflow-y-auto">
+      
+      <!-- Panel Header -->
+      <div class="flex items-center justify-between border-b border-emerald-900/50 pb-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-900/60 border border-emerald-500/40 text-emerald-300 flex items-center justify-center text-lg font-bold shadow-inner">
+            ⚙️
+          </div>
+          <div>
+            <h3 class="font-serif font-bold text-lg text-white flex items-center gap-2">
+              <span>User Settings & Preferences</span>
+              <span class="text-xs font-sans px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">Liquid Glass</span>
+            </h3>
+            <p class="text-xs text-parchment-200 opacity-80">Configure motion physics, interactive parallax feedback, and admin session profile</p>
+          </div>
+        </div>
+        <button onclick="closeModal('userSettingsModal')" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-parchment-200 hover:text-white transition">
+          ✕
+        </button>
+      </div>
+
+      <!-- Current Admin User Badge Card -->
+      <div class="rounded-2xl p-4 bg-emerald-950/40 border border-emerald-700/30 flex items-center justify-between">
+        <div class="flex items-center space-x-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-amberGold text-white font-bold flex items-center justify-center text-sm shadow-md">
+            AD
+          </div>
+          <div>
+            <div class="text-sm font-bold text-white flex items-center gap-2">
+              <span>Ayurveda Acharya</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">System Admin</span>
+            </div>
+            <p class="text-xs text-parchment-200 opacity-75">admin@sitaramayurveda.com</p>
+            <p class="text-[11px] text-emerald-400 mt-0.5 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Central Cloud Synchronizer Online</span>
+            </p>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-[10px] text-parchment-300 uppercase tracking-wider font-semibold">Active Motion</div>
+          <div id="modal-active-motion-attr" class="text-xs font-mono font-bold text-emerald-300 bg-black/40 px-2 py-0.5 rounded border border-emerald-800 mt-1">
+            data-motion="snappy"
+          </div>
+        </div>
+      </div>
+
+      <!-- MOTION PROFILES SECTION -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h4 class="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+              <span>⚡</span>
+              <span>Liquid Glass Motion Profiles</span>
+            </h4>
+            <p class="text-[11px] text-parchment-300 opacity-80 mt-0.5">
+              Controls 3D parallax reactivity, magnetic return kinetics, and CSS transitions on all <code class="text-emerald-300">.liquid-glass-card</code> elements via <code class="text-emerald-300">document.body[data-motion]</code>.
+            </p>
+          </div>
+        </div>
+
+        <!-- 3 Interactive Motion Profile Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          
+          <!-- Profile 1: DEFAULT -->
+          <div 
+            id="settings-motion-card-default"
+            onclick="setParallaxMotionMode('default')"
+            class="relative rounded-2xl p-3.5 border transition cursor-pointer flex flex-col justify-between group bg-white/5 hover:bg-white/10 border-white/10">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-white flex items-center gap-1">
+                  <span>🌿</span>
+                  <span>Default</span>
+                </span>
+                <span id="settings-motion-check-default" class="hidden text-xs text-emerald-400 font-bold">✓</span>
+              </div>
+              <div class="text-[10px] font-mono text-emerald-300 bg-black/30 px-1.5 py-0.5 rounded w-fit">
+                data-motion="default"
+              </div>
+              <p class="text-[11px] text-parchment-200 opacity-80 leading-snug">
+                Balanced natural physics with standard ease-out. Optimal for desktop precision and everyday review.
+              </p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-parchment-300">
+              <span>Duration: <strong class="text-white">150ms</strong></span>
+              <span>Snap: <strong class="text-white">320ms</strong></span>
+            </div>
+          </div>
+
+          <!-- Profile 2: SNAPPY -->
+          <div 
+            id="settings-motion-card-snappy"
+            onclick="setParallaxMotionMode('snappy')"
+            class="relative rounded-2xl p-3.5 border transition cursor-pointer flex flex-col justify-between group bg-white/5 hover:bg-white/10 border-white/10">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-white flex items-center gap-1">
+                  <span>⚡</span>
+                  <span>Snappy</span>
+                </span>
+                <span id="settings-motion-check-snappy" class="hidden text-xs text-emerald-400 font-bold">✓</span>
+              </div>
+              <div class="text-[10px] font-mono text-emerald-300 bg-black/30 px-1.5 py-0.5 rounded w-fit">
+                data-motion="snappy"
+              </div>
+              <p class="text-[11px] text-parchment-200 opacity-80 leading-snug">
+                Immediate micro-motion response with crisp, accelerated card tilts. Ideal for rapid multi-card scanning.
+              </p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-parchment-300">
+              <span>Duration: <strong class="text-white">80ms</strong></span>
+              <span>Snap: <strong class="text-white">220ms</strong></span>
+            </div>
+          </div>
+
+          <!-- Profile 3: FLUID -->
+          <div 
+            id="settings-motion-card-fluid"
+            onclick="setParallaxMotionMode('fluid')"
+            class="relative rounded-2xl p-3.5 border transition cursor-pointer flex flex-col justify-between group bg-white/5 hover:bg-white/10 border-white/10">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-white flex items-center gap-1">
+                  <span>🌊</span>
+                  <span>Fluid</span>
+                </span>
+                <span id="settings-motion-check-fluid" class="hidden text-xs text-emerald-400 font-bold">✓</span>
+              </div>
+              <div class="text-[10px] font-mono text-emerald-300 bg-black/30 px-1.5 py-0.5 rounded w-fit">
+                data-motion="fluid"
+              </div>
+              <p class="text-[11px] text-parchment-200 opacity-80 leading-snug">
+                Velvety, organic gliding deceleration with deep magnetic return kinetics. Elegant cinematic feel.
+              </p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-parchment-300">
+              <span>Duration: <strong class="text-white">350ms</strong></span>
+              <span>Snap: <strong class="text-white">450ms</strong></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- LIVE PREVIEW & TILT SENSITIVITY -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-emerald-900/50">
+        <!-- Tilt Magnitude Control -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-parchment-200 flex items-center gap-1">
+              <span>🔄</span>
+              <span>3D Tilt Angle Sensitivity</span>
+            </span>
+            <span id="modal-tilt-display" class="font-mono text-xs font-bold text-emerald-300">7.5°</span>
+          </div>
+          <input 
+            type="range" 
+            id="modal-tilt-slider"
+            min="0" 
+            max="20" 
+            step="0.5" 
+            value="7.5"
+            oninput="setTiltMagnitude(this.value)"
+            class="w-full h-1.5 bg-black/50 rounded-lg appearance-none cursor-pointer accent-emerald-400 focus:outline-none"
+          />
+          <div class="flex justify-between text-[10px] text-parchment-300 opacity-70">
+            <span>0° (Flat Glass)</span>
+            <span>7.5° (Recommended)</span>
+            <span>20° (Max Depth)</span>
+          </div>
+        </div>
+
+        <!-- Live Interactive Preview Card -->
+        <div class="liquid-glass-card rounded-2xl p-3.5 flex items-center justify-between shadow-md" style="min-height: 80px;" title="Hover over this card to feel the active motion profile!">
+          <div>
+            <div class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Interactive Live Preview</div>
+            <div class="text-xs font-serif font-bold text-moss-900 mt-0.5">Liquid Glass Dynamics</div>
+            <div class="text-[10px] text-gray-500">Hover your cursor to test motion response</div>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-800 flex items-center justify-center font-bold text-xs">
+            🌿
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="pt-4 border-t border-emerald-900/50 flex items-center justify-between">
+        <span class="text-[11px] text-parchment-300 opacity-75">
+          Settings are saved automatically to local storage.
+        </span>
+        <button 
+          type="button" 
+          onclick="closeModal('userSettingsModal')" 
+          class="px-5 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-moss-950 rounded-xl shadow transition">
+          Done
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  </div> <!-- End #dashboard-view -->
+
+  <!-- Application State & Script Logic -->
+  <script>
+    // Initial Classical Medicines mirroring the Android App
+    let medicines = [
+      {
+        id: "ashwagandha_root",
+        name: "Ashwagandha Root",
+        sanskritName: "अश्वगंधा (Withania somnifera)",
+        category: "CHURNA",
+        tagPill: "ADAPTOGEN",
+        healthGoals: ["STRESS_RELIEF", "IMMUNITY"],
+        dosageSummary: "500mg • After Breakfast",
+        shortDescription: "Supports stress reduction, adrenal vitality, and deep restful sleep.",
+        classicalRef: "Charaka Samhita Chikitsa Sthana 1.1",
+        rasa: "Tikta (Bitter), Kashaya (Astringent), Madhura (Sweet)",
+        virya: "Ushna (Hot Potency)",
+        vipaka: "Madhura (Sweet post-digestive)",
+        granularIngredients: [
+          { sanskrit: "Ashwagandha Moola", botanical: "Withania somnifera (Dry Root)", ratio: "85% (500mg)", part: "Mature Root", active: "Withanolides ≥ 2.5%, Withaferin A" },
+          { sanskrit: "Pippali Churna", botanical: "Piper longum (Bioavailability Enhancer)", ratio: "10% (59mg)", part: "Dried Spikes", active: "Piperine 98% bio-catalyst" },
+          { sanskrit: "Go Ghrita Matrix", botanical: "A2 Clarified Cow Ghee Matrix", ratio: "5% (29mg)", part: "Purified Lipid", active: "Lipophilic cellular carrier" }
+        ]
+      },
+      {
+        id: "triphala_churna",
+        name: "Triphala Churna",
+        sanskritName: "त्रिफला चूर्ण (Three Sacred Fruits)",
+        category: "CHURNA",
+        tagPill: "DIGESTIVE DETOX",
+        healthGoals: ["DIGESTION", "DETOX"],
+        dosageSummary: "3g - 5g • At Bedtime",
+        shortDescription: "Classic three-fruit formulation for gentle colon cleanse and systemic detox.",
+        classicalRef: "Sushruta Samhita Sutrasthana 38",
+        rasa: "Pancharasa (5 tastes excluding Lavana/Salty)",
+        virya: "Anushnasheeta (Balanced neutral potency)",
+        vipaka: "Madhura (Sweet post-digestive)",
+        granularIngredients: [
+          { sanskrit: "Haritaki", botanical: "Terminalia chebula (Yellow Myrobalan)", ratio: "33.33% (1.67g)", part: "Fruit Pericarp", active: "Chebulinic acid, Tannins" },
+          { sanskrit: "Bibhitaki", botanical: "Terminalia bellirica (Belleric Myrobalan)", ratio: "33.33% (1.67g)", part: "Fruit Pericarp", active: "Gallic acid, Ellagic acid" },
+          { sanskrit: "Amalaki", botanical: "Phyllanthus emblica (Indian Gooseberry)", ratio: "33.33% (1.67g)", part: "Dried Fruit Pulp", active: "Natural Vitamin C, Emblicanin A & B" }
+        ]
+      },
+      {
+        id: "brahmi_vati",
+        name: "Brahmi Vati",
+        sanskritName: "ब्राह्मी वटी (Classical Tablet)",
+        category: "VATI",
+        tagPill: "NOOTROPIC",
+        healthGoals: ["COGNITION", "STRESS_RELIEF"],
+        dosageSummary: "1 tablet • Morning with warm milk",
+        shortDescription: "Enhances memory retention, concentration, and clears mental fatigue.",
+        classicalRef: "Bhaishajya Ratnavali Manasaroga",
+        rasa: "Tikta (Bitter), Kashaya (Astringent)",
+        virya: "Sheeta (Cooling Potency)",
+        vipaka: "Madhura (Sweet post-digestive)",
+        granularIngredients: [
+          { sanskrit: "Brahmi Standardized", botanical: "Bacopa monnieri (Standardized Extract)", ratio: "45% (112mg)", part: "Whole Herb", active: "Bacosides A & B ≥ 20%" },
+          { sanskrit: "Shankhapushpi", botanical: "Convolvulus pluricaulis", ratio: "25% (62mg)", part: "Whole Plant", active: "Convolvine, Microphylic acid" },
+          { sanskrit: "Vacha Shuddha", botanical: "Acorus calamus (Purified Sweet Flag)", ratio: "15% (37mg)", part: "Shodhita Rhizome", active: "Beta-asarone detoxified" },
+          { sanskrit: "Swarna Makshika Bhasma", botanical: "Purified Calcined Chalcopyrite", ratio: "15% (37mg)", part: "Mineral Bhasma", active: "Micro-elemental Bio-chelated Iron/Copper" }
+        ]
+      },
+      {
+        id: "chyawanprash_awaleha",
+        name: "Chyawanprash Awaleha",
+        sanskritName: "च्यवनप्राश अवलेह (Rasayana Jam)",
+        category: "RASAYANA",
+        tagPill: "IMMUNITY BOOSTER",
+        healthGoals: ["IMMUNITY"],
+        dosageSummary: "1 tablespoon • Morning empty stomach",
+        shortDescription: "Ancient rejuvenating herbal jam for deep respiratory resistance and vitality.",
+        classicalRef: "Charaka Samhita Chikitsa Sthana 1.28-34",
+        rasa: "Madhura, Amla, Tikta, Katu, Kashaya",
+        virya: "Sheeta-Ushna Samana (Balanced)",
+        vipaka: "Madhura (Nourishing)",
+        granularIngredients: [
+          { sanskrit: "Amalaki Fresh Pulp", botanical: "Phyllanthus emblica (Steamed fresh fruit)", ratio: "58% (5.8g)", part: "Fresh Fruit Pulp", active: "Stable Polyphenolic Ascorbate" },
+          { sanskrit: "Dashamoola Kwatha", botanical: "Ten Sacred Classical Roots Decoction", ratio: "18% (1.8g)", part: "Root Bark Extract", active: "Adaptogenic Phytosterols" },
+          { sanskrit: "Ashtavarga Rare Herbs", botanical: "Jeevaka, Rishabhaka, Meda, Mahameda, etc.", ratio: "8% (0.8g)", part: "Tuberous Roots", active: "Vitalizing Ojas precursors" },
+          { sanskrit: "Pippali", botanical: "Piper longum (Bioavailability vehicle)", ratio: "4% (0.4g)", part: "Fruit Spikes", active: "Piperine, Piperlonguminine" },
+          { sanskrit: "Madhu & Go Ghrita", botanical: "Forest Honey & A2 Grass-fed Cow Ghee", ratio: "12% (1.2g)", part: "Purified Anupana", active: "Bio-lipid delivery matrix" }
+        ]
+      },
+      {
+        id: "kumkumadi_tailam",
+        name: "Kumkumadi Tailam",
+        sanskritName: "कुंकुमादि तैलम् (Saffron Facial Oil)",
+        category: "TAILA",
+        tagPill: "SKIN RADIANCE",
+        healthGoals: ["SKIN_HEALTH"],
+        dosageSummary: "3-4 drops • Night massage",
+        shortDescription: "Miraculous Ayurvedic elixir with Kashmiri Saffron for radiant skin luster.",
+        classicalRef: "Ashtanga Hridaya Uttarasthana 31",
+        rasa: "Tikta, Kashaya, Madhura",
+        virya: "Anushna (Gentle warm)",
+        vipaka: "Madhura",
+        granularIngredients: [
+          { sanskrit: "Kashmiri Kunkuma", botanical: "Crocus sativus (Grade-1 Red Saffron)", ratio: "8g per Litre", part: "Stigmas & Styles", active: "Crocin, Safranal, Picrocrocin" },
+          { sanskrit: "Chandana Shweta & Rakta", botanical: "Santalum album & Pterocarpus santalinus", ratio: "15% decoction", part: "Heartwood Core", active: "Alpha-santalol, Santalin" },
+          { sanskrit: "Manjistha", botanical: "Rubia cordifolia (Indian Madder)", ratio: "12% decoction", part: "Roots & Stems", active: "Purpurin, Alizarin anti-oxidants" },
+          { sanskrit: "Yashtimadhu", botanical: "Glycyrrhiza glabra (Licorice Root)", ratio: "10% decoction", part: "Dried Roots", active: "Glabridin, Glycyrrhizin" },
+          { sanskrit: "Tila Thailam Base", botanical: "Cold Pressed Sesamum indicum", ratio: "55% oil vehicle", part: "Virgin Seeds", active: "Sesamin, Sesamol lipid barrier" }
+        ]
+      },
+      {
+        id: "amritarishta",
+        name: "Amritarishta",
+        sanskritName: "अमृतारिष्ट (Fermented Guduchi)",
+        category: "ARISHTA",
+        tagPill: "LIVER & FEVER DETOX",
+        healthGoals: ["IMMUNITY", "DETOX", "DIGESTION"],
+        dosageSummary: "15ml with equal water • After lunch",
+        shortDescription: "Traditional fermented herbal wine kindling digestive Agni and detoxifying.",
+        classicalRef: "Bhaishajya Ratnavali Jwaradhikara",
+        rasa: "Tikta (Intense Bitter), Kashaya",
+        virya: "Ushna (Bio-active warm)",
+        vipaka: "Madhura",
+        granularIngredients: [
+          { sanskrit: "Amrita / Guduchi", botanical: "Tinospora cordifolia (Heart-leaved Moonseed)", ratio: "40% (2.0g/15ml)", part: "Mature Stems", active: "Cordifolioside, Tinosporaside" },
+          { sanskrit: "Dashamoola Kwatha", botanical: "Ten Sacred Roots Decoction", ratio: "25% (1.25g/15ml)", part: "Barks & Roots", active: "Antipyretic bio-flavonoids" },
+          { sanskrit: "Katuki", botanical: "Picrorhiza kurroa (Kutki Rhizome)", ratio: "10% (0.5g/15ml)", part: "Root/Rhizome", active: "Picroside I & II hepatoprotective" },
+          { sanskrit: "Dhataki Pushpa", botanical: "Woodfordia fruticosa (Fire Flame Bush)", ratio: "10% (0.5g/15ml)", part: "Dried Flowers", active: "Natural wild yeast bio-fermentation" },
+          { sanskrit: "Purana Guda", botanical: "Aged Chemical-free Jaggery base", ratio: "15% base", part: "Cane Extract", active: "Self-generated ethanol ≤ 10% v/v" }
+        ]
+      },
+      {
+        id: "dashamula_kwatha",
+        name: "Dashamula Kwatha",
+        sanskritName: "दशमूल क्वाथ (Ten Sacred Roots)",
+        category: "KWATHA",
+        tagPill: "VATA HARMONY",
+        healthGoals: ["JOINT_MOBILITY", "STRESS_RELIEF"],
+        dosageSummary: "40ml warm decoction • Twice daily",
+        shortDescription: "Ancient ten-root decoction relieving joint stiffness and muscular aches.",
+        classicalRef: "Sharangadhara Samhita Madhyama Khanda 2",
+        rasa: "Tikta (Bitter), Kashaya (Astringent)",
+        virya: "Ushna (Penetrating Heat)",
+        vipaka: "Katu (Pungent post-digestive)",
+        granularIngredients: [
+          { sanskrit: "Brihat Panchamoola", botanical: "Bilva, Agnimantha, Shyonaka, Patala, Gambhari", ratio: "50% (5 equal roots)", part: "Stem & Root Bark", active: "Lupenone, Scopoletin, Pectolinarigenin" },
+          { sanskrit: "Laghu Panchamoola", botanical: "Brihati, Kantakari, Gokshura, Shalaparni, Prishniparni", ratio: "50% (5 small shrubs)", part: "Whole Plants & Roots", active: "Solasodine, Tribuloside, Gangetin" }
+        ]
+      },
+      {
+        id: "gokshuradi_guggulu",
+        name: "Gokshuradi Guggulu",
+        sanskritName: "गोक्षुरादि गुग्गुलु (Renal Tablet)",
+        category: "VATI",
+        tagPill: "URINARY & DETOX",
+        healthGoals: ["DETOX", "JOINT_MOBILITY"],
+        dosageSummary: "2 tablets • Twice daily with warm water",
+        shortDescription: "Balances renal fluids, flushes metabolic uric acid, and eases joints.",
+        classicalRef: "Bhaishajya Ratnavali Pramehadhikara",
+        rasa: "Madhura, Tikta, Kashaya, Katu",
+        virya: "Sheeta-Ushna Samana",
+        vipaka: "Madhura",
+        granularIngredients: [
+          { sanskrit: "Gokshura Kwatha", botanical: "Tribulus terrestris (Puncturvine 28-fold decoction)", ratio: "52% (260mg)", part: "Spiny Fruits & Roots", active: "Protodioscin, Furostanol Saponins" },
+          { sanskrit: "Shuddha Guggulu", botanical: "Commiphora mukul (Triphala-purified oleo-gum-resin)", ratio: "28% (140mg)", part: "Purified Resin", active: "Guggulsterones Z & E" },
+          { sanskrit: "Triphala Standardized", botanical: "Haritaki, Bibhitaki, Amalaki myrobalans", ratio: "10% (50mg)", part: "Dried Fruits", active: "Gallic & Chebulic tannins" },
+          { sanskrit: "Trikatu & Musta", botanical: "Zingiber, Piper nigrum, P. longum, Cyperus rotundus", ratio: "10% (50mg)", part: "Rhizomes & Seeds", active: "Gingerol, Piperine deep digestive Agni" }
+        ]
+      }
+    ];
+
+    let users = [
+      { id: "usr_admin", name: "Ayurveda Acharya", email: "acharya@ayurveda.org", role: "ADMIN", status: "VERIFIED" },
+      { id: "usr_dr_sharma", name: "Dr. Ananya Sharma, BAMS", email: "ananya.sharma@clinic.in", role: "PRACTITIONER", status: "VERIFIED" },
+      { id: "usr_seeker", name: "Devika Patel", email: "devika.patel@gmail.com", role: "PATIENT", status: "VERIFIED" }
+    ];
+
+    let activeHealthGoal = "ALL";
+    const STORAGE_KEY = 'ayurguide_medicines_catalogue_v2';
+
+    function saveMedicinesToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(medicines));
+      } catch (e) {
+        console.warn('Unable to persist medicines to localStorage', e);
+      }
+    }
+
+    function loadMedicinesFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            medicines = parsed;
+          }
+        }
+      } catch (e) {
+        console.warn('Unable to read medicines from localStorage', e);
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      let toast = document.getElementById('ayurToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'ayurToast';
+        toast.className = 'fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-semibold flex items-center space-x-2.5 transition-all transform duration-300 opacity-0 translate-y-4 pointer-events-none max-w-md';
+        document.body.appendChild(toast);
+      }
+
+      let icon = '🌿';
+      if (type === 'error') {
+        icon = '🚫';
+        toast.className = 'fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-semibold flex items-center space-x-2.5 transition-all transform duration-300 opacity-0 translate-y-4 pointer-events-none max-w-md bg-red-950 text-white border-2 border-red-500';
+      } else if (type === 'success') {
+        icon = '✅';
+        toast.className = 'fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-semibold flex items-center space-x-2.5 transition-all transform duration-300 opacity-0 translate-y-4 pointer-events-none max-w-md bg-emerald-950 text-white border-2 border-emerald-500';
+      } else {
+        icon = '🌿';
+        toast.className = 'fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-semibold flex items-center space-x-2.5 transition-all transform duration-300 opacity-0 translate-y-4 pointer-events-none max-w-md bg-moss-900 text-parchment-50 border border-amber-400/40';
+      }
+
+      toast.innerHTML = `<span class="text-base">${icon}</span><span class="leading-tight">${message}</span>`;
+      toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      if (toast._timer) clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, type === 'error' ? 5000 : 3500);
+    }
+
+    // Tab Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-tab').forEach(el => {
+        el.classList.remove('border-amber-400', 'text-amber-300');
+        el.classList.add('border-transparent', 'text-parchment-200');
+      });
+
+      document.getElementById(tabId).classList.remove('hidden');
+      const btn = document.getElementById('btn-' + tabId);
+      btn.classList.add('border-amber-400', 'text-amber-300');
+      btn.classList.remove('border-transparent', 'text-parchment-200');
+    }
+
+    // Modal Control
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    // 1. ADD MEDICINE
+    function openAddMedicineModal() {
+      document.getElementById('medicineForm').reset();
+      document.getElementById('formMedId').value = "";
+      document.getElementById('medModalTitle').innerText = "Add Medicine to Catalogue";
+      const submitBtn = document.getElementById('medSubmitBtn');
+      if (submitBtn) submitBtn.innerText = "Save to Catalogue";
+      document.querySelectorAll('input[name="formGoals"]').forEach(cb => { cb.checked = false; });
+      openModal('medicineModal');
+    }
+
+    // 2. EDIT MEDICINE
+    function openEditMedicineModal(id) {
+      const med = medicines.find(m => m.id === id);
+      if (!med) return;
+
+      document.getElementById('formMedId').value = med.id;
+      document.getElementById('medModalTitle').innerText = `Edit Medicine: ${med.name}`;
+      const submitBtn = document.getElementById('medSubmitBtn');
+      if (submitBtn) submitBtn.innerText = "Update Medicine";
+
+      document.getElementById('formMedName').value = med.name || "";
+      document.getElementById('formMedSanskrit').value = med.sanskritName || "";
+      document.getElementById('formMedCategory').value = med.category || "CHURNA";
+      document.getElementById('formMedClassicalRef').value = med.classicalRef || "";
+      document.getElementById('formMedBenefit').value = med.benefit || med.shortDescription || "";
+      document.getElementById('formMedDesc').value = med.shortDescription || "";
+
+      const dosageParts = (med.dosageSummary || "").split(' • ');
+      document.getElementById('formMedDosageSummary').value = dosageParts[0] || "";
+      document.getElementById('formMedAnupana').value = dosageParts.slice(1).join(' • ') || "";
+
+      document.querySelectorAll('input[name="formGoals"]').forEach(cb => {
+        cb.checked = Array.isArray(med.healthGoals) && med.healthGoals.includes(cb.value);
+      });
+
+      openModal('medicineModal');
+    }
+
+    // 3. DELETE MEDICINE
+    let pendingDeleteMedicineId = null;
+
+    function deleteMedicine(id) {
+      const med = medicines.find(m => m.id === id);
+      if (!med) {
+        showToast("Medicine not found in catalogue.", "error");
+        return;
+      }
+
+      pendingDeleteMedicineId = id;
+
+      // Populate confirmation dialog info
+      const titleEl = document.getElementById('deleteModalTitle');
+      if (titleEl) titleEl.innerText = "Delete Medicine?";
+
+      const imgEl = document.getElementById('deleteModalMedImg');
+      if (imgEl) {
+        imgEl.src = med.imageUrl || 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=150&q=80';
+        imgEl.alt = med.name || 'Medicine';
+      }
+
+      const nameEl = document.getElementById('deleteModalMedName');
+      if (nameEl) nameEl.innerText = med.name || 'Ayurvedic Medicine';
+
+      const catEl = document.getElementById('deleteModalMedCategory');
+      if (catEl) {
+        catEl.innerText = `${med.category || 'Classical'} • ${med.sanskritName || (med.dosageSummary || '')}`;
+      }
+
+      // Hide any previous database error banner
+      const errAlert = document.getElementById('deleteMedicineErrorAlert');
+      if (errAlert) errAlert.classList.add('hidden');
+
+      // Reset button UI state
+      const confirmBtn = document.getElementById('confirmDeleteMedicineBtn');
+      const spinner = document.getElementById('confirmDeleteMedicineSpinner');
+      const btnText = document.getElementById('confirmDeleteMedicineText');
+      if (confirmBtn) confirmBtn.disabled = false;
+      if (spinner) spinner.classList.add('hidden');
+      if (btnText) btnText.innerText = "Delete Medicine";
+
+      // Show the confirmation dialog
+      openModal('deleteMedicineConfirmModal');
+    }
+
+    function closeDeleteMedicineModal() {
+      closeModal('deleteMedicineConfirmModal');
+      pendingDeleteMedicineId = null;
+      const errAlert = document.getElementById('deleteMedicineErrorAlert');
+      if (errAlert) errAlert.classList.add('hidden');
+    }
+
+    async function executeDeleteMedicine() {
+      if (!pendingDeleteMedicineId) return;
+
+      const medId = pendingDeleteMedicineId;
+      const med = medicines.find(m => m.id === medId);
+      const medName = med ? med.name : "This medicine";
+
+      const confirmBtn = document.getElementById('confirmDeleteMedicineBtn');
+      const spinner = document.getElementById('confirmDeleteMedicineSpinner');
+      const btnText = document.getElementById('confirmDeleteMedicineText');
+      const errAlert = document.getElementById('deleteMedicineErrorAlert');
+      const errMsg = document.getElementById('deleteMedicineErrorMessage');
+
+      if (confirmBtn) confirmBtn.disabled = true;
+      if (spinner) spinner.classList.remove('hidden');
+      if (btnText) btnText.innerText = "Deleting...";
+      if (errAlert) errAlert.classList.add('hidden');
+
+      let deleteSucceeded = false;
+      let databaseError = null;
+
+      try {
+        const res = await fetch('/api/products/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: medId })
+        });
+
+        let data = {};
+        try {
+          data = await res.json();
+        } catch (jsonErr) {
+          data = {};
+        }
+
+        if (res.ok && data.success !== false) {
+          deleteSucceeded = true;
+        } else {
+          databaseError = data.error || (res.status === 409
+            ? "Database restriction: Formulation has active clinical references or dependent records and cannot be deleted."
+            : `Database restriction (${res.status}): Unable to delete medicine from database.`);
+        }
+      } catch (netErr) {
+        console.error("Backend deletion failure:", netErr);
+        databaseError = `Database communication error: ${netErr.message || 'Unable to contact database server.'}`;
+      }
+
+      if (!deleteSucceeded) {
+        if (confirmBtn) confirmBtn.disabled = false;
+        if (spinner) spinner.classList.add('hidden');
+        if (btnText) btnText.innerText = "Delete Medicine";
+
+        const finalMsg = databaseError || "Database restriction prevented deletion of this medicine.";
+        if (errAlert && errMsg) {
+          errMsg.innerText = finalMsg;
+          errAlert.classList.remove('hidden');
+        }
+        showToast(finalMsg, "error");
+        return;
+      }
+
+      const idx = medicines.findIndex(m => m.id === medId);
+      if (idx !== -1) {
+        medicines.splice(idx, 1);
+      }
+      saveMedicinesToStorage();
+
+      renderMedicines();
+      updateMetrics();
+
+      showToast(`Medicine "${medName}" deleted successfully from catalogue.`, "success");
+      closeDeleteMedicineModal();
+    }
+
+    // 4. SEARCH & FILTER CONTROLS
+    function setHealthGoalFilter(goal) {
+      activeHealthGoal = goal;
+      document.querySelectorAll('.goal-chip').forEach(btn => {
+        if (btn.getAttribute('data-goal') === goal) {
+          btn.className = "goal-chip active-chip px-3 py-1 text-xs font-semibold rounded-full bg-moss-700 text-white shadow-sm transition cursor-pointer";
+        } else {
+          btn.className = "goal-chip px-3 py-1 text-xs font-semibold rounded-full bg-parchment-100 text-moss-900 hover:bg-parchment-200 border border-parchment-200 transition cursor-pointer";
+        }
+      });
+      renderMedicines();
+    }
+
+    function filterMedicines() {
+      renderMedicines();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('medSearchInput');
+      if (input) {
+        input.value = "";
+      }
+      renderMedicines();
+    }
+
+    function resetAllFilters() {
+      const searchInput = document.getElementById('medSearchInput');
+      if (searchInput) searchInput.value = "";
+      const catSelect = document.getElementById('medCategoryFilter');
+      if (catSelect) catSelect.value = "ALL";
+      activeHealthGoal = "ALL";
+      document.querySelectorAll('.goal-chip').forEach(btn => {
+        if (btn.getAttribute('data-goal') === "ALL") {
+          btn.className = "goal-chip active-chip px-3 py-1 text-xs font-semibold rounded-full bg-moss-700 text-white shadow-sm transition cursor-pointer";
+        } else {
+          btn.className = "goal-chip px-3 py-1 text-xs font-semibold rounded-full bg-parchment-100 text-moss-900 hover:bg-parchment-200 border border-parchment-200 transition cursor-pointer";
+        }
+      });
+      renderMedicines();
+    }
+
+    // Save Medicine (Handles both ADD and EDIT)
+    function handleSaveMedicine(e) {
+      e.preventDefault();
+      const editId = document.getElementById('formMedId').value;
+      const name = document.getElementById('formMedName').value.trim();
+      const sanskrit = document.getElementById('formMedSanskrit').value.trim();
+      const category = document.getElementById('formMedCategory').value;
+      const classicalRef = (document.getElementById('formMedClassicalRef') ? document.getElementById('formMedClassicalRef').value.trim() : "") || "Classical Ayurvedic Pharmacopoeia (AFI)";
+      const benefit = document.getElementById('formMedBenefit').value.trim();
+      const desc = document.getElementById('formMedDesc').value.trim();
+      const dosageSummary = document.getElementById('formMedDosageSummary').value.trim() || "500mg daily";
+      const anupana = (document.getElementById('formMedAnupana') ? document.getElementById('formMedAnupana').value.trim() : "") || "Warm water";
+
+      const selectedGoals = Array.from(document.querySelectorAll('input[name="formGoals"]:checked')).map(cb => cb.value);
+      const combinedDosage = anupana ? `${dosageSummary} • ${anupana}` : dosageSummary;
+
+      if (editId) {
+        // Update existing medicine
+        const existing = medicines.find(m => m.id === editId);
+        if (existing) {
+          existing.name = name;
+          existing.sanskritName = sanskrit;
+          existing.category = category;
+          existing.classicalRef = classicalRef;
+          existing.healthGoals = selectedGoals.length > 0 ? selectedGoals : ["IMMUNITY"];
+          existing.dosageSummary = combinedDosage;
+          existing.shortDescription = desc || benefit;
+          if (!existing.granularIngredients || existing.granularIngredients.length === 0) {
+            existing.granularIngredients = [
+              { sanskrit: sanskrit.split(' ')[0] || name, botanical: name, ratio: "100%", part: "Therapeutic Extract", active: "Bioactive Phyto-complex" }
+            ];
+          }
+          saveMedicinesToStorage();
+          closeModal('medicineModal');
+          renderMedicines();
+          updateMetrics();
+          showToast(`Medicine "${name}" updated successfully.`);
+          return;
+        }
+      }
+
+      // Create new medicine
+      const id = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now().toString().slice(-4);
+      const newMed = {
+        id,
+        name,
+        sanskritName: sanskrit,
+        category,
+        classicalRef,
+        healthGoals: selectedGoals.length > 0 ? selectedGoals : ["IMMUNITY"],
+        dosageSummary: combinedDosage,
+        shortDescription: desc || benefit,
+        rasa: "Tikta, Kashaya, Madhura",
+        virya: "Sheeta / Ushna Balanced",
+        vipaka: "Madhura",
+        granularIngredients: [
+          { sanskrit: sanskrit.split(' ')[0] || name, botanical: name, ratio: "100%", part: "Therapeutic Extract", active: "Classical Active Phyto-complex" }
+        ]
+      };
+
+      medicines.unshift(newMed);
+      saveMedicinesToStorage();
+      closeModal('medicineModal');
+      renderMedicines();
+      updateMetrics();
+      showToast(`Medicine "${name}" added to catalogue.`);
+    }
+
+    // Role Promotion
+    function changeUserRole(userId, newRole) {
+      const u = users.find(x => x.id === userId);
+      if (!u) return;
+      u.role = newRole;
+      renderUsers();
+      showToast(`Updated role for ${u.name} to ${newRole}.`);
+    }
+
+    // View Mode Controller for Formulations
+    let medicineViewMode = 'cards';
+    function setMedicineViewMode(mode) {
+      medicineViewMode = mode;
+      const cardsContainer = document.getElementById('medicinesCardsContainer');
+      const tableContainer = document.getElementById('medicinesTableContainer');
+      const btnCards = document.getElementById('viewBtnCards');
+      const btnTable = document.getElementById('viewBtnTable');
+
+      if (mode === 'cards') {
+        if (cardsContainer) cardsContainer.classList.remove('hidden');
+        if (tableContainer) tableContainer.classList.add('hidden');
+        if (btnCards) btnCards.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-moss-700 text-white shadow-xs";
+        if (btnTable) btnTable.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold text-moss-900 hover:text-moss-700 transition flex items-center gap-1.5";
+      } else {
+        if (cardsContainer) cardsContainer.classList.add('hidden');
+        if (tableContainer) tableContainer.classList.remove('hidden');
+        if (btnCards) btnCards.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold text-moss-900 hover:text-moss-700 transition flex items-center gap-1.5";
+        if (btnTable) btnTable.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-moss-700 text-white shadow-xs";
+      }
+    }
+
+    // Render Helpers
+    function renderMedicines() {
+      const searchInput = document.getElementById('medSearchInput');
+      const search = (searchInput?.value || "").trim().toLowerCase();
+      const categoryFilter = document.getElementById('medCategoryFilter')?.value || "ALL";
+
+      // Toggle Clear Search button
+      const clearSearchBtn = document.getElementById('clearSearchBtn');
+      if (clearSearchBtn) {
+        if (search) clearSearchBtn.classList.remove('hidden');
+        else clearSearchBtn.classList.add('hidden');
+      }
+
+      // Check if any filter is active
+      const isFiltered = Boolean(search) || categoryFilter !== "ALL" || activeHealthGoal !== "ALL";
+      const filterBadge = document.getElementById('activeFilterBadge');
+      if (filterBadge) {
+        if (isFiltered) filterBadge.classList.remove('hidden');
+        else filterBadge.classList.add('hidden');
+      }
+      const resetBtn = document.getElementById('resetFiltersBtn');
+      if (resetBtn) {
+        if (isFiltered) resetBtn.classList.remove('hidden');
+        else resetBtn.classList.add('hidden');
+      }
+
+      const tbody = document.getElementById('medicinesTableBody');
+      const cardsContainer = document.getElementById('medicinesCardsContainer');
+      if (tbody) tbody.innerHTML = "";
+      if (cardsContainer) cardsContainer.innerHTML = "";
+
+      const filtered = medicines.filter(m => {
+        const matchesGoal = activeHealthGoal === "ALL" || (m.healthGoals && m.healthGoals.includes(activeHealthGoal));
+        const matchesCategory = categoryFilter === "ALL" || m.category === categoryFilter;
+
+        const herbString = (m.granularIngredients || []).map(i => `${i.sanskrit || ''} ${i.botanical || ''} ${i.active || ''}`).join(' ');
+        const goalString = (m.healthGoals || []).join(' ');
+        const searchableContent = `${m.name} ${m.sanskritName} ${m.category} ${m.classicalRef || ''} ${m.shortDescription || ''} ${m.dosageSummary || ''} ${herbString} ${goalString}`.toLowerCase();
+
+        const matchesSearch = !search || searchableContent.includes(search);
+        return matchesGoal && matchesCategory && matchesSearch;
+      });
+
+      // Update Filter counts in UI
+      const countEl = document.getElementById('filterMatchCount');
+      if (countEl) countEl.innerText = filtered.length;
+      const totalEl = document.getElementById('filterTotalCount');
+      if (totalEl) totalEl.innerText = medicines.length;
+
+      if (filtered.length === 0) {
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-gray-500 font-medium">No medicines found matching criteria. <button onclick="resetAllFilters()" class="text-moss-700 underline font-semibold ml-2">Reset filters</button></td></tr>`;
+        if (cardsContainer) cardsContainer.innerHTML = `<div class="col-span-full py-14 text-center text-gray-500 font-medium bg-white/60 rounded-2xl border border-dashed border-gray-300">No medicines found in catalogue matching criteria.<br><button onclick="resetAllFilters()" class="mt-3 px-4 py-1.5 text-xs font-semibold bg-moss-700 text-white rounded-xl shadow">Reset all filters</button></div>`;
+        return;
+      }
+
+      filtered.forEach(m => {
+        const goalBadges = (m.healthGoals || []).map(g => {
+          const map = {
+            DIGESTION: "🌱 Digestion",
+            IMMUNITY: "🛡️ Immunity",
+            STRESS_RELIEF: "🧘 Stress",
+            COGNITION: "🧠 Focus",
+            SKIN_HEALTH: "✨ Skin",
+            JOINT_MOBILITY: "🦴 Joints",
+            DETOX: "💧 Detox"
+          };
+          return `<span class="inline-block bg-parchment-100 border border-parchment-200 text-[10px] font-semibold text-moss-800 px-2 py-0.5 rounded-full mr-1">${map[g] || g}</span>`;
+        }).join('');
+
+        // 1. Render Flippable 3D Glass Card
+        if (cardsContainer) {
+          const cardDiv = document.createElement('div');
+          cardDiv.className = "liquid-glass-card has-flip rounded-2xl min-h-[400px] flex flex-col justify-between";
+          cardDiv.setAttribute('data-id', m.id);
+
+          const ingredientsList = (m.granularIngredients || []).map(ing => `
+            <div class="p-2 rounded-lg bg-white/85 border border-emerald-900/10 shadow-2xs text-[11px]">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-moss-900">${ing.sanskrit}</span>
+                <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200 font-bold">${ing.ratio}</span>
+              </div>
+              <div class="text-[10px] text-gray-600 italic mt-0.5">${ing.botanical}</div>
+              <div class="flex items-center justify-between text-[10px] text-gray-500 mt-1 pt-1 border-t border-gray-100">
+                <span>Part: <strong class="text-gray-700">${ing.part}</strong></span>
+                <span class="truncate ml-1">Active: <strong class="text-emerald-800">${ing.active}</strong></span>
+              </div>
+            </div>
+          `).join('');
+
+          cardDiv.innerHTML = `
+            <!-- FRONT FACE -->
+            <div class="glass-card-front p-5 flex flex-col justify-between h-full">
+              <div>
+                <div class="flex items-start justify-between gap-2 mb-2">
+                  <span class="bg-moss-100 text-moss-900 font-bold text-[10px] px-2.5 py-1 rounded-md border border-moss-200 uppercase tracking-wider">${m.category}</span>
+                  <span class="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">AFI Verified</span>
+                </div>
+                <h3 class="font-serif font-bold text-base text-moss-900 leading-snug">${m.name}</h3>
+                <p class="text-xs text-amberGold font-semibold italic mt-0.5">${m.sanskritName}</p>
+                
+                <div class="flex flex-wrap gap-1 mt-2.5">${goalBadges}</div>
+                
+                <div class="text-xs text-gray-600 mt-2.5 line-clamp-2 leading-relaxed">
+                  ${m.shortDescription}
+                </div>
+
+                <div class="mt-2.5 pt-2 border-t border-black/5 text-[11px] text-moss-800">
+                  <span class="font-semibold text-gray-500">Classical Reference:</span> ${m.classicalRef || 'Ayurvedic Formulary of India (AFI)'}
+                </div>
+              </div>
+
+              <!-- Card Action Controls -->
+              <div class="border-t border-black/5 pt-3 mt-3 flex items-center justify-between gap-2">
+                <div class="text-[11px] text-gray-600 font-medium truncate flex-1" title="${m.dosageSummary}">
+                  💊 ${m.dosageSummary}
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button type="button" onclick="event.stopPropagation(); openEditMedicineModal('${m.id}')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition cursor-pointer" title="Edit this medicine">
+                    ✏️ Edit
+                  </button>
+                  <button type="button" onclick="event.stopPropagation(); deleteMedicine('${m.id}')" class="px-2 py-1 text-xs font-semibold rounded-lg bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 transition cursor-pointer" title="Delete from Catalogue">
+                    🗑️
+                  </button>
+                  <button type="button" class="secondary-info-btn glass-card-info-btn px-2.5 py-1 text-xs cursor-pointer" data-action="flip-card" title="Inspect botanical ingredients">
+                    <span>🌿</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- BACK FACE (Granular Botanical Ingredient Details) -->
+            <div class="glass-card-back p-4 flex flex-col justify-between h-full">
+              <div class="flex-1 overflow-y-auto custom-scroll pr-1">
+                <div class="flex items-center justify-between border-b border-gray-200/80 pb-2 mb-2.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs">🌿</span>
+                    <span class="text-[11px] font-bold text-moss-900 uppercase tracking-wider">Granular Ingredients</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <button type="button" class="glass-card-flip-back-btn" data-action="flip-card" title="Flip back to overview">
+                      <span>↩ Back</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="mb-2">
+                  <h4 class="font-serif font-bold text-sm text-moss-900">${m.name}</h4>
+                  <div class="text-[11px] text-emerald-700 font-semibold italic">${m.classicalRef || 'Classical Ayurvedic Pharmacopoeia'}</div>
+                </div>
+
+                <!-- Granular ingredients list -->
+                <div class="space-y-1.5">
+                  ${ingredientsList}
+                </div>
+
+                <!-- Pharmacopeia Profile -->
+                <div class="mt-2.5 p-2 rounded-lg bg-emerald-50/80 border border-emerald-200/80 text-[10px] text-emerald-950">
+                  <div class="font-bold uppercase tracking-wider text-[9px] text-emerald-800 mb-0.5">Ayurvedic Energetics:</div>
+                  <div>Rasa: <strong>${m.rasa || 'Tikta, Kashaya'}</strong></div>
+                  <div class="flex items-center justify-between mt-0.5">
+                    <span>Virya: <strong>${m.virya || 'Ushna'}</strong></span>
+                    <span>Vipaka: <strong>${m.vipaka || 'Madhura'}</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-2.5 border-t border-gray-200/80 flex items-center justify-between mt-2">
+                <button type="button" onclick="event.stopPropagation(); openEditMedicineModal('${m.id}')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition cursor-pointer">
+                  ✏️ Edit Details
+                </button>
+                <button type="button" class="glass-card-flip-back-btn" data-action="flip-card">
+                  <span>↩ Return to Front</span>
+                </button>
+              </div>
+            </div>
+          `;
+          cardsContainer.appendChild(cardDiv);
+        }
+
+        // 2. Render Table Row
+        if (tbody) {
+          const tr = document.createElement('tr');
+          tr.className = "medicine-table-row hover:bg-parchment-50 transition border-b border-parchment-100 cursor-pointer";
+          tr.innerHTML = `
+            <td class="py-3 px-4">
+              <div class="font-bold text-moss-900">${m.name}</div>
+              <div class="text-xs text-amberGold font-medium">${m.sanskritName}</div>
+            </td>
+            <td class="py-3 px-4">
+              <span class="bg-moss-100 text-moss-800 font-bold text-[11px] px-2.5 py-1 rounded-md border border-moss-200">${m.category}</span>
+            </td>
+            <td class="py-3 px-4 text-xs font-medium text-emerald-800">
+              ${m.classicalRef || 'AFI Classical Reference'}
+            </td>
+            <td class="py-3 px-4">
+              <div class="flex flex-wrap gap-1">${goalBadges}</div>
+            </td>
+            <td class="py-3 px-4 text-xs text-gray-600">
+              ${m.dosageSummary}
+            </td>
+            <td class="py-3 px-4 text-right whitespace-nowrap space-x-1.5">
+              <button onclick="openEditMedicineModal('${m.id}')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition cursor-pointer" title="Edit Medicine">✏️ Edit</button>
+              <button onclick="setMedicineViewMode('cards'); const c = document.querySelector('[data-id=\\'${m.id}\\']'); if(c){ c.scrollIntoView({behavior:'smooth'}); c.classList.add('is-flipped'); }" class="secondary-info-btn text-xs cursor-pointer" title="Inspect Botanicals">🌿 Botanicals</button>
+              <button onclick="deleteMedicine('${m.id}')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition cursor-pointer" title="Remove from Catalogue">🗑️ Delete</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        }
+      });
+    }
+
+    function renderUsers() {
+      const tbody = document.getElementById('usersTableBody');
+      tbody.innerHTML = "";
+      users.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-parchment-50 transition border-b border-parchment-100";
+        tr.innerHTML = `
+          <td class="py-3 px-4">
+            <div class="font-bold text-moss-900">${u.name}</div>
+            <div class="text-xs text-gray-500">${u.email}</div>
+          </td>
+          <td class="py-3 px-4">
+            <select onchange="changeUserRole('${u.id}', this.value)" class="text-xs font-semibold bg-white border border-parchment-200 rounded-lg px-2.5 py-1 focus:ring-2 focus:ring-moss-500 outline-none">
+              <option value="ADMIN" ${u.role === 'ADMIN' ? 'selected' : ''}>⚡ Administrator</option>
+              <option value="PRACTITIONER" ${u.role === 'PRACTITIONER' ? 'selected' : ''}>⚕️ Practitioner (BAMS)</option>
+              <option value="PATIENT" ${u.role === 'PATIENT' ? 'selected' : ''}>🌿 Wellness Seeker</option>
+            </select>
+          </td>
+          <td class="py-3 px-4 text-xs text-gray-600">
+            ${u.role === 'ADMIN' ? 'Full administration, catalogue governance, and role management' : u.role === 'PRACTITIONER' ? 'Clinical assessments, custom dosages, patient review' : 'Personal daily regimens & remedy catalog'}
+          </td>
+          <td class="py-3 px-4">
+            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+              ✓ Verified
+            </span>
+          </td>
+          <td class="py-3 px-4 text-right">
+            <span class="text-xs font-semibold text-emerald-700">Active</span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateMetrics() {
+      if (document.getElementById('statTotalMedicines')) {
+        document.getElementById('statTotalMedicines').innerText = medicines.length;
+      }
+      if (document.getElementById('tabMedCountBadge')) {
+        document.getElementById('tabMedCountBadge').innerText = medicines.length;
+      }
+    }
+
+    // ==========================================
+    // SUPABASE CLOUD DATABASE INTEGRATION & LIVE MONITOR
+    // ==========================================
+    const DEFAULT_SUPABASE_URL = "https://ksnsfilauqzxsegpjpdt.supabase.co";
+    const DEFAULT_SUPABASE_KEY = "sb_secret_YB3vSW9nBcJd-9CXXMkjww_eCDvaprk";
+
+    let supabaseState = {
+      connected: false,
+      url: DEFAULT_SUPABASE_URL,
+      key: DEFAULT_SUPABASE_KEY,
+      latency: null,
+      lastChecked: null,
+      tables: { products: true, categories: true, admins: true }
+    };
+
+    function toggleSbKeyVisibility() {
+      const input = document.getElementById('sb-config-key');
+      const btn = document.getElementById('btn-toggle-sb-key');
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = 'Hide';
+      } else {
+        input.type = 'password';
+        btn.textContent = 'Show';
+      }
+    }
+
+    function updateSupabaseUI(status) {
+      const isConn = !!status.connected;
+      const url = status.url || DEFAULT_SUPABASE_URL;
+      const host = url ? url.replace(/^https?:\/\//, '').split('/')[0] : 'Not Connected';
+      const latencyStr = status.latency ? `${status.latency}ms` : '~120ms';
+
+      // 1. Header Badge
+      const headerDot = document.getElementById('supabaseHeaderDot');
+      const headerText = document.getElementById('supabaseHeaderText');
+      const headerBadge = document.getElementById('supabaseHeaderBadge');
+      if (headerDot && headerText) {
+        if (isConn) {
+          headerDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400";
+          headerText.textContent = `Supabase: Connected (${host.split('.')[0]})`;
+          if (headerBadge) headerBadge.title = `Supabase PostgreSQL Connected: ${url} (${latencyStr})`;
+        } else {
+          headerDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400";
+          headerText.textContent = `Supabase: Connect Database`;
+          if (headerBadge) headerBadge.title = `Supabase not connected. Click to configure credentials.`;
+        }
+      }
+
+      // 2. Modal Status Card
+      const modalDot = document.getElementById('sb-modal-dot');
+      const modalStatusText = document.getElementById('sb-modal-status-text');
+      const modalPing = document.getElementById('sb-modal-ping');
+      const modalEndpoint = document.getElementById('sb-modal-endpoint');
+      if (modalStatusText) {
+        if (isConn) {
+          if (modalDot) modalDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-md shadow-emerald-400";
+          modalStatusText.textContent = "Connected to Cloud Database";
+          modalStatusText.className = "text-xs font-bold uppercase tracking-wider text-emerald-300";
+          if (modalPing) modalPing.textContent = `200 OK • ${latencyStr}`;
+        } else {
+          if (modalDot) modalDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400";
+          modalStatusText.textContent = status.message || "Disconnected";
+          modalStatusText.className = "text-xs font-bold uppercase tracking-wider text-amber-300";
+          if (modalPing) modalPing.textContent = "Unreachable";
+        }
+      }
+      if (modalEndpoint) {
+        modalEndpoint.textContent = url || "None configured";
+        modalEndpoint.title = url;
+      }
+    }
+
+    async function initSupabaseConnection() {
+      const savedUrl = localStorage.getItem('ayurguide_supabase_url') || DEFAULT_SUPABASE_URL;
+      const savedKey = localStorage.getItem('ayurguide_supabase_key') || DEFAULT_SUPABASE_KEY;
+
+      const urlInput = document.getElementById('sb-config-url');
+      const keyInput = document.getElementById('sb-config-key');
+      if (urlInput) urlInput.value = savedUrl;
+      if (keyInput) keyInput.value = savedKey;
+
+      supabaseState.url = savedUrl;
+      supabaseState.key = savedKey;
+
+      await testSupabaseConnectionNow(false);
+    }
+
+    async function testSupabaseConnectionNow(showAlert = true) {
+      const urlInput = document.getElementById('sb-config-url');
+      const keyInput = document.getElementById('sb-config-key');
+      const alertBox = document.getElementById('sb-feedback-alert');
+      const pingIcon = document.getElementById('btn-test-sb-icon');
+
+      const url = (urlInput ? urlInput.value.trim() : '') || supabaseState.url || DEFAULT_SUPABASE_URL;
+      const key = (keyInput ? keyInput.value.trim() : '') || supabaseState.key || DEFAULT_SUPABASE_KEY;
+
+      if (pingIcon) pingIcon.classList.add('animate-spin');
+
+      const t0 = performance.now();
+      let isSuccess = false;
+      let latencyMs = 0;
+      let statusMsg = "";
+
+      try {
+        const res = await fetch('/api/supabase/status', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await res.json();
+        latencyMs = Math.round(performance.now() - t0);
+
+        if (res.ok && data.success) {
+          isSuccess = true;
+          statusMsg = data.message || "Connected successfully to Supabase cloud database!";
+          supabaseState.url = data.url || url;
+        } else if (data.schema_needed) {
+          isSuccess = true;
+          statusMsg = data.message;
+          supabaseState.url = data.url || url;
+        } else {
+          const restRes = await fetch(`${url.replace(/\/$/, '')}/rest/v1/categories?select=id,name&limit=1`, {
+            method: 'GET',
+            headers: {
+              'apikey': key,
+              'Authorization': `Bearer ${key}`,
+              'Accept': 'application/json'
+            }
+          });
+          latencyMs = Math.round(performance.now() - t0);
+          if (restRes.ok) {
+            isSuccess = true;
+            statusMsg = "Connected directly to Supabase cloud database!";
+          } else {
+            statusMsg = `Supabase returned HTTP ${restRes.status}`;
+          }
+        }
+      } catch(err) {
+        try {
+          const restRes = await fetch(`${url.replace(/\/$/, '')}/rest/v1/categories?select=id,name&limit=1`, {
+            method: 'GET',
+            headers: {
+              'apikey': key,
+              'Authorization': `Bearer ${key}`,
+              'Accept': 'application/json'
+            }
+          });
+          latencyMs = Math.round(performance.now() - t0);
+          if (restRes.ok) {
+            isSuccess = true;
+            statusMsg = "Connected directly to Supabase cloud database!";
+          } else {
+            statusMsg = `Supabase request failed: HTTP ${restRes.status}`;
+          }
+        } catch(e2) {
+          latencyMs = Math.round(performance.now() - t0);
+          statusMsg = "Cannot reach Supabase endpoint. Please verify network.";
+        }
+      }
+
+      if (pingIcon) pingIcon.classList.remove('animate-spin');
+
+      supabaseState.connected = isSuccess;
+      supabaseState.latency = latencyMs;
+      supabaseState.lastChecked = new Date();
+
+      updateSupabaseUI({
+        connected: isSuccess,
+        url: url,
+        latency: latencyMs,
+        message: statusMsg
+      });
+
+      if (showAlert && alertBox) {
+        alertBox.classList.remove('hidden');
+        if (isSuccess) {
+          alertBox.className = "p-3 rounded-xl text-xs flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800";
+          alertBox.innerHTML = `<span>✓</span> <span><strong>Connection Verified:</strong> ${statusMsg} (${latencyMs}ms)</span>`;
+        } else {
+          alertBox.className = "p-3 rounded-xl text-xs flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800";
+          alertBox.innerHTML = `<span>⚠️</span> <span><strong>Connection Warning:</strong> ${statusMsg}</span>`;
+        }
+      }
+    }
+
+    async function handleSaveSupabaseConfig(e) {
+      if (e) e.preventDefault();
+      const url = document.getElementById('sb-config-url').value.trim();
+      const key = document.getElementById('sb-config-key').value.trim();
+      const btn = document.getElementById('btn-save-sb');
+
+      if (!url || !key) {
+        alert("Please provide both Supabase Project URL and API Key.");
+        return;
+      }
+
+      if (btn) btn.innerHTML = `<span>⏳</span> <span>Connecting...</span>`;
+
+      localStorage.setItem('ayurguide_supabase_url', url);
+      localStorage.setItem('ayurguide_supabase_key', key);
+      supabaseState.url = url;
+      supabaseState.key = key;
+
+      try {
+        await fetch('/api/supabase/configure', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, key })
+        });
+      } catch(err) {
+        console.warn("Backend configuration call failed, continuing with local storage credentials:", err);
+      }
+
+      await testSupabaseConnectionNow(true);
+
+      if (btn) btn.innerHTML = `<span>💾</span> <span>Save & Connect</span>`;
+      alert("Supabase configuration saved! Connection active.");
+    }
+
+    // Mouse-tracked 3D Parallax Tilt Effect with Magnetic Snapping Gravitation & Refraction
+    function initParallaxCards() {
+      let activeMagneticCard = null;
+      let magneticTimer = null;
+
+      document.addEventListener('mousemove', (e) => {
+        const card = e.target.closest('.liquid-glass-card');
+        if (!card) return;
+
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left; // x position within element
+        const y = e.clientY - rect.top;  // y position within element
+
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        // Magnetic Snapping Transition:
+        // When cursor enters a card, briefly trigger a snap transition so the card
+        // noticeably gravitates toward the cursor before normal continuous tracking engages.
+        if (activeMagneticCard !== card) {
+          if (activeMagneticCard && activeMagneticCard !== card) {
+            activeMagneticCard.classList.remove('is-magnetic-snapping');
+          }
+          activeMagneticCard = card;
+          card.classList.add('is-magnetic-snapping');
+          clearTimeout(magneticTimer);
+          const snapDuration = (document.body.getAttribute('data-motion') === 'snappy') ? 220 : 340;
+          magneticTimer = setTimeout(() => {
+            if (activeMagneticCard) {
+              activeMagneticCard.classList.remove('is-magnetic-snapping');
+            }
+          }, snapDuration);
+        }
+
+        // Magnetic Gravitation:
+        // Physical translation subtly pulling the card center toward cursor
+        const magnetStrength = 10;
+        const magnetPullX = ((x - centerX) / centerX) * magnetStrength;
+        const magnetPullY = ((y - centerY) / centerY) * magnetStrength;
+
+        // Calculate rotation limits based on tilt magnitude
+        const mag = (typeof currentTiltMagnitude === 'number') ? currentTiltMagnitude : 7.5;
+        const rotateX = ((centerY - y) / centerY) * mag;
+        const rotateY = ((x - centerX) / centerX) * mag;
+
+        // Opposing light & shadow offsets for true frosted glass refraction
+        const shadowOffsetX = (-rotateY * 1.5).toFixed(1);
+        const shadowOffsetY = (rotateX * 1.5).toFixed(1);
+        const lightOffsetX = (rotateY * 1.8).toFixed(1);
+        const lightOffsetY = (-rotateX * 1.8).toFixed(1);
+
+        // Calculate percentage positions for CSS radial gradients
+        const pctX = ((x / rect.width) * 100).toFixed(1);
+        const pctY = ((y / rect.height) * 100).toFixed(1);
+        const oppPctX = (100 - (x / rect.width) * 100).toFixed(1);
+        const oppPctY = (100 - (y / rect.height) * 100).toFixed(1);
+
+        // Update CSS variables for reflection & opposite inner shadow
+        card.style.setProperty('--mouse-x', `${pctX}%`);
+        card.style.setProperty('--mouse-y', `${pctY}%`);
+        card.style.setProperty('--shadow-x', `${oppPctX}%`);
+        card.style.setProperty('--shadow-y', `${oppPctY}%`);
+        card.style.setProperty('--glare-opacity', '1');
+        card.style.setProperty(
+          '--glass-inner-shadow',
+          `inset ${lightOffsetX}px ${lightOffsetY}px 12px 0 rgba(255, 255, 255, 0.85), inset ${shadowOffsetX}px ${shadowOffsetY}px 18px 0 rgba(4, 38, 20, 0.16)`
+        );
+
+        // Magnetic translation + elevation + 3D tilt
+        card.style.transform = `perspective(1000px) translate3d(${magnetPullX.toFixed(2)}px, ${(magnetPullY - 4).toFixed(2)}px, 0) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale(1.018)`;
+        
+        // Parallax depth shift on inner children with magnetic gravitation factor
+        // (Excluding .glass-card-front and .glass-card-back to preserve 3D card flip rotations)
+        const children = card.children;
+        for (let i = 0; i < children.length; i++) {
+          if (children[i].classList.contains('glass-card-front') || children[i].classList.contains('glass-card-back')) {
+            continue;
+          }
+          children[i].style.transform = `translateZ(20px) translateX(${((rotateY * 0.55) + (magnetPullX * 0.35)).toFixed(2)}px) translateY(${((-rotateX * 0.55) + (magnetPullY * 0.35)).toFixed(2)}px)`;
+        }
+      });
+
+      document.addEventListener('mouseout', (e) => {
+        const card = e.target.closest('.liquid-glass-card');
+        if (!card) return;
+        // Check if cursor actually left the card
+        if (!card.contains(e.relatedTarget)) {
+          if (activeMagneticCard === card) {
+            card.classList.remove('is-magnetic-snapping');
+            activeMagneticCard = null;
+            clearTimeout(magneticTimer);
+          }
+          card.style.transform = 'perspective(1000px) translate3d(0px, 0px, 0px) rotateX(0deg) rotateY(0deg) scale(1)';
+          card.style.setProperty('--glare-opacity', '0');
+          card.style.removeProperty('--glass-inner-shadow');
+          const children = card.children;
+          for (let i = 0; i < children.length; i++) {
+            if (children[i].classList.contains('glass-card-front') || children[i].classList.contains('glass-card-back')) {
+              continue;
+            }
+            children[i].style.transform = 'translateZ(0px) translateX(0px) translateY(0px)';
+          }
+        }
+      });
+
+      // Universal 3D Flip Handler for .liquid-glass-card
+      document.addEventListener('click', (e) => {
+        const flipBtn = e.target.closest('[data-action="flip-card"], .secondary-info-btn, .glass-card-info-btn, .glass-card-flip-back-btn');
+        if (flipBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const card = flipBtn.closest('.liquid-glass-card');
+          if (card) {
+            card.classList.toggle('is-flipped');
+          }
+        }
+      });
+    }
+
+    function generateFormulationQrSvg(text, title, subtitle, code) {
+      if (typeof QRCode === 'undefined') {
+        console.warn('QRCode library is not loaded');
+        return null;
+      }
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '-9999px';
+      document.body.appendChild(tempDiv);
+
+      let moduleCount = 0;
+      let modules = null;
+
+      try {
+        const qr = new QRCode(tempDiv, {
+          text: text,
+          width: 256,
+          height: 256,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+
+        if (qr && qr._oQRCode && typeof qr._oQRCode.getModuleCount === 'function') {
+          moduleCount = qr._oQRCode.getModuleCount();
+          modules = [];
+          for (let r = 0; r < moduleCount; r++) {
+            const row = [];
+            for (let c = 0; c < moduleCount; c++) {
+              row.push(qr._oQRCode.isDark(r, c));
+            }
+            modules.push(row);
+          }
+        }
+      } catch (e) {
+        console.error('Error generating QR code modules for SVG:', e);
+      } finally {
+        if (tempDiv.parentNode) {
+          tempDiv.parentNode.removeChild(tempDiv);
+        }
+      }
+
+      if (!modules || moduleCount === 0) {
+        return null;
+      }
+
+      const scale = 8;
+      const quietZone = 4;
+      const qrPixelSize = (moduleCount + (quietZone * 2)) * scale;
+      const headerHeight = 64;
+      const footerHeight = 48;
+      const totalWidth = qrPixelSize;
+      const totalHeight = headerHeight + qrPixelSize + footerHeight;
+
+      let pathD = '';
+      for (let r = 0; r < moduleCount; r++) {
+        for (let c = 0; c < moduleCount; c++) {
+          if (modules[r][c]) {
+            const x = (c + quietZone) * scale;
+            const y = headerHeight + ((r + quietZone) * scale);
+            pathD += `M${x},${y}h${scale}v${scale}h-${scale}z `;
+          }
+        }
+      }
+
+      const escapeXml = (str) => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const cleanTitle = escapeXml(title || 'Ayurvedic Classical Formulation');
+      const cleanSub = escapeXml(subtitle || 'SITARAM AYURVEDA');
+      const cleanCode = escapeXml(code || 'ESTD-1921');
+      const cleanUrl = escapeXml(text);
+
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 ${totalWidth} ${totalHeight}" width="${totalWidth}" height="${totalHeight}" shape-rendering="crispEdges">
+  <title>${cleanTitle} - Formulation QR Code</title>
+  <desc>${cleanUrl}</desc>
+  <defs>
+    <style>
+      .bg-panel { fill: #FAF8F5; }
+      .qr-card-border { stroke: #DFB15B; stroke-width: 3; fill: none; }
+      .brand-sub { font-family: 'Plus Jakarta Sans', Arial, sans-serif; font-size: 11px; font-weight: 700; fill: #9A7B38; text-anchor: middle; letter-spacing: 1px; }
+      .brand-title { font-family: 'Playfair Display', Georgia, serif; font-size: 17px; font-weight: bold; fill: #0F382C; text-anchor: middle; }
+      .qr-canvas-bg { fill: #FFFFFF; }
+      .qr-module { fill: #0F382C; }
+      .footer-lead { font-family: 'Plus Jakarta Sans', Arial, sans-serif; font-size: 10px; font-weight: 700; fill: #0F382C; text-anchor: middle; letter-spacing: 0.5px; }
+      .footer-meta { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 9px; fill: #4B5563; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="${totalWidth}" height="${totalHeight}" rx="16" class="bg-panel"/>
+  <rect x="2" y="2" width="${totalWidth - 4}" height="${totalHeight - 4}" rx="14" class="qr-card-border"/>
+
+  <!-- Brand & Formulation Header -->
+  <text x="${totalWidth / 2}" y="26" class="brand-sub">${cleanSub} • ESTD 1921</text>
+  <text x="${totalWidth / 2}" y="48" class="brand-title">${cleanTitle}</text>
+
+  <!-- QR Matrix Container -->
+  <rect x="${quietZone * scale / 2}" y="${headerHeight}" width="${totalWidth - (quietZone * scale)}" height="${qrPixelSize}" class="qr-canvas-bg" rx="6"/>
+  <path class="qr-module" d="${pathD.trim()}"/>
+
+  <!-- Footer & Verification Notice -->
+  <text x="${totalWidth / 2}" y="${headerHeight + qrPixelSize + 20}" class="footer-lead">❖ SCAN FOR CLINICAL MONOGRAPH &amp; DOSAGE ❖</text>
+  <text x="${totalWidth / 2}" y="${headerHeight + qrPixelSize + 36}" class="footer-meta">Catalogue Code: ${cleanCode} • AFI Classical Reference</text>
+</svg>`;
+    }
+
+    function downloadMedicineQrSvg(id) {
+      let med = (typeof medicines !== 'undefined' && Array.isArray(medicines)) ? medicines.find(m => m.id === id) : null;
+      if (!med) {
+        med = { id: id, name: id, code: id };
+      }
+      const origin = window.location.origin;
+      const targetUrl = `${origin}/monograph?id=${encodeURIComponent(med.id || med.code)}`;
+      const svgString = generateFormulationQrSvg(
+        targetUrl,
+        med.name,
+        'SITARAM AYURVEDA',
+        med.code || med.id
+      );
+      if (!svgString) {
+        alert('Could not generate SVG QR Code. Ensure QRCode generator is initialized.');
+        return;
+      }
+      const sanitizedName = (med.name || 'Formulation').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `${sanitizedName}_QR.svg`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        if (a.parentNode) a.parentNode.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      }, 250);
+    }
+
+    let currentTiltMagnitude = parseFloat(localStorage.getItem('glass_parallax_tilt') || '7.5');
+
+    function applyTiltMagnitude(val) {
+      currentTiltMagnitude = Math.max(0, Math.min(25, parseFloat(val) || 7.5));
+      document.documentElement.style.setProperty('--glass-tilt-magnitude', `${currentTiltMagnitude}deg`);
+    }
+
+    function setTiltMagnitude(val) {
+      applyTiltMagnitude(val);
+      localStorage.setItem('glass_parallax_tilt', currentTiltMagnitude);
+
+      const display = document.getElementById('admin-tilt-display');
+      if (display) {
+        display.textContent = `${currentTiltMagnitude.toFixed(1)}°`;
+      }
+      const slider = document.getElementById('admin-tilt-slider');
+      if (slider && slider.value !== String(currentTiltMagnitude)) {
+        slider.value = currentTiltMagnitude;
+      }
+      const modalDisplay = document.getElementById('modal-tilt-display');
+      if (modalDisplay) {
+        modalDisplay.textContent = `${currentTiltMagnitude.toFixed(1)}°`;
+      }
+      const modalSlider = document.getElementById('modal-tilt-slider');
+      if (modalSlider && modalSlider.value !== String(currentTiltMagnitude)) {
+        modalSlider.value = currentTiltMagnitude;
+      }
+    }
+
+    function setParallaxMotionMode(mode) {
+      const validMode = (mode === 'fluid' || mode === 'snappy') ? mode : 'default';
+      document.body.setAttribute('data-motion', validMode);
+      
+      if (validMode === 'snappy') {
+        document.documentElement.style.setProperty('--glass-motion-duration', '0.08s');
+        document.documentElement.style.setProperty('--glass-motion-timing', 'cubic-bezier(0.1, 0.9, 0.2, 1)');
+        document.documentElement.style.setProperty('--glass-shadow-duration', '0.12s');
+        document.documentElement.style.setProperty('--glass-magnetic-timing', 'cubic-bezier(0.2, 1.6, 0.4, 1)');
+        document.documentElement.style.setProperty('--glass-magnetic-duration', '0.22s');
+      } else if (validMode === 'fluid') {
+        document.documentElement.style.setProperty('--glass-motion-duration', '0.35s');
+        document.documentElement.style.setProperty('--glass-motion-timing', 'cubic-bezier(0.25, 1, 0.5, 1)');
+        document.documentElement.style.setProperty('--glass-shadow-duration', '0.45s');
+        document.documentElement.style.setProperty('--glass-magnetic-timing', 'cubic-bezier(0.25, 1.25, 0.4, 1)');
+        document.documentElement.style.setProperty('--glass-magnetic-duration', '0.45s');
+      } else {
+        // default balanced mode
+        document.documentElement.style.setProperty('--glass-motion-duration', '0.15s');
+        document.documentElement.style.setProperty('--glass-motion-timing', 'cubic-bezier(0.2, 0.9, 0.3, 1)');
+        document.documentElement.style.setProperty('--glass-shadow-duration', '0.2s');
+        document.documentElement.style.setProperty('--glass-magnetic-timing', 'cubic-bezier(0.34, 1.56, 0.64, 1)');
+        document.documentElement.style.setProperty('--glass-magnetic-duration', '0.32s');
+      }
+      localStorage.setItem('glass_parallax_motion', validMode);
+
+      // Update Header Motion Buttons
+      const btnDefault = document.getElementById('admin-motion-toggle-default');
+      const btnSnappy = document.getElementById('admin-motion-toggle-snappy');
+      const btnFluid = document.getElementById('admin-motion-toggle-fluid');
+      const activeClass = 'px-2 py-0.5 text-xs font-bold rounded bg-emerald-500 text-moss-900 shadow-sm transition flex items-center';
+      const inactiveClass = 'px-2 py-0.5 text-xs font-semibold rounded text-parchment-200 hover:text-white transition flex items-center';
+      
+      if (btnDefault) btnDefault.className = (validMode === 'default') ? activeClass : inactiveClass;
+      if (btnSnappy) btnSnappy.className = (validMode === 'snappy') ? activeClass : inactiveClass;
+      if (btnFluid) btnFluid.className = (validMode === 'fluid') ? activeClass : inactiveClass;
+
+      // Update Header User Profile Badge
+      const userBadge = document.getElementById('admin-user-active-motion-badge');
+      if (userBadge) {
+        userBadge.textContent = validMode;
+      }
+
+      // Update User Settings Modal Badges & Cards
+      const modalBadge = document.getElementById('modal-active-motion-attr');
+      if (modalBadge) {
+        modalBadge.textContent = `data-motion="${validMode}"`;
+      }
+
+      ['default', 'snappy', 'fluid'].forEach(m => {
+        const card = document.getElementById(`settings-motion-card-${m}`);
+        const check = document.getElementById(`settings-motion-check-${m}`);
+        if (card) {
+          if (m === validMode) {
+            card.className = 'relative rounded-2xl p-3.5 border transition cursor-pointer flex flex-col justify-between group bg-emerald-900/40 border-emerald-400 ring-2 ring-emerald-500/40 shadow-lg';
+          } else {
+            card.className = 'relative rounded-2xl p-3.5 border transition cursor-pointer flex flex-col justify-between group bg-white/5 hover:bg-white/10 border-white/10';
+          }
+        }
+        if (check) {
+          check.classList.toggle('hidden', m !== validMode);
+        }
+      });
+    }
+
+    // =======================================================
+    // ADMIN AUTHENTICATION CONTROLLER (Login-First Gate)
+    // =======================================================
+    let currentAdminUser = null;
+
+    async function checkAdminAuth() {
+      // 1. Check local session cache for instant load
+      const cached = sessionStorage.getItem('sitaram_admin_user');
+      if (cached) {
+        try {
+          const user = JSON.parse(cached);
+          if (user && user.email) {
+            renderAuthenticatedAdmin(user);
+            verifySessionWithBackend();
+            return;
+          }
+        } catch(e) {}
+      }
+
+      // 2. Query server-side session
+      try {
+        const res = await fetch('/api/auth/session', { credentials: 'same-origin' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated && data.admin) {
+            sessionStorage.setItem('sitaram_admin_user', JSON.stringify(data.admin));
+            renderAuthenticatedAdmin(data.admin);
+            return;
+          }
+        }
+      } catch(e) {}
+
+      // Default: show login screen first
+      renderUnauthenticated();
+    }
+
+    async function verifySessionWithBackend() {
+      try {
+        const res = await fetch('/api/auth/session', { credentials: 'same-origin' });
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.authenticated) {
+            sessionStorage.removeItem('sitaram_admin_user');
+            renderUnauthenticated();
+          }
+        }
+      } catch(e) {}
+    }
+
+    function renderAuthenticatedAdmin(admin) {
+      currentAdminUser = admin;
+      const loginView = document.getElementById('login-view');
+      const dashView = document.getElementById('dashboard-view');
+      if (loginView) loginView.classList.add('hidden');
+      if (dashView) {
+        dashView.classList.remove('hidden');
+        dashView.classList.add('flex');
+      }
+
+      // Update user display tags in header
+      const nameEl = document.getElementById('admin-user-name');
+      if (nameEl) nameEl.textContent = admin.name || admin.username || 'Jerin Administrator';
+      const roleEl = document.getElementById('admin-user-role');
+      if (roleEl) roleEl.textContent = (admin.role || 'Super Admin').toUpperCase();
+      const initialsEl = document.getElementById('admin-user-initials');
+      if (initialsEl) {
+        const n = admin.name || admin.username || 'JA';
+        initialsEl.textContent = n.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase() || 'JA';
+      }
+
+      // Initialize dashboard data & cards
+      loadMedicinesFromStorage();
+      renderMedicines();
+      renderUsers();
+      updateMetrics();
+      initParallaxCards();
+    }
+
+    function renderUnauthenticated() {
+      currentAdminUser = null;
+      const loginView = document.getElementById('login-view');
+      const dashView = document.getElementById('dashboard-view');
+      if (dashView) {
+        dashView.classList.add('hidden');
+        dashView.classList.remove('flex');
+      }
+      if (loginView) loginView.classList.remove('hidden');
+    }
+
+    async function handleAdminLogin(e) {
+      e.preventDefault();
+      const identifier = document.getElementById('login-input-identifier').value.trim();
+      const password = document.getElementById('login-input-password').value;
+      const errorAlert = document.getElementById('login-error-alert');
+      const errorText = document.getElementById('login-error-text');
+      const successAlert = document.getElementById('login-success-alert');
+      const submitBtn = document.getElementById('btn-login-submit');
+      const spinner = document.getElementById('btn-login-spinner');
+      const btnText = document.getElementById('btn-login-text');
+
+      errorAlert.classList.add('hidden');
+      successAlert.classList.add('hidden');
+      submitBtn.disabled = true;
+      spinner.classList.remove('hidden');
+      btnText.textContent = "Verifying Admin Credentials...";
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ identifier, username: identifier, email: identifier, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.success && data.admin) {
+          successAlert.classList.remove('hidden');
+          sessionStorage.setItem('sitaram_admin_user', JSON.stringify(data.admin));
+          setTimeout(() => {
+            renderAuthenticatedAdmin(data.admin);
+            submitBtn.disabled = false;
+            spinner.classList.add('hidden');
+            btnText.textContent = "Sign In as Administrator";
+          }, 300);
+        } else {
+          errorAlert.classList.remove('hidden');
+          errorText.textContent = data.error || data.message || "Access Denied: Only authorized administrators can log in.";
+          submitBtn.disabled = false;
+          spinner.classList.add('hidden');
+          btnText.textContent = "Sign In as Administrator";
+        }
+      } catch(err) {
+        errorAlert.classList.remove('hidden');
+        errorText.textContent = "Network error: Unable to reach the authentication gateway.";
+        submitBtn.disabled = false;
+        spinner.classList.add('hidden');
+        btnText.textContent = "Sign In as Administrator";
+      }
+    }
+
+    async function handleAdminLogout() {
+      if (!confirm("Are you sure you want to log out of the Clinical Administration Portal?")) return;
+      try {
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      } catch(e) {}
+      sessionStorage.removeItem('sitaram_admin_user');
+      localStorage.removeItem('sitaram_admin_user');
+      renderUnauthenticated();
+    }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById('login-input-password');
+      const btn = document.getElementById('btn-toggle-pw');
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = 'Hide';
+      } else {
+        input.type = 'password';
+        btn.textContent = 'Show';
+      }
+    }
+
+    function quickFillAdmin() {
+      document.getElementById('login-input-identifier').value = 'sys.jerin@gmail.com';
+      document.getElementById('login-input-password').value = 'admin123';
+    }
+
+    // Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedMotion = localStorage.getItem('glass_parallax_motion') || 'default';
+      setParallaxMotionMode(savedMotion);
+      const savedTilt = localStorage.getItem('glass_parallax_tilt') || '7.5';
+      setTiltMagnitude(savedTilt);
+      
+      // Initialize Supabase Live Connection & Status Monitor
+      initSupabaseConnection();
+
+      // Check Authentication (Displays Login View first if not authenticated)
+      checkAdminAuth();
+    });
+  </script>
+</body>
+</html>

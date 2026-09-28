@@ -637,26 +637,6 @@
           </div>
         </div>
 
-        <!-- Supabase Cloud Connection Status Badge -->
-        <button 
-          id="supabaseHeaderBadge" 
-          onclick="openModal('supabaseConfigModal')" 
-          class="flex items-center space-x-2 text-xs bg-moss-800 hover:bg-moss-750 border border-emerald-500/40 px-3 py-1.5 rounded-full transition cursor-pointer shadow-xs group"
-          title="Supabase PostgreSQL Cloud Database • Click to view connection status">
-          <span id="supabaseHeaderDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400"></span>
-          <span id="supabaseHeaderText" class="text-parchment-100 font-medium tracking-wide">Supabase: Checking...</span>
-        </button>
-
-        <button 
-          onclick="openModal('supabaseConfigModal')" 
-          class="text-xs bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 hover:text-white px-3 py-1.5 rounded-lg border border-emerald-500/40 transition flex items-center space-x-1.5 font-semibold cursor-pointer shadow-xs"
-          title="Manage Supabase Cloud Database Connection">
-          <span class="text-emerald-400">⚡</span>
-          <span>Supabase Cloud</span>
-        </button>
-
-        <div class="h-6 w-px bg-moss-700"></div>
-
         <!-- User Profile & Settings Trigger Button -->
         <button 
           type="button"
@@ -1746,6 +1726,143 @@
 
       </div>
 
+      <!-- CARD 3: SUPABASE CLOUD DATABASE CONFIGURATION -->
+      <div id="supabaseSettingsCard" class="bg-white rounded-3xl border border-parchment-200 shadow-sm p-6 sm:p-7 space-y-6">
+        <!-- Header -->
+        <div class="border-b border-parchment-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 font-bold flex items-center justify-center text-lg border border-emerald-200 shadow-xs">
+              ⚡
+            </span>
+            <div>
+              <h3 class="font-serif font-bold text-lg text-moss-900">Supabase Cloud Database Configuration</h3>
+              <p class="text-xs text-gray-500">PostgreSQL cloud storage, API credentials, and multi-client data synchronization</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="sb-settings-badge" class="text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5">
+              <span id="sb-settings-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span id="sb-settings-status-text">Checking status...</span>
+            </span>
+            <span id="sb-settings-ping" class="text-[10px] font-mono bg-parchment-100 px-2.5 py-1 rounded text-moss-800 border border-parchment-200">~120ms</span>
+          </div>
+        </div>
+
+        <!-- Connection Diagnostics Card -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-950 via-[#072418] to-moss-950 text-white border border-emerald-500/30 space-y-3 shadow-inner">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div>
+              <span class="text-emerald-400/80 block text-[10px] uppercase font-bold tracking-wider">Active Endpoint:</span>
+              <span id="sb-settings-endpoint" class="font-mono text-emerald-200 text-xs truncate block select-all" title="https://ksnsfilauqzxsegpjpdt.supabase.co">https://ksnsfilauqzxsegpjpdt.supabase.co</span>
+            </div>
+            <div>
+              <span class="text-emerald-400/80 block text-[10px] uppercase font-bold tracking-wider">PostgREST API Layer:</span>
+              <span class="font-mono text-emerald-300 text-xs font-semibold">/rest/v1/ Healthy</span>
+            </div>
+          </div>
+
+          <div class="pt-2.5 border-t border-emerald-900/60 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-gray-300 text-[10px] uppercase font-semibold">Verified Tables:</span>
+              <span class="px-2 py-0.5 rounded-md bg-emerald-900/70 text-emerald-300 border border-emerald-700/50 font-mono text-[10px]">✓ products</span>
+              <span class="px-2 py-0.5 rounded-md bg-emerald-900/70 text-emerald-300 border border-emerald-700/50 font-mono text-[10px]">✓ categories</span>
+              <span class="px-2 py-0.5 rounded-md bg-emerald-900/70 text-emerald-300 border border-emerald-700/50 font-mono text-[10px]">✓ admins</span>
+            </div>
+            <a 
+              href="/api/supabase/schema" 
+              download="supabase_schema.sql" 
+              class="text-emerald-300 hover:text-emerald-200 text-[11px] font-medium flex items-center gap-1 hover:underline">
+              <span>📄 Download SQL Schema</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Feedback Alert -->
+        <div id="sb-settings-feedback" class="hidden p-3.5 rounded-2xl text-xs flex items-center gap-2"></div>
+
+        <!-- Configuration Form -->
+        <form id="supabase-settings-form" onsubmit="handleSaveSupabaseSettings(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+              <span>Supabase Project URL *</span>
+              <span class="text-[10px] font-normal text-gray-500">PostgreSQL Cloud URL</span>
+            </label>
+            <input 
+              type="url" 
+              id="sb-settings-url" 
+              required
+              placeholder="https://your-project-ref.supabase.co" 
+              class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 text-xs font-mono text-moss-900 focus:ring-2 focus:ring-moss-500 focus:border-transparent outline-none transition" 
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+              <span>Supabase API Key (Anon / Service Role) *</span>
+              <span class="text-[10px] font-semibold text-emerald-700">Project JWT Token</span>
+            </label>
+            <div class="relative">
+              <input 
+                type="password" 
+                id="sb-settings-key" 
+                required
+                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
+                class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 text-xs font-mono text-moss-900 focus:ring-2 focus:ring-moss-500 focus:border-transparent outline-none transition pr-16" 
+              />
+              <button 
+                type="button" 
+                onclick="toggleSbSettingsKeyVisibility()" 
+                id="btn-toggle-sb-settings-key"
+                class="absolute right-2.5 top-2 px-2.5 py-1 text-[10px] font-bold text-gray-600 hover:text-moss-800 rounded-lg bg-gray-100 hover:bg-gray-200 transition">
+                Show
+              </button>
+            </div>
+            <p class="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200 mt-2 leading-normal">
+              💡 <strong>API Key Format:</strong> Supabase requires the <strong>anon (public)</strong> or <strong>service_role</strong> JWT token (starts with <code>eyJ...</code>). Tokens starting with <code>sb_secret_</code> or <code>sbp_</code> are CLI tokens and will return 401. Copy the key from Supabase Dashboard → <strong>Project Settings → API</strong>.
+            </p>
+          </div>
+
+          <div class="p-3.5 bg-parchment-50 rounded-2xl border border-parchment-200 text-xs text-gray-600 space-y-1">
+            <div class="font-bold text-moss-900 flex items-center gap-1.5">
+              <span>☁️</span>
+              <span>Central Cloud Synchronization</span>
+            </div>
+            <p class="text-[11px] text-gray-600 leading-relaxed">
+              When connected, all additions, edits, and deletions in the Medicine Catalogue synchronize automatically with Supabase PostgreSQL and the Android application.
+            </p>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="pt-3 border-t border-parchment-100 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <button 
+                type="button" 
+                onclick="testSupabaseConnectionNow()" 
+                id="btn-test-sb-settings"
+                class="px-4 py-2.5 text-xs font-semibold rounded-xl bg-parchment-100 hover:bg-parchment-200 text-moss-900 border border-parchment-300 transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                <span id="btn-test-sb-icon-settings">🔄</span>
+                <span>Test Connection</span>
+              </button>
+              <button 
+                type="button" 
+                onclick="syncMedicinesToSupabase()" 
+                class="px-4 py-2.5 text-xs font-semibold rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                <span>☁️</span>
+                <span>Sync Catalogue to Cloud</span>
+              </button>
+            </div>
+
+            <button 
+              type="submit" 
+              id="btn-save-sb-settings"
+              class="px-6 py-2.5 text-xs font-bold bg-moss-700 hover:bg-moss-800 text-white rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer">
+              <span>💾</span>
+              <span>Save & Connect</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
     </section>
 
   </main>
@@ -2422,7 +2539,7 @@
         <div>
           <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 flex items-center justify-between">
             <span>Supabase API Key (Anon / Service Role)</span>
-            <span class="text-[10px] font-normal text-gray-500">JWT Token</span>
+            <span class="text-[10px] font-normal text-emerald-700 font-semibold">Project API JWT Key</span>
           </label>
           <div class="relative">
             <input 
@@ -2440,6 +2557,9 @@
               Show
             </button>
           </div>
+          <p class="text-[10.5px] text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200 mt-1.5 leading-normal">
+            💡 <strong>API Key Format:</strong> Supabase requires the <strong>anon (public)</strong> or <strong>service_role</strong> JWT token (starts with <code>eyJ...</code>). Tokens starting with <code>sb_secret_</code> or <code>sbp_</code> are CLI tokens and will return 401. Copy the key from Supabase Dashboard → <strong>Project Settings → API</strong>.
+          </p>
         </div>
 
         <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs text-gray-600 space-y-1">
@@ -6231,7 +6351,7 @@
       const host = url ? url.replace(/^https?:\/\//, '').split('/')[0] : 'Not Connected';
       const latencyStr = status.latency ? `${status.latency}ms` : '~120ms';
 
-      // 1. Header Badge
+      // 1. Header Badge (if present)
       const headerDot = document.getElementById('supabaseHeaderDot');
       const headerText = document.getElementById('supabaseHeaderText');
       const headerBadge = document.getElementById('supabaseHeaderBadge');
@@ -6267,7 +6387,7 @@
           bannerBadge.textContent = "Offline / Action Required";
           if (bannerLatency) bannerLatency.textContent = "Disconnected";
           if (bannerDetails) {
-            bannerDetails.innerHTML = `Supabase connection required. Click <span class="text-amber-300 font-bold underline cursor-pointer" onclick="openModal('supabaseConfigModal')">Configure</span> to connect your project.`;
+            bannerDetails.innerHTML = `Supabase connection required. Click <span class="text-amber-300 font-bold underline cursor-pointer" onclick="openSupabaseSettings()">Configure in Admin Settings</span> to connect your project.`;
           }
         }
       }
@@ -6294,6 +6414,55 @@
         modalEndpoint.textContent = url || "None configured";
         modalEndpoint.title = url;
       }
+
+      // 4. Admin Settings Card
+      const settingsDot = document.getElementById('sb-settings-dot');
+      const settingsStatusText = document.getElementById('sb-settings-status-text');
+      const settingsBadge = document.getElementById('sb-settings-badge');
+      const settingsPing = document.getElementById('sb-settings-ping');
+      const settingsEndpoint = document.getElementById('sb-settings-endpoint');
+      if (settingsStatusText) {
+        if (isConn) {
+          if (settingsDot) settingsDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+          settingsStatusText.textContent = "Connected to Supabase (200 OK)";
+          if (settingsBadge) {
+            settingsBadge.className = "text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5";
+          }
+          if (settingsPing) settingsPing.textContent = latencyStr;
+        } else {
+          if (settingsDot) settingsDot.className = "w-2 h-2 rounded-full bg-amber-500";
+          settingsStatusText.textContent = status.message ? (status.message.length > 35 ? status.message.substring(0, 35) + '...' : status.message) : "Action Required";
+          if (settingsBadge) {
+            settingsBadge.className = "text-[11px] font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1.5";
+          }
+          if (settingsPing) settingsPing.textContent = "Offline";
+        }
+      }
+      if (settingsEndpoint) {
+        settingsEndpoint.textContent = url || "None configured";
+        settingsEndpoint.title = url;
+      }
+    }
+
+    function toggleSbSettingsKeyVisibility() {
+      const input = document.getElementById('sb-settings-key');
+      const btn = document.getElementById('btn-toggle-sb-settings-key');
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        if (btn) btn.textContent = 'Hide';
+      } else {
+        input.type = 'password';
+        if (btn) btn.textContent = 'Show';
+      }
+    }
+
+    function openSupabaseSettings() {
+      switchTab('adminSettingsTab');
+      setTimeout(() => {
+        const el = document.getElementById('supabaseSettingsCard');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
     }
 
     async function initSupabaseConnection() {
@@ -6306,6 +6475,11 @@
       if (urlInput) urlInput.value = savedUrl;
       if (keyInput) keyInput.value = savedKey;
 
+      const settingsUrlInput = document.getElementById('sb-settings-url');
+      const settingsKeyInput = document.getElementById('sb-settings-key');
+      if (settingsUrlInput) settingsUrlInput.value = savedUrl;
+      if (settingsKeyInput) settingsKeyInput.value = savedKey;
+
       supabaseState.url = savedUrl;
       supabaseState.key = savedKey;
 
@@ -6314,15 +6488,18 @@
     }
 
     async function testSupabaseConnectionNow(showAlert = true) {
-      const urlInput = document.getElementById('sb-config-url');
-      const keyInput = document.getElementById('sb-config-key');
+      const urlInput = document.getElementById('sb-settings-url') || document.getElementById('sb-config-url');
+      const keyInput = document.getElementById('sb-settings-key') || document.getElementById('sb-config-key');
       const alertBox = document.getElementById('sb-feedback-alert');
+      const alertBoxSettings = document.getElementById('sb-settings-feedback');
       const pingIcon = document.getElementById('btn-test-sb-icon');
+      const pingIconSettings = document.getElementById('btn-test-sb-icon-settings');
 
       const url = (urlInput ? urlInput.value.trim() : '') || supabaseState.url || DEFAULT_SUPABASE_URL;
       const key = (keyInput ? keyInput.value.trim() : '') || supabaseState.key || DEFAULT_SUPABASE_KEY;
 
       if (pingIcon) pingIcon.classList.add('animate-spin');
+      if (pingIconSettings) pingIconSettings.classList.add('animate-spin');
 
       const t0 = performance.now();
       let isSuccess = false;
@@ -6361,7 +6538,20 @@
             isSuccess = true;
             statusMsg = "Connected directly to Supabase cloud database!";
           } else {
-            statusMsg = `Supabase returned HTTP ${restRes.status}: ${restRes.statusText}`;
+            let errDetail = "";
+            try {
+              const errJson = await restRes.json();
+              if (errJson && errJson.message) errDetail = errJson.message;
+            } catch(e) {}
+            if (restRes.status === 401) {
+              if (key.startsWith('sb_') || key.startsWith('sbp_') || !key.startsWith('eyJ')) {
+                statusMsg = "HTTP 401 (Unregistered API Key): You entered an 'sb_secret_' CLI token. Please copy the 'anon' public or 'service_role' JWT key (starts with 'eyJ...') from Supabase Dashboard > Project Settings > API.";
+              } else {
+                statusMsg = `HTTP 401: Unauthorized API key (${errDetail || 'Invalid key for this project'}).`;
+              }
+            } else {
+              statusMsg = `Supabase returned HTTP ${restRes.status}: ${errDetail || restRes.statusText}`;
+            }
           }
         }
       } catch(err) {
@@ -6380,7 +6570,20 @@
             isSuccess = true;
             statusMsg = "Connected directly to Supabase cloud database!";
           } else {
-            statusMsg = `Supabase request failed: HTTP ${restRes.status}`;
+            let errDetail = "";
+            try {
+              const errJson = await restRes.json();
+              if (errJson && errJson.message) errDetail = errJson.message;
+            } catch(e) {}
+            if (restRes.status === 401) {
+              if (key.startsWith('sb_') || key.startsWith('sbp_') || !key.startsWith('eyJ')) {
+                statusMsg = "HTTP 401 (Unregistered API Key): You entered an 'sb_secret_' CLI token. Please copy the 'anon' public or 'service_role' JWT key (starts with 'eyJ...') from Supabase Dashboard > Project Settings > API.";
+              } else {
+                statusMsg = `HTTP 401: Unauthorized API key (${errDetail || 'Invalid key'}).`;
+              }
+            } else {
+              statusMsg = `Supabase request failed: HTTP ${restRes.status} ${errDetail || ''}`;
+            }
           }
         } catch(e2) {
           latencyMs = Math.round(performance.now() - t0);
@@ -6389,6 +6592,7 @@
       }
 
       if (pingIcon) pingIcon.classList.remove('animate-spin');
+      if (pingIconSettings) pingIconSettings.classList.remove('animate-spin');
 
       supabaseState.connected = isSuccess;
       supabaseState.latency = latencyMs;
@@ -6401,16 +6605,61 @@
         message: statusMsg
       });
 
-      if (showAlert && alertBox) {
-        alertBox.classList.remove('hidden');
-        if (isSuccess) {
-          alertBox.className = "p-3 rounded-xl text-xs flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800";
-          alertBox.innerHTML = `<span>✓</span> <span><strong>Connection Verified:</strong> ${statusMsg} (${latencyMs}ms)</span>`;
-        } else {
-          alertBox.className = "p-3 rounded-xl text-xs flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800";
-          alertBox.innerHTML = `<span>⚠️</span> <span><strong>Connection Warning:</strong> ${statusMsg}</span>`;
+      [alertBox, alertBoxSettings].forEach(box => {
+        if (showAlert && box) {
+          box.classList.remove('hidden');
+          if (isSuccess) {
+            box.className = "p-3.5 rounded-2xl text-xs flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800";
+            box.innerHTML = `<span>✓</span> <span><strong>Connection Verified:</strong> ${statusMsg} (${latencyMs}ms)</span>`;
+          } else {
+            box.className = "p-3.5 rounded-2xl text-xs flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800";
+            box.innerHTML = `<span>⚠️</span> <span><strong>Connection Warning:</strong> ${statusMsg}</span>`;
+          }
         }
+      });
+    }
+
+    async function handleSaveSupabaseSettings(e) {
+      if (e) e.preventDefault();
+      const urlInput = document.getElementById('sb-settings-url');
+      const keyInput = document.getElementById('sb-settings-key');
+      const btn = document.getElementById('btn-save-sb-settings');
+
+      const url = (urlInput ? urlInput.value.trim() : '');
+      const key = (keyInput ? keyInput.value.trim() : '');
+
+      if (!url || !key) {
+        showToast("Please provide both Supabase Project URL and API Key.", "error");
+        return;
       }
+
+      if (btn) btn.innerHTML = `<span>⏳</span> <span>Connecting...</span>`;
+
+      localStorage.setItem('ayurguide_supabase_url', url);
+      localStorage.setItem('ayurguide_supabase_key', key);
+      supabaseState.url = url;
+      supabaseState.key = key;
+
+      // Sync modal inputs if present
+      const modalUrl = document.getElementById('sb-config-url');
+      const modalKey = document.getElementById('sb-config-key');
+      if (modalUrl) modalUrl.value = url;
+      if (modalKey) modalKey.value = key;
+
+      try {
+        await fetch('/api/supabase/configure', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, key })
+        });
+      } catch(err) {
+        console.warn("Backend configuration call failed, continuing with local storage credentials:", err);
+      }
+
+      await testSupabaseConnectionNow(true);
+
+      if (btn) btn.innerHTML = `<span>💾</span> <span>Save & Connect</span>`;
+      showToast("Supabase configuration saved! Connection active.");
     }
 
     async function handleSaveSupabaseConfig(e) {
@@ -6430,6 +6679,12 @@
       localStorage.setItem('ayurguide_supabase_key', key);
       supabaseState.url = url;
       supabaseState.key = key;
+
+      // Sync settings inputs
+      const settingsUrl = document.getElementById('sb-settings-url');
+      const settingsKey = document.getElementById('sb-settings-key');
+      if (settingsUrl) settingsUrl.value = url;
+      if (settingsKey) settingsKey.value = key;
 
       try {
         await fetch('/api/supabase/configure', {

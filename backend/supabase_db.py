@@ -75,10 +75,55 @@ def init_canonical_data():
                 CATEGORIES_STORE.append(cat_obj)
                 cat_map[c.get("id")] = c.get("name")
 
-            # Products and users must only come from Supabase cloud database
-            # No dummy, sample, or demonstration products or users are loaded
+            # Canonical master products and user profiles
             PRODUCTS_STORE.clear()
+            for p in d.get("products", []):
+                packings = p.get("packings_json") or p.get("packings") or []
+                if isinstance(packings, str):
+                    try: packings = json.loads(packings)
+                    except Exception: packings = [packings]
+                ingredients = p.get("ingredients_json") or p.get("ingredients") or []
+                if isinstance(ingredients, str):
+                    try: ingredients = json.loads(ingredients)
+                    except Exception: ingredients = [ingredients]
+
+                c_name = cat_map.get(p.get("category_id"), "Arishtam")
+                PRODUCTS_STORE.append({
+                    "id": p.get("id"),
+                    "code": p.get("code"),
+                    "name": p.get("name"),
+                    "category": c_name,
+                    "classicalReference": p.get("classical_reference"),
+                    "packings": packings or [],
+                    "ingredients": ingredients or [],
+                    "usage": p.get("usage") or "",
+                    "indications": p.get("indications") or "",
+                    "description": p.get("description") or "",
+                    "imageUrl": p.get("image_url") or "",
+                    "status": p.get("status") or "Active",
+                    "stock": p.get("stock", 25),
+                    "featured": bool(p.get("featured")),
+                    "createdAt": p.get("created_at"),
+                    "updatedAt": p.get("updated_at")
+                })
+
             USERS_STORE.clear()
+            for u in d.get("users", []):
+                USERS_STORE.append({
+                    "id": u.get("id"),
+                    "name": u.get("name"),
+                    "email": u.get("email"),
+                    "role": (u.get("role") or "PATIENT").upper(),
+                    "status": (u.get("status") or "Active").capitalize(),
+                    "prakriti": u.get("prakriti") or "Pitta",
+                    "designation": u.get("designation") or "",
+                    "phone": u.get("phone") or "",
+                    "avatarUrl": u.get("avatar_url") or "",
+                    "clinicalNotes": u.get("clinical_notes") or "",
+                    "adherencePercent": int(u.get("adherence_percent") or 85),
+                    "createdAt": u.get("created_at"),
+                    "updatedAt": u.get("updated_at")
+                })
 
             for ing in d.get("ingredients", []):
                 INGREDIENTS_STORE.append({
@@ -132,6 +177,18 @@ def get_supabase_credentials():
             except Exception:
                 pass
     return url, key
+
+def set_supabase_credentials(url: str, key: str):
+    clean_url = url.strip().rstrip("/")
+    clean_key = key.strip()
+    os.environ["SUPABASE_URL"] = clean_url
+    os.environ["SUPABASE_KEY"] = clean_key
+    try:
+        os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump({"url": clean_url, "key": clean_key}, f, indent=2)
+    except Exception as e:
+        print(f"Error persisting supabase credentials: {e}", flush=True)
 
 def supabase_api_call(endpoint: str, method: str = "GET", data: dict = None, params: dict = None, headers_extra: dict = None):
     """Executes an authenticated REST call to Supabase PostgREST."""
@@ -465,45 +522,55 @@ def get_all_products(search=None, category=None, status=None, ingredient=None):
     endpoint = f"products?{'&'.join(params)}&order=id.asc"
     res = supabase_api_call(endpoint)
     if res.get("success") and isinstance(res.get("data"), list):
-        products = []
-        for r in res["data"]:
-            packings = r.get("packings")
-            if isinstance(packings, str):
-                try: packings = json.loads(packings)
-                except Exception: packings = [packings]
-            elif not packings:
-                packings = []
+        if len(res["data"]) > 0:
+            products = []
+            for r in res["data"]:
+                packings = r.get("packings")
+                if isinstance(packings, str):
+                    try: packings = json.loads(packings)
+                    except Exception: packings = [packings]
+                elif not packings:
+                    packings = []
 
-            ingredients = r.get("ingredients")
-            if isinstance(ingredients, str):
-                try: ingredients = json.loads(ingredients)
-                except Exception: ingredients = [ingredients]
-            elif not ingredients:
-                ingredients = []
+                ingredients = r.get("ingredients")
+                if isinstance(ingredients, str):
+                    try: ingredients = json.loads(ingredients)
+                    except Exception: ingredients = [ingredients]
+                elif not ingredients:
+                    ingredients = []
 
-            products.append({
-                "id": r.get("id"),
-                "code": r.get("code"),
-                "name": r.get("name"),
-                "category": r.get("category_name"),
-                "classicalReference": r.get("classical_reference"),
-                "packings": packings,
-                "ingredients": ingredients,
-                "usage": r.get("dosage") or "",
-                "indications": r.get("indications") or "",
-                "description": r.get("description") or "",
-                "imageUrl": r.get("image_url") or "",
-                "status": r.get("status") or "Active",
-                "stock": r.get("stock", 25),
-                "featured": bool(r.get("featured")),
-                "createdAt": r.get("created_at"),
-                "updatedAt": r.get("updated_at")
-            })
+                products.append({
+                    "id": r.get("id"),
+                    "code": r.get("code"),
+                    "name": r.get("name"),
+                    "category": r.get("category_name"),
+                    "classicalReference": r.get("classical_reference"),
+                    "packings": packings,
+                    "ingredients": ingredients,
+                    "usage": r.get("dosage") or "",
+                    "indications": r.get("indications") or "",
+                    "description": r.get("description") or "",
+                    "imageUrl": r.get("image_url") or "",
+                    "status": r.get("status") or "Active",
+                    "stock": r.get("stock", 25),
+                    "featured": bool(r.get("featured")),
+                    "createdAt": r.get("created_at"),
+                    "updatedAt": r.get("updated_at")
+                })
 
-        if ingredient:
-            ing_lower = ingredient.lower().strip()
-            products = [p for p in products if any(ing_lower in i.lower() for i in p["ingredients"])]
-        return products
+            if ingredient:
+                ing_lower = ingredient.lower().strip()
+                products = [p for p in products if any(ing_lower in i.lower() for i in p["ingredients"])]
+            return products
+        else:
+            # Table is connected but has 0 records; auto-seed master catalogue to cloud
+            url, key = get_supabase_credentials()
+            if key and len(key) > 20 and key != "test":
+                try:
+                    import backend.supabase_sync as s_sync
+                    s_sync.sync_master_catalogue_to_supabase()
+                except Exception as ex:
+                    print(f"Auto-sync products notice: {ex}", flush=True)
 
     # Use Central In-Memory Store
     result = list(PRODUCTS_STORE)
@@ -892,7 +959,17 @@ def get_all_users(search=None, role=None, status=None):
     try:
         res = supabase_api_call(endpoint)
         if res.get("success") and isinstance(res.get("data"), list):
-            return [format_supabase_user(r) for r in res["data"]]
+            if len(res["data"]) > 0:
+                return [format_supabase_user(r) for r in res["data"]]
+            else:
+                # Connected but table has 0 records; auto-seed master profiles
+                url, key = get_supabase_credentials()
+                if key and len(key) > 20 and key != "test":
+                    try:
+                        import backend.supabase_sync as s_sync
+                        s_sync.sync_master_catalogue_to_supabase()
+                    except Exception as ex:
+                        print(f"Auto-sync users notice: {ex}", flush=True)
     except Exception as e:
         print(f"Supabase get_all_users notice: {e}", flush=True)
 

@@ -3845,64 +3845,157 @@
 
     async function loadMedicinesFromServer() {
       try {
-        const res = await fetch('/api/products');
+        const currentKey = localStorage.getItem('ayurguide_supabase_key') || supabaseState.key || '';
+        const currentUrl = localStorage.getItem('ayurguide_supabase_url') || supabaseState.url || DEFAULT_SUPABASE_URL;
+
+        const reqHeaders = { 'Accept': 'application/json' };
+        if (currentKey) reqHeaders['X-Supabase-Key'] = currentKey;
+        if (currentUrl) reqHeaders['X-Supabase-Url'] = currentUrl;
+
+        let serverProducts = [];
+        let fetchedOk = false;
+
+        const res = await fetch('/api/products', { headers: reqHeaders });
         if (res.ok) {
           const json = await res.json();
-          if (json && Array.isArray(json.data)) {
-            const serverProducts = json.data;
-            const mapped = serverProducts.map(sp => {
-              return {
-                id: sp.code || (sp.id ? `med_${sp.id}` : `med_${Date.now()}`),
-                code: sp.code || '',
-                name: sp.name || 'Unnamed Medicine',
-                sanskritName: sp.sanskrit_name || sp.sanskritName || sp.name || '',
-                category: sp.category || sp.category_name || 'Arishtam',
-                status: (sp.status || 'Active').toUpperCase() === 'ACTIVE' ? 'PUBLISHED' : (sp.status || 'PUBLISHED').toUpperCase(),
-                imageUrl: sp.imageUrl || sp.image_url || '',
-                tagPill: (sp.category ? sp.category.toUpperCase() : 'CLASSICAL'),
-                healthGoals: sp.health_goals || sp.healthGoals || ["IMMUNITY"],
-                benefit: sp.indications || sp.description || "",
-                shortDescription: sp.description || "",
-                monograph: sp.monograph || sp.description || "",
-                contraindications: sp.contraindications || "",
-                dosageSummary: sp.usage || sp.dosageSummary || "",
-                anupana: sp.anupana || "",
-                classicalRef: sp.classicalReference || sp.classical_reference || "",
-                rasa: sp.rasa || "",
-                virya: sp.virya || "",
-                vipaka: sp.vipaka || "",
-                granularIngredients: Array.isArray(sp.ingredients) && sp.ingredients.length > 0
-                  ? sp.ingredients.map(ing => ({
-                      sanskrit: typeof ing === 'string' ? ing : (ing.name || ing.sanskrit || 'Herb'),
-                      botanical: typeof ing === 'string' ? '' : (ing.botanicalName || ing.botanical || ''),
-                      ratio: typeof ing === 'object' && ing.ratio ? ing.ratio : 'Standard Proportion',
-                      part: typeof ing === 'object' && ing.part ? ing.part : 'Purified Part',
-                      active: typeof ing === 'object' && ing.active ? ing.active : ''
-                    }))
-                  : []
-              };
-            });
-
-            medicines = mapped;
-            saveMedicinesToStorage();
-            renderMedicines();
-            updateMetrics();
-            renderDashboardRecentMedicines();
-            if (typeof updateGlobalDraftAlertBar === 'function') {
-              updateGlobalDraftAlertBar();
-            }
-            hideDatabaseErrorBanner('products');
-            return;
+          if (json && Array.isArray(json.data) && json.data.length > 0) {
+            serverProducts = json.data;
+            fetchedOk = true;
           }
         }
-        showDatabaseErrorBanner('products', 'Unable to retrieve products from Supabase database.');
+
+        // Direct Supabase PostgREST query fallback if server returned 0 items
+        if (!fetchedOk && currentKey && (currentKey.startsWith('eyJ') || currentKey.length > 25)) {
+          try {
+            const cleanUrl = currentUrl.replace(/\/$/, '');
+            const directRes = await fetch(`${cleanUrl}/rest/v1/products?select=*&order=id.asc`, {
+              headers: {
+                'apikey': currentKey,
+                'Authorization': `Bearer ${currentKey}`,
+                'Accept': 'application/json'
+              }
+            });
+            if (directRes.ok) {
+              const dJson = await directRes.json();
+              if (Array.isArray(dJson) && dJson.length > 0) {
+                serverProducts = dJson.map(r => ({
+                  id: r.id,
+                  code: r.code,
+                  name: r.name,
+                  category: r.category_name,
+                  classicalReference: r.classical_reference,
+                  packings: r.packings || [],
+                  ingredients: r.ingredients || [],
+                  usage: r.dosage || '',
+                  indications: r.indications || '',
+                  description: r.description || '',
+                  imageUrl: r.image_url || '',
+                  status: r.status || 'Active',
+                  stock: r.stock || 25,
+                  featured: Boolean(r.featured)
+                }));
+                fetchedOk = true;
+                // Auto-sync working key to server
+                fetch('/api/supabase/configure', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ url: currentUrl, key: currentKey })
+                }).catch(() => {});
+              }
+            }
+          } catch (eDirect) {
+            console.warn("Direct Supabase query fallback notice:", eDirect);
+          }
+        }
+
+        if (fetchedOk && serverProducts.length > 0) {
+          const mapped = serverProducts.map(sp => {
+            return {
+              id: sp.code || (sp.id ? `med_${sp.id}` : `med_${Date.now()}`),
+              code: sp.code || '',
+              name: sp.name || 'Unnamed Medicine',
+              sanskritName: sp.sanskrit_name || sp.sanskritName || sp.name || '',
+              category: sp.category || sp.category_name || 'Arishtam',
+              status: (sp.status || 'Active').toUpperCase() === 'ACTIVE' ? 'PUBLISHED' : (sp.status || 'PUBLISHED').toUpperCase(),
+              imageUrl: sp.imageUrl || sp.image_url || '',
+              tagPill: (sp.category ? sp.category.toUpperCase() : 'CLASSICAL'),
+              healthGoals: sp.health_goals || sp.healthGoals || ["IMMUNITY"],
+              benefit: sp.indications || sp.description || "",
+              shortDescription: sp.description || "",
+              monograph: sp.monograph || sp.description || "",
+              contraindications: sp.contraindications || "",
+              dosageSummary: sp.usage || sp.dosageSummary || "",
+              anupana: sp.anupana || "",
+              classicalRef: sp.classicalReference || sp.classical_reference || "",
+              rasa: sp.rasa || "",
+              virya: sp.virya || "",
+              vipaka: sp.vipaka || "",
+              granularIngredients: Array.isArray(sp.ingredients) && sp.ingredients.length > 0
+                ? sp.ingredients.map(ing => ({
+                    sanskrit: typeof ing === 'string' ? ing : (ing.name || ing.sanskrit || 'Herb'),
+                    botanical: typeof ing === 'string' ? '' : (ing.botanicalName || ing.botanical || ''),
+                    ratio: typeof ing === 'object' && ing.ratio ? ing.ratio : 'Standard Proportion',
+                    part: typeof ing === 'object' && ing.part ? ing.part : 'Purified Part',
+                    active: typeof ing === 'object' && ing.active ? ing.active : ''
+                  }))
+                : []
+            };
+          });
+
+          medicines = mapped;
+          saveMedicinesToStorage();
+          renderMedicines();
+          updateMetrics();
+          renderDashboardRecentMedicines();
+          if (typeof updateGlobalDraftAlertBar === 'function') {
+            updateGlobalDraftAlertBar();
+          }
+          hideDatabaseErrorBanner('products');
+          return;
+        }
+
+        // Database returned 0 products or auth failure
+        const sbStatus = await fetch('/api/supabase/status').then(r => r.json()).catch(() => null);
+        if (sbStatus && sbStatus.success && sbStatus.products_count === 0) {
+          showDatabaseErrorBanner('products', 'Supabase database is connected, but the products table contains 0 records. Click "Sync Master Data to Cloud" to populate 12 classical formulations.', true);
+        } else if (sbStatus && sbStatus.status === 401) {
+          showDatabaseErrorBanner('products', sbStatus.message || 'Supabase HTTP 401: Unauthorized API key. Please configure a valid JWT token.', false);
+        } else {
+          showDatabaseErrorBanner('products', 'Unable to retrieve live products from Supabase database.', true);
+        }
       } catch (e) {
         console.warn('Unable to load medicines from server API:', e);
-        showDatabaseErrorBanner('products', 'Database connection error. Unable to load products from Supabase.');
+        showDatabaseErrorBanner('products', 'Database connection error. Unable to load products from Supabase.', true);
       }
     }
 
-    function showDatabaseErrorBanner(type, message) {
+    async function syncMasterCatalogueToSupabase() {
+      showToast("Synchronizing Master Formulations and User Profiles to Supabase...");
+      try {
+        const curKey = localStorage.getItem('ayurguide_supabase_key') || supabaseState.key || '';
+        const curUrl = localStorage.getItem('ayurguide_supabase_url') || supabaseState.url || '';
+        const res = await fetch('/api/supabase/migrate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Supabase-Key': curKey,
+            'X-Supabase-Url': curUrl
+          }
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Cloud Sync Complete: ${data.message || 'Master catalogue and user profiles synchronized to Supabase!'}`);
+          await loadMedicinesFromServer();
+          await loadUsers();
+        } else {
+          showToast(`Sync Notice: ${data.error || data.message || 'Unable to sync. Please verify table schema in Supabase.'}`, 'error');
+        }
+      } catch (err) {
+        showToast('Sync request failed. Please check network connection.', 'error');
+      }
+    }
+
+    function showDatabaseErrorBanner(type, message, showSyncButton = true) {
       const bannerId = type === 'products' ? 'dbErrorBannerProducts' : 'dbErrorBannerUsers';
       let banner = document.getElementById(bannerId);
       if (!banner) {
@@ -3919,6 +4012,7 @@
           <span class="text-base">⚠️</span>
           <span><strong>Database Notice:</strong> ${message}</span>
           <button onclick="openSupabaseSettings()" class="ml-2 px-2.5 py-1 text-[11px] font-bold bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg transition cursor-pointer">Configure Supabase Key</button>
+          ${showSyncButton ? `<button onclick="syncMasterCatalogueToSupabase()" class="px-2.5 py-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition cursor-pointer shadow-xs">☁️ Sync Master Data to Cloud</button>` : ''}
         </div>
         <button onclick="this.parentElement.remove()" class="text-amber-700 hover:text-amber-900 font-bold ml-3 text-sm cursor-pointer">&times;</button>
       `;
@@ -6457,22 +6551,66 @@
         if (searchInput && searchInput.value.trim()) params.append('search', searchInput.value.trim());
         if (statusFilter && statusFilter.value) params.append('status', statusFilter.value);
 
-        const res = await fetch(`/api/users?${params.toString()}`);
+        const currentKey = localStorage.getItem('ayurguide_supabase_key') || supabaseState.key || '';
+        const currentUrl = localStorage.getItem('ayurguide_supabase_url') || supabaseState.url || DEFAULT_SUPABASE_URL;
+
+        const reqHeaders = { 'Accept': 'application/json' };
+        if (currentKey) reqHeaders['X-Supabase-Key'] = currentKey;
+        if (currentUrl) reqHeaders['X-Supabase-Url'] = currentUrl;
+
+        let serverUsers = [];
+        let fetchedOk = false;
+
+        const res = await fetch(`/api/users?${params.toString()}`, { headers: reqHeaders });
         if (res.ok) {
           const json = await res.json();
-          if (json.success && Array.isArray(json.data)) {
-            users = json.data;
-            saveUsersToStorage();
-            updateUserStats(users);
-            filterAndRenderUsers();
-            hideDatabaseErrorBanner('users');
-            return;
+          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+            serverUsers = json.data;
+            fetchedOk = true;
           }
         }
-        showDatabaseErrorBanner('users', 'Failed to retrieve registered users from database.');
+
+        // Direct Supabase query fallback
+        if (!fetchedOk && currentKey && (currentKey.startsWith('eyJ') || currentKey.length > 25)) {
+          try {
+            const cleanUrl = currentUrl.replace(/\/$/, '');
+            const directRes = await fetch(`${cleanUrl}/rest/v1/profiles?select=*&order=created_at.desc`, {
+              headers: {
+                'apikey': currentKey,
+                'Authorization': `Bearer ${currentKey}`,
+                'Accept': 'application/json'
+              }
+            });
+            if (directRes.ok) {
+              const dJson = await directRes.json();
+              if (Array.isArray(dJson) && dJson.length > 0) {
+                serverUsers = dJson;
+                fetchedOk = true;
+              }
+            }
+          } catch(eDirect) {}
+        }
+
+        if (fetchedOk && serverUsers.length > 0) {
+          users = serverUsers;
+          saveUsersToStorage();
+          updateUserStats(users);
+          filterAndRenderUsers();
+          hideDatabaseErrorBanner('users');
+          return;
+        }
+
+        const sbStatus = await fetch('/api/supabase/status').then(r => r.json()).catch(() => null);
+        if (sbStatus && sbStatus.success && sbStatus.profiles_count === 0) {
+          showDatabaseErrorBanner('users', 'Supabase database is connected, but the profiles table contains 0 records. Click "Sync Master Data to Cloud" to seed user profiles.', true);
+        } else if (sbStatus && sbStatus.status === 401) {
+          showDatabaseErrorBanner('users', sbStatus.message || 'Supabase HTTP 401 Unauthorized. Please verify your anon/service_role API key.', false);
+        } else {
+          showDatabaseErrorBanner('users', 'Failed to retrieve registered users from database.', true);
+        }
       } catch (err) {
         console.warn("Server API error loading users:", err);
-        showDatabaseErrorBanner('users', 'Database connection error. Unable to load users from Supabase.');
+        showDatabaseErrorBanner('users', 'Database connection error. Unable to load users from Supabase.', true);
       }
 
       updateUserStats(users);
@@ -6942,7 +7080,7 @@
     // SUPABASE CLOUD DATABASE INTEGRATION & LIVE MONITOR
     // ==========================================
     const DEFAULT_SUPABASE_URL = "https://ksnsfilauqzxsegpjpdt.supabase.co";
-    const DEFAULT_SUPABASE_KEY = "sb_secret_YB3vSW9nBcJd-9CXXMkjww_eCDvaprk";
+    const DEFAULT_SUPABASE_KEY = "";
 
     let supabaseState = {
       connected: false,
@@ -7089,7 +7227,7 @@
     async function initSupabaseConnection() {
       // 1. Check local storage
       const savedUrl = localStorage.getItem('ayurguide_supabase_url') || DEFAULT_SUPABASE_URL;
-      const savedKey = localStorage.getItem('ayurguide_supabase_key') || DEFAULT_SUPABASE_KEY;
+      const savedKey = localStorage.getItem('ayurguide_supabase_key') || "";
 
       const urlInput = document.getElementById('sb-config-url');
       const keyInput = document.getElementById('sb-config-key');
@@ -7104,6 +7242,22 @@
       supabaseState.url = savedUrl;
       supabaseState.key = savedKey;
 
+      // Automatically sync saved key from localStorage to server if it looks like a valid JWT
+      if (savedKey && (savedKey.startsWith('eyJ') || savedKey.length > 20)) {
+        try {
+          fetch('/api/supabase/configure', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: savedUrl, key: savedKey })
+          }).then(r => r.json()).then(cfgData => {
+            if (cfgData && cfgData.success) {
+              loadMedicinesFromServer();
+              loadUsers();
+            }
+          }).catch(() => {});
+        } catch(e) {}
+      }
+
       // 2. Test live connectivity
       await testSupabaseConnectionNow(false);
     }
@@ -7117,7 +7271,7 @@
       const pingIconSettings = document.getElementById('btn-test-sb-icon-settings');
 
       const url = (urlInput ? urlInput.value.trim() : '') || supabaseState.url || DEFAULT_SUPABASE_URL;
-      const key = (keyInput ? keyInput.value.trim() : '') || supabaseState.key || DEFAULT_SUPABASE_KEY;
+      const key = (keyInput ? keyInput.value.trim() : '') || supabaseState.key || '';
 
       if (pingIcon) pingIcon.classList.add('animate-spin');
       if (pingIconSettings) pingIconSettings.classList.add('animate-spin');
@@ -7128,10 +7282,13 @@
       let statusMsg = "";
 
       try {
-        // Try backend /api/supabase/status first
+        // Try backend /api/supabase/status with client headers
+        const reqHeaders = { 'Accept': 'application/json' };
+        if (key) reqHeaders['X-Supabase-Key'] = key;
+        if (url) reqHeaders['X-Supabase-Url'] = url;
         const res = await fetch('/api/supabase/status', {
           method: 'GET',
-          headers: { 'Accept': 'application/json' }
+          headers: reqHeaders
         });
         const data = await res.json();
         latencyMs = Math.round(performance.now() - t0);
@@ -7267,20 +7424,33 @@
       if (modalUrl) modalUrl.value = url;
       if (modalKey) modalKey.value = key;
 
+      let cfgResult = null;
       try {
-        await fetch('/api/supabase/configure', {
+        const res = await fetch('/api/supabase/configure', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url, key })
         });
+        cfgResult = await res.json();
       } catch(err) {
-        console.warn("Backend configuration call failed, continuing with local storage credentials:", err);
+        console.warn("Backend configuration call failed:", err);
       }
 
       await testSupabaseConnectionNow(true);
 
       if (btn) btn.innerHTML = `<span>💾</span> <span>Save & Connect</span>`;
-      showToast("Supabase configuration saved! Connection active.");
+
+      if (cfgResult && cfgResult.success) {
+        showToast(cfgResult.message || "Supabase configuration saved! Live connection active.");
+        await loadMedicinesFromServer();
+        await loadUsers();
+      } else if (cfgResult && cfgResult.status === 401) {
+        showToast(cfgResult.message || "HTTP 401: Unauthorized API key.", "error");
+      } else {
+        showToast("Supabase credentials saved. Reloading data...");
+        await loadMedicinesFromServer();
+        await loadUsers();
+      }
     }
 
     async function handleSaveSupabaseConfig(e) {
@@ -7307,20 +7477,33 @@
       if (settingsUrl) settingsUrl.value = url;
       if (settingsKey) settingsKey.value = key;
 
+      let cfgResult = null;
       try {
-        await fetch('/api/supabase/configure', {
+        const res = await fetch('/api/supabase/configure', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url, key })
         });
+        cfgResult = await res.json();
       } catch(err) {
-        console.warn("Backend configuration call failed, continuing with local storage credentials:", err);
+        console.warn("Backend configuration call failed:", err);
       }
 
       await testSupabaseConnectionNow(true);
 
       if (btn) btn.innerHTML = `<span>💾</span> <span>Save & Connect</span>`;
-      showToast("Supabase configuration saved! Connection active.");
+
+      if (cfgResult && cfgResult.success) {
+        showToast(cfgResult.message || "Supabase configuration saved! Live connection active.");
+        await loadMedicinesFromServer();
+        await loadUsers();
+      } else if (cfgResult && cfgResult.status === 401) {
+        showToast(cfgResult.message || "HTTP 401: Unauthorized API key.", "error");
+      } else {
+        showToast("Supabase configuration saved! Connection active.");
+        await loadMedicinesFromServer();
+        await loadUsers();
+      }
     }
 
     async function syncMedicinesToSupabase() {

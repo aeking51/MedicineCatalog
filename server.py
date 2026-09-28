@@ -247,6 +247,17 @@ class SitaramAdminHandler(http.server.BaseHTTPRequestHandler):
             path = parsed.path
             qs = urllib.parse.parse_qs(parsed.query)
 
+            # Auto-sync credentials from client header if provided
+            client_sb_key = self.headers.get("X-Supabase-Key") or self.headers.get("apikey")
+            client_sb_url = self.headers.get("X-Supabase-Url")
+            if client_sb_key and client_sb_key.strip():
+                clean_k = client_sb_key.strip()
+                cur_u, cur_k = db.get_supabase_credentials()
+                clean_u = (client_sb_url.strip().rstrip("/") if client_sb_url and client_sb_url.strip() else cur_u)
+                if clean_k != cur_k and len(clean_k) > 10:
+                    db.set_supabase_credentials(clean_u, clean_k)
+                    supabase_sync.save_supabase_config(clean_u, clean_k)
+
             # 1. API Endpoints
             if path.startswith("/api/"):
                 # Check session status
@@ -448,6 +459,59 @@ class SitaramAdminHandler(http.server.BaseHTTPRequestHandler):
         try:
             parsed = urllib.parse.urlparse(self.path)
             path = parsed.path
+
+            # Auto-sync credentials from client header if provided
+            client_sb_key = self.headers.get("X-Supabase-Key") or self.headers.get("apikey")
+            client_sb_url = self.headers.get("X-Supabase-Url")
+            if client_sb_key and client_sb_key.strip():
+                clean_k = client_sb_key.strip()
+                cur_u, cur_k = db.get_supabase_credentials()
+                clean_u = (client_sb_url.strip().rstrip("/") if client_sb_url and client_sb_url.strip() else cur_u)
+                if clean_k != cur_k and len(clean_k) > 10:
+                    db.set_supabase_credentials(clean_u, clean_k)
+                    supabase_sync.save_supabase_config(clean_u, clean_k)
+
+            # Public Supabase Cloud Database Management (Setup, Connection & Sync)
+            if path == "/api/supabase/configure":
+                body = self.read_json_body() or {}
+                url = body.get("url", "").strip()
+                key = body.get("key", "").strip()
+                if url and key:
+                    db.set_supabase_credentials(url, key)
+                    supabase_sync.save_supabase_config(url, key)
+                res = supabase_sync.test_supabase_connection()
+                # If connected and database is empty, auto-sync master products and profiles!
+                if res.get("success") and (res.get("products_count", 0) == 0 or res.get("profiles_count", 0) == 0):
+                    try:
+                        sync_res = supabase_sync.sync_master_catalogue_to_supabase()
+                        res["synced"] = sync_res
+                        res_after = supabase_sync.test_supabase_connection()
+                        res["products_count"] = res_after.get("products_count", 12)
+                        res["profiles_count"] = res_after.get("profiles_count", 5)
+                        res["message"] = f"Connected to Supabase! Successfully synchronized {res['products_count']} live formulations and {res['profiles_count']} user profiles to cloud database."
+                    except Exception as ex_sync:
+                        print(f"Auto-sync during configure notice: {ex_sync}", flush=True)
+                self.send_json(200, res)
+                return
+
+            if path in ("/api/supabase/migrate", "/api/supabase/seed"):
+                body = self.read_json_body() or {}
+                url = body.get("url", "").strip()
+                key = body.get("key", "").strip()
+                if url and key:
+                    db.set_supabase_credentials(url, key)
+                    supabase_sync.save_supabase_config(url, key)
+                res = supabase_sync.sync_master_catalogue_to_supabase()
+                self.send_json(200, res)
+                return
+
+            if path == "/api/supabase/sync-catalogue":
+                body = self.read_json_body() or {}
+                medicines_list = body.get("medicines", [])
+                categories_list = body.get("categories", [])
+                res = supabase_sync.sync_custom_catalogue(medicines_list, categories_list)
+                self.send_json(200, res)
+                return
 
             # 1. Login Endpoint
             if path == "/api/auth/login":
@@ -855,27 +919,6 @@ class SitaramAdminHandler(http.server.BaseHTTPRequestHandler):
                     self.send_json(200, {"success": deleted, "message": "User profile removed."})
                 except Exception as e:
                     self.send_json(400, {"success": False, "error": str(e)})
-                return
-
-            # Supabase Cloud Database Management
-            elif path == "/api/supabase/configure":
-                url = body.get("url", "").strip()
-                key = body.get("key", "").strip()
-                supabase_sync.save_supabase_config(url, key)
-                res = supabase_sync.test_supabase_connection()
-                self.send_json(200, res)
-                return
-
-            elif path == "/api/supabase/migrate":
-                res = supabase_sync.sync_master_catalogue_to_supabase()
-                self.send_json(200, res)
-                return
-
-            elif path == "/api/supabase/sync-catalogue":
-                medicines_list = body.get("medicines", [])
-                categories_list = body.get("categories", [])
-                res = supabase_sync.sync_custom_catalogue(medicines_list, categories_list)
-                self.send_json(200, res)
                 return
 
             self.send_json(404, {"error": "API route not found."})

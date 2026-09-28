@@ -252,6 +252,30 @@ class SitaramAdminHandler(http.server.BaseHTTPRequestHandler):
                         self.send_json(404, {"success": False, "error": f"Monograph not found for identifier {prod_id}"})
                     return
 
+                # Public user profile API for mobile app & portal
+                if path == "/api/users/profile":
+                    user_id = qs.get("id", [None])[0]
+                    email = qs.get("email", [None])[0]
+                    user = None
+                    if user_id:
+                        user = db.get_user_by_id(user_id)
+                    elif email:
+                        user = db.get_user_by_email(email)
+                    if user:
+                        self.send_json(200, {"success": True, "data": user})
+                    else:
+                        self.send_json(404, {"success": False, "error": "User profile not found."})
+                    return
+
+                # Public user catalogue / directory sync endpoint for mobile app
+                if path == "/api/users/sync":
+                    search = qs.get("search", [None])[0]
+                    role = qs.get("role", [None])[0]
+                    status = qs.get("status", [None])[0]
+                    users = db.get_all_users(search, role, status)
+                    self.send_json(200, {"success": True, "data": users, "count": len(users)})
+                    return
+
                 # Public Supabase Connection & Schema Endpoints
                 if path == "/api/supabase/status":
                     cfg = supabase_sync.get_supabase_config()
@@ -337,6 +361,23 @@ class SitaramAdminHandler(http.server.BaseHTTPRequestHandler):
                 elif path == "/api/audit-logs":
                     logs = db.get_audit_logs(100)
                     self.send_json(200, {"success": True, "data": logs, "count": len(logs)})
+                    return
+
+                elif path == "/api/users":
+                    search = qs.get("search", [None])[0]
+                    role = qs.get("role", [None])[0]
+                    status = qs.get("status", [None])[0]
+                    users = db.get_all_users(search, role, status)
+                    self.send_json(200, {"success": True, "data": users, "count": len(users)})
+                    return
+
+                elif path.startswith("/api/users/"):
+                    user_id = path.replace("/api/users/", "").strip()
+                    user = db.get_user_by_id(user_id)
+                    if user:
+                        self.send_json(200, {"success": True, "data": user})
+                    else:
+                        self.send_json(404, {"success": False, "error": "User not found."})
                     return
 
                 self.send_json(404, {"error": "API route not found."})
@@ -464,6 +505,87 @@ class SitaramAdminHandler(http.server.BaseHTTPRequestHandler):
                         self.send_json(500, {"success": False, "error": f"Failed to process logo: {proc.stderr}"})
                 except Exception as e:
                     self.send_json(400, {"success": False, "error": f"Invalid image format: {str(e)}"})
+                return
+
+            # Public User Authentication (Mobile App & Client Web)
+            if path == "/api/auth/user-login":
+                body = self.read_json_body() or {}
+                identifier = body.get("identifier") or body.get("email") or body.get("username") or ""
+                password = body.get("password", "")
+                result = db.authenticate_user(identifier, password)
+                if result.get("success"):
+                    user = result["user"]
+                    token, expires = db.create_session(user["id"])
+                    client_ip = self.client_address[0] if self.client_address else "127.0.0.1"
+                    db.log_audit(user.get("email", ""), "USER_LOGIN", "AUTH", user["id"], "User authenticated successfully.", client_ip)
+                    self.send_json(200, {
+                        "success": True,
+                        "token": token,
+                        "user": user
+                    })
+                elif result.get("suspended"):
+                    self.send_json(403, {
+                        "success": False,
+                        "suspended": True,
+                        "message": result.get("message", "This account is currently suspended. Please contact your system administrator.")
+                    })
+                else:
+                    self.send_json(401, {
+                        "success": False,
+                        "message": result.get("message", "Invalid login credentials.")
+                    })
+                return
+
+            # Public User Self-Registration (Mobile App & Client Web)
+            if path == "/api/auth/register":
+                body = self.read_json_body() or {}
+                email = (body.get("email") or "").strip().lower()
+                name = (body.get("name") or "").strip()
+                if not email or not name:
+                    self.send_json(400, {"success": False, "error": "Name and Email are required for registration."})
+                    return
+                body["role"] = "USER"
+                body["status"] = "Active"
+                try:
+                    user = db.create_user(body)
+                    self.send_json(201, {"success": True, "data": user, "message": "Account registered successfully."})
+                except ValueError as ve:
+                    self.send_json(409, {"success": False, "error": str(ve)})
+                except Exception as e:
+                    self.send_json(500, {"success": False, "error": str(e)})
+                return
+
+            # Public User Profile Self-Update (Mobile App & Client Web)
+            if path == "/api/users/profile":
+                body = self.read_json_body() or {}
+                user_id = body.get("id")
+                if not user_id:
+                    self.send_json(400, {"success": False, "error": "User ID is required."})
+                    return
+                # Ordinary user cannot promote role or change status (is_admin=False)
+                try:
+                    updated = db.update_user(user_id, body, is_admin=False)
+                    if updated:
+                        self.send_json(200, {"success": True, "data": updated, "message": "Profile updated successfully."})
+                    else:
+                        self.send_json(404, {"success": False, "error": "User profile not found."})
+                except Exception as e:
+                    self.send_json(400, {"success": False, "error": str(e)})
+                return
+
+            # Public User Password Reset (Mobile App & Client Web)
+            if path == "/api/auth/user-reset":
+                body = self.read_json_body() or {}
+                email = body.get("email", "")
+                new_pwd = body.get("new_password") or body.get("password") or ""
+                try:
+                    ok = db.reset_user_password(email, new_pwd)
+                    if ok:
+                        self.send_json(200, {"success": True, "message": "Password reset successfully."})
+                    else:
+                        self.send_json(404, {"success": False, "error": "Account not found."})
+                except Exception as e:
+                    self.send_json(400, {"success": False, "error": str(e)})
                 return
 
             # 4. Authenticated Data Mutations
@@ -637,6 +759,62 @@ class SitaramAdminHandler(http.server.BaseHTTPRequestHandler):
                 self.send_json(201, {"success": True, "data": mfg})
                 return
 
+            # User Administration Mutations (Admin Governance)
+            elif path == "/api/users":
+                try:
+                    user = db.create_user(body, admin_email=admin_email)
+                    self.send_json(201, {"success": True, "data": user, "message": "User registered successfully."})
+                except ValueError as ve:
+                    self.send_json(409, {"success": False, "error": str(ve)})
+                except Exception as e:
+                    self.send_json(400, {"success": False, "error": str(e)})
+                return
+
+            elif path == "/api/users/update":
+                user_id = body.get("id")
+                if not user_id:
+                    self.send_json(400, {"success": False, "error": "User ID is required for update."})
+                    return
+                try:
+                    user = db.update_user(user_id, body, admin_email=admin_email, is_admin=True)
+                    if user:
+                        self.send_json(200, {"success": True, "data": user, "message": "User profile updated successfully."})
+                    else:
+                        self.send_json(404, {"success": False, "error": "User not found."})
+                except ValueError as ve:
+                    self.send_json(409, {"success": False, "error": str(ve)})
+                except Exception as e:
+                    self.send_json(400, {"success": False, "error": str(e)})
+                return
+
+            elif path == "/api/users/status":
+                user_id = body.get("id")
+                new_status = body.get("status", "Active")
+                if not user_id:
+                    self.send_json(400, {"success": False, "error": "User ID is required."})
+                    return
+                try:
+                    user = db.update_user_status(user_id, new_status, admin_email=admin_email)
+                    if user:
+                        self.send_json(200, {"success": True, "data": user, "message": f"User status set to {new_status}."})
+                    else:
+                        self.send_json(404, {"success": False, "error": "User not found."})
+                except Exception as e:
+                    self.send_json(400, {"success": False, "error": str(e)})
+                return
+
+            elif path == "/api/users/delete":
+                user_id = body.get("id")
+                if not user_id:
+                    self.send_json(400, {"success": False, "error": "User ID is required."})
+                    return
+                try:
+                    deleted = db.delete_user(user_id, admin_email=admin_email)
+                    self.send_json(200, {"success": deleted, "message": "User profile removed."})
+                except Exception as e:
+                    self.send_json(400, {"success": False, "error": str(e)})
+                return
+
             # Supabase Cloud Database Management
             elif path == "/api/supabase/configure":
                 url = body.get("url", "").strip()
@@ -692,6 +870,15 @@ class SitaramAdminHandler(http.server.BaseHTTPRequestHandler):
                 self.send_json(200, {"success": True, "data": cat})
                 return
 
+            elif path.startswith("/api/users/"):
+                user_id = path.split("/")[-1]
+                user = db.update_user(user_id, body, admin_email=admin_email, is_admin=True)
+                if user:
+                    self.send_json(200, {"success": True, "data": user})
+                else:
+                    self.send_json(404, {"success": False, "error": "User not found."})
+                return
+
             self.send_json(404, {"error": "API route not found."})
         except Exception as e:
             self.send_json(500, {"error": str(e)})
@@ -728,6 +915,12 @@ class SitaramAdminHandler(http.server.BaseHTTPRequestHandler):
                 cat_id = path.split("/")[-1]
                 success = db.delete_category(cat_id, admin_email)
                 self.send_json(200, {"success": success})
+                return
+
+            elif path.startswith("/api/users/"):
+                user_id = path.split("/")[-1]
+                deleted = db.delete_user(user_id, admin_email=admin_email)
+                self.send_json(200, {"success": deleted, "message": "User profile removed."})
                 return
 
             self.send_json(404, {"error": "API route not found."})

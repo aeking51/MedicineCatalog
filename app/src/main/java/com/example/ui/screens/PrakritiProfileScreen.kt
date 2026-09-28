@@ -429,7 +429,7 @@ private fun UserProfileHeroCard(
                     Spacer(modifier = Modifier.height(2.dp))
 
                     Text(
-                        text = user.designation.ifEmpty { user.role.displayName },
+                        text = user.designation.ifEmpty { "Registered Member" },
                         fontSize = 12.sp,
                         color = themeColors.mutedTextColor,
                         fontWeight = FontWeight.Medium
@@ -441,21 +441,6 @@ private fun UserProfileHeroCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Role Pill
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (themeColors.isDark) Color(0xFF252F23) else NaturalMossPrimary.copy(alpha = 0.12f))
-                                .padding(horizontal = 8.dp, vertical = 3.dp)
-                        ) {
-                            Text(
-                                text = "${user.role.iconEmoji} ${user.role.badgeLabel}",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (themeColors.isDark) Color(0xFFDCE5D1) else NaturalMossDark
-                            )
-                        }
-
                         // Status Pill
                         Box(
                             modifier = Modifier
@@ -960,7 +945,7 @@ private fun ProfileDetailsCard(
             DetailItemRow(
                 icon = Icons.Default.Security,
                 label = "Account Designation",
-                value = user.designation.ifEmpty { "${user.role.displayName} Account" },
+                value = user.designation.ifEmpty { "Registered Member" },
                 themeColors = themeColors
             )
 

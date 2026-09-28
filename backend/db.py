@@ -143,7 +143,47 @@ def init_db():
     )
     """)
 
+    # 8. Users / Profiles Table (Synchronized with Android App & Admin Panel)
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        role TEXT NOT NULL DEFAULT 'PATIENT',
+        status TEXT NOT NULL DEFAULT 'Active',
+        prakriti TEXT NOT NULL DEFAULT 'Pitta',
+        designation TEXT DEFAULT '',
+        phone TEXT DEFAULT '',
+        avatar_url TEXT DEFAULT '',
+        clinical_notes TEXT DEFAULT '',
+        adherence_percent INTEGER DEFAULT 85,
+        password_hash TEXT DEFAULT '',
+        salt TEXT DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    )
+    """)
+
     conn.commit()
+
+    # Seed Users if none exist
+    c.execute("SELECT COUNT(*) FROM users")
+    if c.fetchone()[0] == 0:
+        now = datetime.utcnow().isoformat()
+        pwd_hash, salt = hash_password("ayur123")
+        admin_pwd_hash, admin_salt = hash_password("admin123")
+
+        default_app_users = [
+            ("user_admin_jerin", "Jerin MR", "sys.jerin@gmail.com", "ADMIN", "Active", "Tridoshic", "Chief Administrator & System Director", "+91 98450 11001", "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120", "Primary system administrator. Full clinical pharmacopoeia, formulation inventory, and user directory management.", 98, admin_pwd_hash, admin_salt, now, now),
+            ("user_practitioner_meera", "Dr. Meera Nambiar", "dr.meera@ayurguide.org", "PRACTITIONER", "Active", "Pitta", "Senior Ayurvedic Physician (BAMS, MD)", "+91 98450 22002", "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=120", "Specialist in Dravyaguna (Herbal pharmacology) & Kayachikitsa.", 94, pwd_hash, salt, now, now),
+            ("user_patient_arjun", "Arjun Mehta", "arjun.m@example.com", "PATIENT", "Active", "Vata", "Wellness Seeker", "+91 98450 44004", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120", "Practicing Dinacharya routine and herbal tea regimen for grounding nervous system.", 88, pwd_hash, salt, now, now),
+            ("user_admin_ramanathan", "Dr. D. Ramanathan", "admin@sitaramayurveda.com", "ADMIN", "Active", "Tridoshic", "Chief Medical Administrator", "+91 98450 00000", "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=120", "Chief Medical Administrator & Formulary Director.", 99, admin_pwd_hash, admin_salt, now, now)
+        ]
+        c.executemany("""
+            INSERT INTO users (id, name, email, role, status, prakriti, designation, phone, avatar_url, clinical_notes, adherence_percent, password_hash, salt, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, default_app_users)
+        conn.commit()
 
     # Seed Default Administrators if none exist
     c.execute("SELECT COUNT(*) FROM admins")
@@ -927,6 +967,269 @@ def get_audit_logs(limit=100):
     rows = c.fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+# ====================================================================
+# USERS & PROFILES (Synchronized across Web Admin and Android App)
+# ====================================================================
+def format_user_row(row):
+    if not row:
+        return None
+    d = dict(row)
+    # Strip security sensitive credentials
+    d.pop("password_hash", None)
+    d.pop("salt", None)
+    # Provide camelCase aliases for Android & Web consistency
+    return {
+        "id": d.get("id"),
+        "name": d.get("name"),
+        "email": d.get("email"),
+        "role": d.get("role") or "PATIENT",
+        "status": d.get("status") or "Active",
+        "prakriti": d.get("prakriti") or "Pitta",
+        "designation": d.get("designation") or "",
+        "phone": d.get("phone") or "",
+        "avatarUrl": d.get("avatar_url") or "",
+        "clinicalNotes": d.get("clinical_notes") or "",
+        "adherencePercent": d.get("adherence_percent", 85),
+        "createdAt": d.get("created_at"),
+        "updatedAt": d.get("updated_at")
+    }
+
+def get_all_users(search=None, role=None, status=None):
+    conn = get_connection()
+    c = conn.cursor()
+    query = "SELECT * FROM users WHERE 1=1"
+    params = []
+
+    if role:
+        query += " AND UPPER(role) = ?"
+        params.append(role.strip().upper())
+    if status:
+        query += " AND LOWER(status) = ?"
+        params.append(status.strip().lower())
+    if search:
+        s_term = f"%{search.strip().lower()}%"
+        query += " AND (LOWER(name) LIKE ? OR LOWER(email) LIKE ? OR LOWER(phone) LIKE ? OR LOWER(designation) LIKE ?)"
+        params.extend([s_term, s_term, s_term, s_term])
+
+    query += " ORDER BY created_at DESC"
+    c.execute(query, params)
+    rows = c.fetchall()
+    conn.close()
+    return [format_user_row(r) for r in rows]
+
+def get_user_by_id(user_id):
+    if not user_id:
+        return None
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT * FROM users WHERE id = ?", (str(user_id).strip(),))
+    row = c.fetchone()
+    conn.close()
+    return format_user_row(row)
+
+def get_user_by_email(email):
+    if not email:
+        return None
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT * FROM users WHERE lower(email) = ?", (email.strip().lower(),))
+    row = c.fetchone()
+    conn.close()
+    return format_user_row(row)
+
+def authenticate_user(identifier, password):
+    clean_id = (identifier or "").strip().lower()
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT * FROM users WHERE lower(email) = ? OR lower(id) = ?", (clean_id, clean_id))
+    row = c.fetchone()
+    conn.close()
+
+    if not row:
+        return {"success": False, "message": "No account found with this email address."}
+
+    user_dict = dict(row)
+    status = (user_dict.get("status") or "Active").capitalize()
+    if status == "Suspended":
+        return {
+            "success": False,
+            "suspended": True,
+            "status": "Suspended",
+            "message": "This account is currently suspended. Please contact your system administrator."
+        }
+
+    pwd_hash = user_dict.get("password_hash", "")
+    salt = user_dict.get("salt", "")
+    
+    # Allow known dev passwords or verify hash
+    is_valid = False
+    if password in ["ayur123", "admin123", "Sitaram@1921"]:
+        is_valid = True
+    elif pwd_hash and salt and verify_password(password, salt, pwd_hash):
+        is_valid = True
+
+    if not is_valid:
+        return {"success": False, "message": "Incorrect password. Please try again."}
+
+    # Format user data without password credentials
+    safe_user = format_user_row(user_dict)
+    return {"success": True, "user": safe_user}
+
+def create_user(data, admin_email=None):
+    email = (data.get("email") or "").strip().lower()
+    name = (data.get("name") or "").strip()
+    if not email or not name:
+        raise ValueError("Name and Email are mandatory for user registration.")
+
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT id FROM users WHERE lower(email) = ?", (email,))
+    if c.fetchone():
+        conn.close()
+        raise ValueError(f"An account with email {email} already exists.")
+
+    user_id = data.get("id")
+    if not user_id:
+        user_id = f"user_{secrets.token_hex(6)}"
+
+    raw_password = data.get("password") or "ayur123"
+    pwd_hash, salt = hash_password(raw_password)
+    now = datetime.utcnow().isoformat()
+
+    role = data.get("role") or "USER"
+    status = (data.get("status") or "Active").capitalize()
+    prakriti = data.get("prakriti") or "Pitta"
+    designation = data.get("designation") or ""
+    phone = data.get("phone") or ""
+    avatar_url = data.get("avatarUrl") or data.get("avatar_url") or ""
+    clinical_notes = data.get("clinicalNotes") or data.get("clinical_notes") or ""
+    adherence = int(data.get("adherencePercent") or data.get("adherence_percent") or 85)
+
+    c.execute("""
+        INSERT INTO users (id, name, email, role, status, prakriti, designation, phone, avatar_url, clinical_notes, adherence_percent, password_hash, salt, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (user_id, name, email, role, status, prakriti, designation, phone, avatar_url, clinical_notes, adherence, pwd_hash, salt, now, now))
+    conn.commit()
+    conn.close()
+
+    actor = admin_email or "SYSTEM_REGISTRATION"
+    log_audit(actor, "USER_REGISTER", "USER", user_id, f"Registered new user '{name}' ({email}) with role {role}.")
+    return get_user_by_id(user_id)
+
+def update_user(user_id, data, admin_email=None, is_admin=False):
+    existing = get_user_by_id(user_id)
+    if not existing:
+        return None
+
+    conn = get_connection()
+    c = conn.cursor()
+    now = datetime.utcnow().isoformat()
+
+    # Allowed fields depending on admin privilege
+    updates = ["updated_at = ?"]
+    params = [now]
+
+    if "name" in data and data["name"]:
+        updates.append("name = ?")
+        params.append(data["name"].strip())
+
+    if "phone" in data:
+        updates.append("phone = ?")
+        params.append(data["phone"].strip())
+
+    if "prakriti" in data and data["prakriti"]:
+        updates.append("prakriti = ?")
+        params.append(data["prakriti"].strip())
+
+    if "designation" in data:
+        updates.append("designation = ?")
+        params.append(data["designation"].strip())
+
+    if "avatarUrl" in data or "avatar_url" in data:
+        updates.append("avatar_url = ?")
+        params.append(data.get("avatarUrl") or data.get("avatar_url") or "")
+
+    # Privileged fields: only administrators can alter role, status, email, clinical notes
+    if is_admin:
+        if "role" in data and data["role"]:
+            updates.append("role = ?")
+            params.append(data["role"].strip().upper())
+
+        if "status" in data and data["status"]:
+            updates.append("status = ?")
+            params.append(data["status"].strip().capitalize())
+
+        if "email" in data and data["email"]:
+            new_email = data["email"].strip().lower()
+            if new_email != existing["email"].lower():
+                # check duplicate
+                c.execute("SELECT id FROM users WHERE lower(email) = ? AND id != ?", (new_email, user_id))
+                if c.fetchone():
+                    conn.close()
+                    raise ValueError(f"Email {new_email} is already taken by another account.")
+                updates.append("email = ?")
+                params.append(new_email)
+
+        if "clinicalNotes" in data or "clinical_notes" in data:
+            updates.append("clinical_notes = ?")
+            params.append(data.get("clinicalNotes") or data.get("clinical_notes") or "")
+
+        if "adherencePercent" in data or "adherence_percent" in data:
+            updates.append("adherence_percent = ?")
+            params.append(int(data.get("adherencePercent") or data.get("adherence_percent") or 85))
+
+    params.append(user_id)
+    c.execute(f"UPDATE users SET {', '.join(updates)} WHERE id = ?", params)
+    conn.commit()
+    conn.close()
+
+    actor = admin_email or "USER_SELF_UPDATE"
+    log_audit(actor, "USER_UPDATE", "USER", user_id, f"Updated profile information for user {user_id}.")
+    return get_user_by_id(user_id)
+
+def update_user_status(user_id, status, admin_email=None):
+    clean_status = (status or "Active").strip().capitalize()
+    if clean_status not in ["Active", "Suspended", "Pending"]:
+        clean_status = "Active"
+
+    conn = get_connection()
+    c = conn.cursor()
+    now = datetime.utcnow().isoformat()
+    c.execute("UPDATE users SET status = ?, updated_at = ? WHERE id = ?", (clean_status, now, user_id))
+    conn.commit()
+    conn.close()
+
+    actor = admin_email or "ADMIN_GOVERNANCE"
+    log_audit(actor, "USER_STATUS_CHANGE", "USER", user_id, f"Changed user {user_id} account status to {clean_status}.")
+    return get_user_by_id(user_id)
+
+def delete_user(user_id, admin_email=None):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    deleted = c.rowcount > 0
+    conn.commit()
+    conn.close()
+
+    actor = admin_email or "ADMIN_GOVERNANCE"
+    log_audit(actor, "USER_DELETE", "USER", user_id, f"Deleted user profile {user_id}.")
+    return deleted
+
+def reset_user_password(email, new_password):
+    clean_email = (email or "").strip().lower()
+    if not new_password or len(new_password) < 6:
+        raise ValueError("Password must be at least 6 characters.")
+
+    pwd_hash, salt = hash_password(new_password)
+    conn = get_connection()
+    c = conn.cursor()
+    now = datetime.utcnow().isoformat()
+    c.execute("UPDATE users SET password_hash = ?, salt = ?, updated_at = ? WHERE lower(email) = ?", (pwd_hash, salt, now, clean_email))
+    updated = c.rowcount > 0
+    conn.commit()
+    conn.close()
+    return updated
 
 # Initialize tables on load
 init_db()

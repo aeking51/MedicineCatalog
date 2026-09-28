@@ -1254,26 +1254,137 @@
       </div>
     </section>
 
-    <!-- TAB 3: USERS & PRACTITIONERS DIRECTORY -->
+    <!-- TAB 3: USER DIRECTORY & MANAGEMENT -->
     <section id="usersTab" class="tab-content hidden space-y-6">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 class="font-serif text-xl font-bold text-moss-900">User & Practitioner Governance</h2>
-          <p class="text-xs text-gray-500">Manage clinical access levels, role promotions, and practitioner verification</p>
+          <div class="flex items-center gap-2.5">
+            <h2 class="font-serif text-2xl font-bold text-moss-900">User Directory & Management</h2>
+            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Supabase Cloud Synced
+            </span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">Single source of truth synchronized across website Admin Panel and Android application</p>
         </div>
-        <button onclick="openModal('addUserModal')" class="bg-moss-700 hover:bg-moss-800 text-white font-semibold text-sm px-4 py-2 rounded-xl shadow transition">
-          ➕ Register New Practitioner
-        </button>
+        <div class="flex items-center gap-2.5">
+          <button 
+            type="button" 
+            onclick="loadUsers()" 
+            class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-parchment-100 hover:bg-parchment-200 text-moss-900 border border-parchment-300 transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+            <span>🔄</span>
+            <span>Refresh Sync</span>
+          </button>
+          <button 
+            type="button" 
+            onclick="openModal('addUserModal')" 
+            class="bg-moss-700 hover:bg-moss-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer">
+            <span>➕</span>
+            <span>Register New User</span>
+          </button>
+        </div>
       </div>
 
+      <!-- Quick Stats KPI Cards (No Role Classifications) -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+        <div class="bg-white p-3.5 rounded-2xl border border-parchment-200 shadow-2xs flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-moss-50 text-moss-700 font-bold flex items-center justify-center text-lg">
+            👥
+          </div>
+          <div>
+            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Total Users</div>
+            <div id="statTotalUsers" class="text-lg font-bold text-moss-950 font-serif">4</div>
+          </div>
+        </div>
+
+        <div class="bg-white p-3.5 rounded-2xl border border-parchment-200 shadow-2xs flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 font-bold flex items-center justify-center text-lg">
+            ✓
+          </div>
+          <div>
+            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Active Accounts</div>
+            <div id="statActiveUsers" class="text-lg font-bold text-emerald-700 font-serif">4</div>
+          </div>
+        </div>
+
+        <div class="bg-white p-3.5 rounded-2xl border border-parchment-200 shadow-2xs flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-red-50 text-red-700 font-bold flex items-center justify-center text-lg">
+            ⛔
+          </div>
+          <div>
+            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Suspended</div>
+            <div id="statSuspendedUsers" class="text-lg font-bold text-red-600 font-serif">0</div>
+          </div>
+        </div>
+
+        <div class="bg-white p-3.5 rounded-2xl border border-parchment-200 shadow-2xs flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 font-bold flex items-center justify-center text-lg">
+            📱
+          </div>
+          <div>
+            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">App Synced</div>
+            <div id="statSyncedUsers" class="text-lg font-bold text-moss-800 font-serif">4</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Status Filters Toolbar (No Role Filter) -->
+      <div class="bg-white p-4 rounded-2xl border border-parchment-200 shadow-2xs space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+          <div class="md:col-span-8 relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 text-sm">
+              🔍
+            </span>
+            <input 
+              type="text" 
+              id="userSearchInput" 
+              oninput="loadUsers()" 
+              placeholder="Search user accounts by name, email, phone, designation..." 
+              class="w-full pl-9 pr-4 py-2.5 text-xs rounded-xl border border-parchment-200 bg-parchment-50/50 focus:bg-white focus:ring-2 focus:ring-moss-500 focus:border-moss-500 outline-none transition"
+            />
+          </div>
+
+          <div class="md:col-span-4 flex items-center gap-2">
+            <select 
+              id="userStatusFilter" 
+              onchange="loadUsers()" 
+              class="w-full px-3 py-2.5 text-xs font-semibold rounded-xl border border-parchment-200 bg-parchment-50/50 focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none cursor-pointer">
+              <option value="">All Account Statuses</option>
+              <option value="Active">Active Accounts</option>
+              <option value="Suspended">Suspended Accounts</option>
+              <option value="Pending">Pending Verification</option>
+            </select>
+            <button 
+              type="button" 
+              onclick="resetUserFilters()" 
+              title="Reset Filters"
+              class="p-2.5 rounded-xl border border-parchment-200 hover:bg-parchment-100 text-gray-500 text-xs transition shrink-0 cursor-pointer">
+              ✖
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-[11px] text-gray-500 pt-1 border-t border-parchment-100">
+          <div class="flex items-center gap-2">
+            <span>Showing <strong id="userDisplayCount" class="text-moss-900 font-bold">4</strong> registered accounts</span>
+            <span class="text-parchment-300">•</span>
+            <span class="text-emerald-700 font-medium">Auto-syncing with Android app every 12 seconds</span>
+          </div>
+          <div class="text-gray-400 font-mono text-[10px]">
+            Table: profiles (Supabase PostgreSQL)
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Table (No Role Column) -->
       <div class="bg-white rounded-2xl border border-parchment-200 shadow-sm overflow-hidden">
         <div class="overflow-x-auto custom-scroll">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-parchment-100 text-moss-900 text-xs uppercase font-bold border-b border-parchment-200 tracking-wider">
-                <th class="py-3.5 px-4">User</th>
-                <th class="py-3.5 px-4">Role Designation</th>
-                <th class="py-3.5 px-4">Clinical Privileges</th>
+                <th class="py-3.5 px-4">User Profile</th>
+                <th class="py-3.5 px-4">Contact & Title</th>
+                <th class="py-3.5 px-4">Clinical Constitution & Notes</th>
                 <th class="py-3.5 px-4">Account Status</th>
                 <th class="py-3.5 px-4 text-right">Actions</th>
               </tr>
@@ -1299,7 +1410,7 @@
             </span>
           </div>
           <p class="text-xs text-gray-500 mt-1">
-            Manage your administrator profile, credentials, security authentication, and portal display preferences
+            Manage your administrator profile, credentials, and security authentication
           </p>
         </div>
         
@@ -1633,83 +1744,6 @@
           </form>
         </div>
 
-      </div>
-
-      <!-- CARD 3: PORTAL DISPLAY & MOTION PREFERENCES -->
-      <div class="bg-white rounded-3xl border border-parchment-200 shadow-sm p-6 space-y-5">
-        <div class="border-b border-parchment-100 pb-3 flex items-center justify-between">
-          <div class="flex items-center gap-2.5">
-            <span class="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 font-bold flex items-center justify-center text-sm border border-purple-200">
-              ⚡
-            </span>
-            <div>
-              <h3 class="font-serif font-bold text-base text-moss-900">Portal Display & Motion Preferences</h3>
-              <p class="text-xs text-gray-500">Configure liquid glass physics, 3D card response dynamics, and audio feedback</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Default Mode -->
-          <div 
-            onclick="setParallaxMotionMode('default')" 
-            class="p-4 rounded-2xl border border-parchment-200 hover:border-emerald-500 bg-parchment-50 cursor-pointer transition flex flex-col justify-between group">
-            <div class="space-y-1">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-moss-900">🌿 Default Natural</span>
-                <span class="text-[10px] font-mono text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">150ms</span>
-              </div>
-              <p class="text-[11px] text-gray-500 leading-snug">Smooth everyday easing with balanced natural physics.</p>
-            </div>
-          </div>
-
-          <!-- Snappy Mode -->
-          <div 
-            onclick="setParallaxMotionMode('snappy')" 
-            class="p-4 rounded-2xl border border-emerald-500 bg-emerald-50/50 cursor-pointer transition flex flex-col justify-between group">
-            <div class="space-y-1">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-emerald-900">⚡ Snappy Accelerated</span>
-                <span class="text-[10px] font-mono text-emerald-700 bg-emerald-200 px-1.5 py-0.5 rounded">80ms</span>
-              </div>
-              <p class="text-[11px] text-emerald-800 leading-snug">Immediate micro-motion response for high-speed catalogue curation.</p>
-            </div>
-          </div>
-
-          <!-- Fluid Mode -->
-          <div 
-            onclick="setParallaxMotionMode('fluid')" 
-            class="p-4 rounded-2xl border border-parchment-200 hover:border-emerald-500 bg-parchment-50 cursor-pointer transition flex flex-col justify-between group">
-            <div class="space-y-1">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-moss-900">🌊 Fluid Cinematic</span>
-                <span class="text-[10px] font-mono text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">350ms</span>
-              </div>
-              <p class="text-[11px] text-gray-500 leading-snug">Velvety organic deceleration with deep magnetic gravitation.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3D Tilt Slider -->
-        <div class="pt-4 border-t border-parchment-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div class="space-y-0.5">
-            <div class="text-xs font-bold text-gray-700">3D Tilt Angle Sensitivity</div>
-            <div class="text-[11px] text-gray-500">Controls maximum degrees of glass surface deflection</div>
-          </div>
-          <div class="flex items-center space-x-3 w-full sm:w-64">
-            <input 
-              type="range" 
-              min="0" 
-              max="20" 
-              step="0.5" 
-              id="adminTabTiltSlider" 
-              value="7.5"
-              oninput="setTiltMagnitude(this.value)" 
-              class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-moss-600" 
-            />
-            <span id="adminTabTiltVal" class="font-mono text-xs font-bold text-moss-800 w-10 text-right">7.5°</span>
-          </div>
-        </div>
       </div>
 
     </section>
@@ -2670,6 +2704,205 @@
     </div>
   </div>
 
+  <!-- MODAL: REGISTER / ADD NEW USER & PRACTITIONER -->
+  <div id="addUserModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 shadow-2xl border border-parchment-200 space-y-5 animate-fade-in custom-scrollbar max-h-[90vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between border-b border-parchment-200 pb-3">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-moss-100 text-moss-800 flex items-center justify-center text-lg font-bold">
+            👥
+          </div>
+          <div>
+            <h3 class="font-serif font-bold text-lg text-moss-900">Register New User Account</h3>
+            <p class="text-xs text-gray-500">Creates profile in Supabase PostgreSQL synchronized with Android application</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('addUserModal')" class="w-8 h-8 rounded-full bg-parchment-100 hover:bg-parchment-200 flex items-center justify-center text-gray-500 hover:text-moss-900 transition">
+          ✕
+        </button>
+      </div>
+
+      <form id="addUserForm" onsubmit="handleCreateUser(event)" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-moss-900 mb-1">Full Name <span class="text-red-500">*</span></label>
+            <input type="text" id="addUserName" required placeholder="e.g. Dr. Ananya Sharma" class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-moss-900 mb-1">Email Address <span class="text-red-500">*</span></label>
+            <input type="email" id="addUserEmail" required placeholder="doctor@clinic.org" class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-moss-900 mb-1">Initial Account Status</label>
+          <select id="addUserStatus" class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs font-semibold focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none">
+            <option value="Active" selected>Active (Full App & Web Access)</option>
+            <option value="Pending">Pending Verification</option>
+            <option value="Suspended">Suspended (Access Blocked)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-moss-900 mb-1">Professional Title / Designation</label>
+            <input type="text" id="addUserDesignation" placeholder="e.g. Senior Ayurvedic Physician" class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-moss-900 mb-1">Contact Phone</label>
+            <input type="text" id="addUserPhone" placeholder="+91 98450 12345" class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-moss-900 mb-1">Prakriti Constitution</label>
+            <select id="addUserPrakriti" class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs font-semibold focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none">
+              <option value="Pitta" selected>Pitta (Metabolic & Transformative)</option>
+              <option value="Vata">Vata (Kinetic & Neuro-muscular)</option>
+              <option value="Kapha">Kapha (Structural & Cohesive)</option>
+              <option value="Tridoshic">Tridoshic (Balanced Constitution)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-moss-900 mb-1">Initial Password</label>
+            <input type="text" id="addUserPassword" value="ayur123" class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs font-mono focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none" />
+            <span class="text-[10px] text-gray-500">User can reset password in Android app or portal</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-moss-900 mb-1">Clinical Notes & Pharmacopoeia Guidance</label>
+          <textarea id="addUserClinicalNotes" rows="2" placeholder="Clinical observations, registered clinic address, or regimen instructions..." class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none"></textarea>
+        </div>
+
+        <div class="pt-3 border-t border-parchment-200 flex items-center justify-between">
+          <span class="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Syncs to Supabase profiles table
+          </span>
+          <div class="flex items-center space-x-2">
+            <button type="button" onclick="closeModal('addUserModal')" class="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition cursor-pointer">
+              Cancel
+            </button>
+            <button type="submit" id="btnSubmitAddUser" class="px-5 py-2 text-xs font-bold bg-moss-700 hover:bg-moss-800 text-white rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer">
+              <span>💾</span>
+              <span>Register & Sync</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT USER PROFILE & STATUS MANAGEMENT -->
+  <div id="editUserProfileModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 shadow-2xl border border-parchment-200 space-y-5 animate-fade-in custom-scrollbar max-h-[90vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between border-b border-parchment-200 pb-3">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center text-lg font-bold">
+            ✏️
+          </div>
+          <div>
+            <h3 class="font-serif font-bold text-lg text-moss-900">Edit User Profile & Governance</h3>
+            <p class="text-xs text-gray-500">Updates will synchronize immediately with the Android app and Supabase</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('editUserProfileModal')" class="w-8 h-8 rounded-full bg-parchment-100 hover:bg-parchment-200 flex items-center justify-center text-gray-500 hover:text-moss-900 transition">
+          ✕
+        </button>
+      </div>
+
+      <form id="editUserForm" onsubmit="handleUpdateUser(event)" class="space-y-4">
+        <input type="hidden" id="editUserId" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-moss-900 mb-1">Full Name <span class="text-red-500">*</span></label>
+            <input type="text" id="editUserName" required class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-moss-900 mb-1">Email Address <span class="text-red-500">*</span></label>
+            <input type="email" id="editUserEmail" required class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-moss-900 mb-1">Account Status (Access Control) <span class="text-red-500">*</span></label>
+          <select id="editUserStatus" onchange="checkSuspendedWarning(this.value)" class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs font-semibold focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none">
+            <option value="Active">Active (Permitted Full Access)</option>
+            <option value="Suspended">Suspended (Access Completely Blocked)</option>
+            <option value="Pending">Pending Verification</option>
+          </select>
+        </div>
+
+        <!-- Dynamic Suspension Warning Banner -->
+        <div id="suspensionWarningBanner" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2 animate-fade-in">
+          <span class="text-base shrink-0">⚠️</span>
+          <div>
+            <span class="font-bold">Account Suspension Warning:</span>
+            <p class="text-[11px] mt-0.5 text-red-600">Setting this account to Suspended will revoke access across both the Android application and the website. The user will be barred upon returning to or refreshing the app.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-moss-900 mb-1">Designation / Title</label>
+            <input type="text" id="editUserDesignation" class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-moss-900 mb-1">Phone Number</label>
+            <input type="text" id="editUserPhone" class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-moss-900 mb-1">Prakriti Constitution</label>
+            <select id="editUserPrakriti" class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs font-semibold focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none">
+              <option value="Pitta">Pitta (Fire & Water)</option>
+              <option value="Vata">Vata (Air & Space)</option>
+              <option value="Kapha">Kapha (Earth & Water)</option>
+              <option value="Tridoshic">Tridoshic (Balanced)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-moss-900 mb-1">Therapeutic Adherence Score (%)</label>
+            <input type="number" id="editUserAdherence" min="0" max="100" class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-moss-900 mb-1">Clinical Notes & Special Instructions</label>
+          <textarea id="editUserClinicalNotes" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-parchment-300 bg-parchment-50/50 text-xs focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none"></textarea>
+        </div>
+
+        <div class="pt-3 border-t border-parchment-200 flex items-center justify-between">
+          <span id="editUserSyncStatus" class="text-[11px] text-gray-500">
+            Target ID: <span id="displayEditUserId" class="font-mono text-moss-900 font-bold"></span>
+          </span>
+          <div class="flex items-center space-x-2">
+            <button type="button" onclick="closeModal('editUserProfileModal')" class="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition cursor-pointer">
+              Cancel
+            </button>
+            <button type="submit" id="btnSubmitEditUser" class="px-5 py-2 text-xs font-bold bg-moss-700 hover:bg-moss-800 text-white rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer">
+              <span>💾</span>
+              <span>Save & Sync</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
   </div> <!-- End #dashboard-view -->
 
   <!-- Application State & Script Logic -->
@@ -2679,58 +2912,177 @@
     // =======================================================
     const initialCategories = [
       { 
-        code: "CHURNA", 
-        name: "Churna", 
-        icon: "🍃", 
-        subtitle: "Fine Herbal Powder (80-100 Mesh)", 
-        description: "Dry herbal pulverizations prepared according to Sharangadhara Samhita. Instantly activates taste receptors (Bodhak Kapha) and absorbs directly in the gastrointestinal tract." 
-      },
-      { 
-        code: "VATI", 
-        name: "Vati / Gutika", 
-        icon: "💊", 
-        subtitle: "Compressed Herbal Tablets & Pills", 
-        description: "Classical tablets bound with herbal decoctions or purified herbal gum binders. Convenient dosage control with standardized phyto-chemical potency." 
-      },
-      { 
-        code: "ARISHTA", 
-        name: "Asava & Arishta", 
+        code: "ARI", 
+        name: "Arishtam", 
         icon: "🏺", 
-        subtitle: "Self-Fermented Herbal Elixirs", 
-        description: "Hydro-alcoholic herbal elixirs naturally fermented using Dhataki flowers and unrefined jaggery. Self-generated bio-ethanol transports active principles deep into tissues (Srotas)." 
+        subtitle: "Fermented Herbal Decoctions", 
+        description: "Self-generated herbal fermented elixirs and tonics prepared with boiled decoction bases." 
       },
       { 
-        code: "TAILA", 
-        name: "Taila", 
-        icon: "✨", 
-        subtitle: "Medicated Botanical Oils", 
-        description: "Lipophilic lipid extraction prepared via Murchhana and Sneha Kalpana using cold-pressed sesame or coconut oil for transdermal and nervous tissue delivery." 
+        code: "ASA", 
+        name: "Asavam", 
+        icon: "🍷", 
+        subtitle: "Cold-Infused Fermented Tonics", 
+        description: "Fermented herbal infusions prepared with fresh juices or cold water extracts." 
       },
       { 
-        code: "GHRITA", 
-        name: "Ghrita", 
-        icon: "🧈", 
-        subtitle: "Medicated A2 Cow Ghee", 
-        description: "Herbal extracts infused into clarified grass-fed cow ghee. Possesses unique lipophilic ability to penetrate the blood-brain barrier and deeply nourish Majja & Shukra Dhatus." 
+        code: "ARK", 
+        name: "Arkam", 
+        icon: "💧", 
+        subtitle: "Distilled Volatile Formulations", 
+        description: "Distilled herbal extracts capturing essential aromatic actives." 
       },
       { 
-        code: "RASAYANA", 
-        name: "Rasayana / Avaleha", 
-        icon: "🍯", 
-        subtitle: "Rejuvenating Herbal Confections & Jams", 
-        description: "Semi-solid electuary jams made with honey, cow ghee, and jaggery base, conferring longevity, immune cellular resistance (Vyadhikshamatva), and Ojas enhancement." 
+        code: "BHA", 
+        name: "Bhasmas / Ksharams", 
+        icon: "⚪", 
+        subtitle: "Calcined Ash & Alkaline Extracts", 
+        description: "Calcined nano-mineral preparations and purified alkaline botanical ashes." 
       },
       { 
-        code: "KWATHA", 
-        name: "Kwatha / Kashayam", 
+        code: "CHO", 
+        name: "Choornams", 
+        icon: "🍃", 
+        subtitle: "Micro-Pulverized Herbal Powders", 
+        description: "Finely sifted botanical powders for digestive, metabolic and systemic therapeutic use." 
+      },
+      { 
+        code: "GUL", 
+        name: "Gulika, Gulika Tablets, Capsules", 
+        icon: "💊", 
+        subtitle: "Classical Ayurvedic Tablets & Pills", 
+        description: "Classical hand-rolled pills, compressed tablets and vegetarian capsules." 
+      },
+      { 
+        code: "SHC", 
+        name: "Single Herb Vegan Capsules", 
+        icon: "🌱", 
+        subtitle: "Standardized Monograph Extracts", 
+        description: "Pure single botanical standard extracts in 100% vegetarian plant cellulose shells." 
+      },
+      { 
+        code: "KAS", 
+        name: "Kashayams", 
         icon: "🫖", 
-        subtitle: "Concentrated Classical Herbal Decoctions", 
-        description: "Coarse therapeutic herbal blends boiled down to 1/4th or 1/8th volume to extract water-soluble tannins, flavonoids, and bitter principles for acute metabolic action." 
+        subtitle: "Concentrated Herbal Decoctions", 
+        description: "Concentrated aqueous herbal extracts formulated according to classical treatises." 
+      },
+      { 
+        code: "KTB", 
+        name: "Kashayam Tablets", 
+        icon: "🔘", 
+        subtitle: "Compressed Decoction Concentrates", 
+        description: "Spray-dried aqueous herbal decoctions compressed into convenient, precise tablet forms." 
+      },
+      { 
+        code: "KSC", 
+        name: "Preservative Free Kashayam Sachet", 
+        icon: "📦", 
+        subtitle: "Pure Decoction Sachet Units", 
+        description: "Pure vacuum-sealed classical decoctions with zero artificial preservatives or stabilizers." 
+      },
+      { 
+        code: "LEH", 
+        name: "Lehyams", 
+        icon: "🍯", 
+        subtitle: "Herbal Electuaries & Rejuvenative Jams", 
+        description: "Semi-solid nutritive herbal jams prepared in raw jaggery, honey and cow ghee." 
+      },
+      { 
+        code: "GHR", 
+        name: "Ghruthams", 
+        icon: "🧈", 
+        subtitle: "Medicated Clarified Butter (Ghee)", 
+        description: "Medicated cow ghee preparations crossing the blood-brain barrier for deep cellular delivery." 
+      },
+      { 
+        code: "AVA", 
+        name: "Avartis", 
+        icon: "🔄", 
+        subtitle: "High-Potency Multi-Cooked Lipids", 
+        description: "Repeatedly potentiated herbal lipid formulations processed up to 101 cycles." 
+      },
+      { 
+        code: "SGC", 
+        name: "Soft Gel Capsules", 
+        icon: "🟡", 
+        subtitle: "Lipid-Soluble Liquid Capsules", 
+        description: "Lipid-soluble classical medicated oils and actives encapsulated for modern palate." 
+      },
+      { 
+        code: "SVT", 
+        name: "Sevams / Vasthi Thailams", 
+        icon: "💉", 
+        subtitle: "Enema & Internal Delivery Oils", 
+        description: "Internal administration and panchakarma basti (enema) medicated oils." 
+      },
+      { 
+        code: "ERA", 
+        name: "Eranda Thailams", 
+        icon: "🌿", 
+        subtitle: "Purified Castor Oil Formulations", 
+        description: "Herbal-infused purified castor oil preparations for metabolic purgation and vata disorders." 
+      },
+      { 
+        code: "THI", 
+        name: "Thailams", 
+        icon: "✨", 
+        subtitle: "Classical Sesame Medicated Oils", 
+        description: "Traditional sesame oil-based external and internal medicated preparations." 
+      },
+      { 
+        code: "KTH", 
+        name: "Kera Thailams", 
+        icon: "🥥", 
+        subtitle: "Coconut Oil Medicated Formulations", 
+        description: "Pitta-pacifying cooling medicated oils prepared in pure cold-pressed coconut oil." 
+      },
+      { 
+        code: "KUZ", 
+        name: "Kuzhambu", 
+        icon: "🧴", 
+        subtitle: "Viscous Poly-Herbal Liniments", 
+        description: "Thick, viscous poly-herbal multi-oil formulations for musculoskeletal and joint disorders." 
+      },
+      { 
+        code: "MUK", 
+        name: "Mukkuttu", 
+        icon: "🪔", 
+        subtitle: "Triple-Base Medicated Lipids", 
+        description: "Classical formulations prepared using a synergy of three distinct medicated lipid bases." 
+      },
+      { 
+        code: "LEP", 
+        name: "Lepams / Ointments", 
+        icon: "🩹", 
+        subtitle: "Topical Herbal Pastes & Salves", 
+        description: "Therapeutic herbal pastes, creams and topical emollient salves for dermatological applications." 
+      },
+      { 
+        code: "RAS", 
+        name: "Rasakriya", 
+        icon: "🧪", 
+        subtitle: "Concentrated Solidified Extracts", 
+        description: "Deeply concentrated and solidified herbal extracts boiled down to crystalline potency." 
+      },
+      { 
+        code: "OTC", 
+        name: "O.T.C Products", 
+        icon: "🏷️", 
+        subtitle: "Over-The-Counter Wellness Solutions", 
+        description: "Direct consumer wellness preparations, lozenges, balms and health boosters." 
+      },
+      { 
+        code: "PAT", 
+        name: "Ethical Patents", 
+        icon: "🛡️", 
+        subtitle: "Clinically Researched Proprietary Formulations", 
+        description: "Scientifically validated proprietary intellectual formulas and targeted therapeutic blends." 
       }
     ];
 
     let categories = [...initialCategories];
-    const STORAGE_KEY_CATEGORIES = 'ayurguide_categories_v3';
+    const STORAGE_KEY_CATEGORIES = 'ayurguide_categories_v4';
 
     function saveCategoriesToStorage() {
       try {
@@ -2746,10 +3098,65 @@
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            categories = parsed;
+            // Deduplicate and merge stored categories with all initial categories
+            const existingCodes = new Set(parsed.map(c => (c.code || '').toUpperCase()));
+            const merged = [...parsed];
+            initialCategories.forEach(initCat => {
+              if (!existingCodes.has(initCat.code.toUpperCase()) && !merged.some(c => (c.name || '').toLowerCase() === initCat.name.toLowerCase())) {
+                merged.push(initCat);
+              }
+            });
+            categories = merged;
           }
         }
       } catch(e) {}
+    }
+
+    async function loadCategoriesFromServer() {
+      try {
+        const res = await fetch('/api/categories');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.data) && data.data.length > 0) {
+            const serverCats = data.data;
+            const merged = [];
+            const seenCodes = new Set();
+            const seenNames = new Set();
+
+            serverCats.forEach(sc => {
+              const code = (sc.code || sc.name.toUpperCase().replace(/\s+/g, '_')).trim();
+              const name = (sc.name || '').trim();
+              if (name && !seenCodes.has(code.toUpperCase()) && !seenNames.has(name.toLowerCase())) {
+                seenCodes.add(code.toUpperCase());
+                seenNames.add(name.toLowerCase());
+                merged.push({
+                  code: code,
+                  name: name,
+                  icon: sc.icon || '🏷️',
+                  subtitle: sc.title || sc.subtitle || name,
+                  description: sc.description || ''
+                });
+              }
+            });
+
+            // Ensure all 24 initial categories are represented
+            initialCategories.forEach(ic => {
+              if (!seenCodes.has(ic.code.toUpperCase()) && !seenNames.has(ic.name.toLowerCase())) {
+                seenCodes.add(ic.code.toUpperCase());
+                seenNames.add(ic.name.toLowerCase());
+                merged.push(ic);
+              }
+            });
+
+            categories = merged;
+            saveCategoriesToStorage();
+            populateCategoryDropdowns();
+            renderCategories();
+          }
+        }
+      } catch(err) {
+        console.warn('Category background server load note:', err);
+      }
     }
 
     function populateCategoryDropdowns() {
@@ -2758,7 +3165,7 @@
       if (filterSelect) {
         const curVal = filterSelect.value;
         filterSelect.innerHTML = `<option value="ALL">📦 All Categories (${categories.length})</option>` +
-          categories.map(c => `<option value="${c.code}">${c.icon} ${c.name} (${c.code})</option>`).join('');
+          categories.map(c => `<option value="${c.code}">${c.icon || '🏷️'} ${c.name} (${c.code})</option>`).join('');
         if (categories.some(c => c.code === curVal)) {
           filterSelect.value = curVal;
         } else {
@@ -2771,7 +3178,7 @@
       if (formSelect) {
         const curVal = formSelect.value;
         formSelect.innerHTML = categories.map(c => 
-          `<option value="${c.code}">${c.icon} ${c.name} (${c.subtitle})</option>`
+          `<option value="${c.code}">${c.icon || '🏷️'} ${c.name} — ${c.subtitle || c.name}</option>`
         ).join('');
         if (curVal && categories.some(c => c.code === curVal)) {
           formSelect.value = curVal;
@@ -2904,6 +3311,8 @@
           error = "Category Name must be at least 2 characters.";
         } else if (val.length > 80) {
           error = "Category Name cannot exceed 80 characters.";
+        } else if (!origCode && categories.some(c => c.name.toLowerCase() === val.toLowerCase())) {
+          error = `A category named "${val}" already exists.`;
         }
       } else if (fieldId === 'formCatIcon') {
         if (!val) {
@@ -3107,210 +3516,320 @@
     // =======================================================
     const initialMedicines = [
       {
-        id: "ashwagandha_root",
-        name: "Ashwagandha Root",
-        sanskritName: "अश्वगंधा (Withania somnifera)",
-        category: "CHURNA",
+        id: "SA-88225",
+        code: "SA-88225",
+        name: "Dashamoolarishtam",
+        sanskritName: "दशमूलारिष्टम् (Ten Sacred Roots)",
+        category: "ARI",
         status: "PUBLISHED",
-        imageUrl: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=600&q=80",
-        tagPill: "ADAPTOGEN",
-        healthGoals: ["STRESS_RELIEF", "IMMUNITY"],
-        benefit: "Somatic vitality, adrenal support, and deep restful restorative sleep.",
-        shortDescription: "Classical adaptogenic root promoting somatic rejuvenation, adrenal equilibrium, and restful sleep.",
-        monograph: "Ashwagandha is Ayurveda's supreme Rasayana for Vata and Kapha imbalances. It fortifies Ojas (vital immunity), nourishes Mamsa and Asthi Dhatus, down-regulates elevated cortisol, and restores endocrine rhythm. Classical preparation ensures high withanolide bioavailability without digestive irritation.",
-        contraindications: "Contraindicated in severe acute Pitta aggravation with excess internal heat. Use with caution during early pregnancy without physician supervision.",
-        dosageSummary: "500mg • After Breakfast",
-        anupana: "Warm cow milk or lukewarm water with a dash of ghee",
-        classicalRef: "Charaka Samhita Chikitsa Sthana 1.1 / AFI Vol. I",
+        imageUrl: "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600",
+        tagPill: "VITALITY & DETOX",
+        healthGoals: ["DETOX", "DIGESTION", "IMMUNITY"],
+        benefit: "Post-partum recovery, respiratory strength, digestive fire kindle and deep detox",
+        shortDescription: "Traditionally used to support digestion, strength, vitality, and recovery from physical exhaustion.",
+        monograph: "Master classical fermented bio-active elixir formulated with Dashamoola (Ten Roots) and Dhataki flowers. Kindles Pachaka Agni, balances Vata and Kapha, and rejuvenates exhausted tissues.",
+        contraindications: "Consult Vaidya during active hyperacidity.",
+        dosageSummary: "15-25 ml Twice daily after meals with equal quantity of warm water",
+        anupana: "Equal volume of warm water",
+        classicalRef: "Sharangadhara Samhita",
         rasa: "Tikta (Bitter), Kashaya (Astringent), Madhura (Sweet)",
-        virya: "Ushna (Warm Potency)",
-        vipaka: "Madhura (Sweet post-digestive)",
+        virya: "Ushna (Heating)",
+        vipaka: "Madhura (Post-digestive sweet)",
         granularIngredients: [
-          { sanskrit: "Ashwagandha Moola", botanical: "Withania somnifera (Dry Root)", ratio: "85% (500mg)", part: "Mature Root", active: "Withanolides ≥ 2.5%, Withaferin A" },
-          { sanskrit: "Pippali Churna", botanical: "Piper longum (Bioavailability Enhancer)", ratio: "10% (59mg)", part: "Dried Spikes", active: "Piperine 98% bio-catalyst" },
-          { sanskrit: "Go Ghrita Matrix", botanical: "A2 Clarified Cow Ghee Matrix", ratio: "5% (29mg)", part: "Purified Lipid", active: "Lipophilic cellular carrier" }
+          { sanskrit: "Dashamoola", botanical: "Aegle marmelos & 9 classical roots", ratio: "50% (Decoction base)", part: "Roots", active: "Phytosterols, Flavonoids" },
+          { sanskrit: "Draksha", botanical: "Vitis vinifera", ratio: "20%", part: "Dried Fruit", active: "Polyphenols, Bio-nutrients" },
+          { sanskrit: "Dhataki", botanical: "Woodfordia fruticosa", ratio: "10%", part: "Flowers", active: "Wild fermentation catalyst" },
+          { sanskrit: "Amalaki", botanical: "Emblica officinalis", ratio: "20%", part: "Fruit Pulp", active: "Stable Bio-ascorbate" }
         ]
       },
       {
-        id: "triphala_churna",
+        id: "SA-00001",
+        code: "SA-00001",
+        name: "Abhayarishtam",
+        sanskritName: "अभयारिष्टम् (Terminalia chebula Formulation)",
+        category: "ARI",
+        status: "PUBLISHED",
+        imageUrl: "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600",
+        tagPill: "DIGESTIVE HEALTH",
+        healthGoals: ["DIGESTION", "DETOX"],
+        benefit: "Arshas (Hemorrhoids), Udara (Abdominal disorders), Vibanda (Constipation), Agnimandya.",
+        shortDescription: "Classic Ayurvedic fermented formulation indicated primarily for hemorrhoids, sluggish digestion, and chronic constipation.",
+        monograph: "Abhayarishtam is prepared using Haritaki (Abhaya) and fermented herbs. It acts as an effective mild laxative, liver stimulant, and bowel regulator without causing griping or dependency.",
+        contraindications: "Diarrhea, dysentery, severe dehydration.",
+        dosageSummary: "15 to 25 ml twice daily after meals with equal quantity of warm water",
+        anupana: "Equal quantity of warm water",
+        classicalRef: "Ashtangahrudayam, Arshorogadhikaram",
+        rasa: "Kashaya, Tikta, Madhura",
+        virya: "Ushna",
+        vipaka: "Madhura",
+        granularIngredients: [
+          { sanskrit: "Abhaya", botanical: "Terminalia chebula", ratio: "40%", part: "Fruit Rind", active: "Chebulinic acid, Tannins" },
+          { sanskrit: "Dhatri", botanical: "Emblica officinalis", ratio: "25%", part: "Fruit", active: "Vitamin C, Emblicanin" },
+          { sanskrit: "Kapitha", botanical: "Feronia elephantum", ratio: "15%", part: "Fruit Pulp", active: "Pectin, Organic acids" },
+          { sanskrit: "Vishala", botanical: "Citrullus colocynthis", ratio: "20%", part: "Root", active: "Colocynthin" }
+        ]
+      },
+      {
+        id: "SA-00002",
+        code: "SA-00002",
+        name: "Amritarishtam",
+        sanskritName: "अमृतारिष्टम् (Guduchi Bio-Ferment)",
+        category: "ARI",
+        status: "PUBLISHED",
+        imageUrl: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=600",
+        tagPill: "IMMUNE RESILIENCE",
+        healthGoals: ["IMMUNITY", "DETOX"],
+        benefit: "Jwara (Chronic & intermittent fevers), Jeerna Jwara, Ajeerna, Yakrit roga (Hepatic sluggishness).",
+        shortDescription: "Potent immunomodulatory elixir that detoxifies Ama, strengthens hepatic function, and relieves recurrent pyrexia.",
+        monograph: "Amritarishtam uses classical stem decoctions of Amritha (Tinospora cordifolia) naturally fermented with Dhataki flowers and Dashamoola to clear deep metabolic Ama and support liver metabolism.",
+        contraindications: "Severe acute hyperacidity or gastric ulceration.",
+        dosageSummary: "15 to 25 ml twice daily after food",
+        anupana: "Equal volume of lukewarm water",
+        classicalRef: "Bhaishajya Ratnavali, Jwaradhikaram",
+        rasa: "Tikta, Kashaya",
+        virya: "Ushna",
+        vipaka: "Madhura",
+        granularIngredients: [
+          { sanskrit: "Amrita / Guduchi", botanical: "Tinospora cordifolia", ratio: "45%", part: "Mature Stem", active: "Tinosporaside, Cordifolioside" },
+          { sanskrit: "Bilva", botanical: "Aegle marmelos", ratio: "20%", part: "Root Bark", active: "Marmelosin" },
+          { sanskrit: "Shyonaka", botanical: "Oroxylum indicum", ratio: "20%", part: "Root Bark", active: "Baicalein" },
+          { sanskrit: "Dhataki", botanical: "Woodfordia fruticosa", ratio: "15%", part: "Flowers", active: "Fermentation catalyst" }
+        ]
+      },
+      {
+        id: "SA-00003",
+        code: "SA-00003",
+        name: "Ashokarishtam",
+        sanskritName: "अशोकारिष्टम् (Uterine Tonic)",
+        category: "ARI",
+        status: "PUBLISHED",
+        imageUrl: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600",
+        tagPill: "WOMEN WELLNESS",
+        healthGoals: ["IMMUNITY", "VITALITY"],
+        benefit: "Asrigdara (Menorrhagia), Pradara (Leucorrhea), Katishoola (Low back pain), Shweta Pradara.",
+        shortDescription: "Classical uterine tonic indicated for hormonal harmony, excessive menstrual bleeding, and pelvic comfort.",
+        monograph: "Formulated with true Ashoka bark and cooling astringents, Ashokarishtam regulates endometrium vascularity, soothes pelvic heaviness, and promotes emotional balance.",
+        contraindications: "Contraindicated during active pregnancy.",
+        dosageSummary: "15 to 25 ml twice daily after food",
+        anupana: "Equal volume of warm water",
+        classicalRef: "Bhaishajya Ratnavali, Pradaradhikaram",
+        rasa: "Kashaya, Tikta",
+        virya: "Sheeta",
+        vipaka: "Katu",
+        granularIngredients: [
+          { sanskrit: "Ashoka", botanical: "Saraca asoca", ratio: "50%", part: "Stem Bark", active: "Saracin, Catechol tannins" },
+          { sanskrit: "Dhataki", botanical: "Woodfordia fruticosa", ratio: "20%", part: "Flowers", active: "Wild yeast bio-actives" },
+          { sanskrit: "Musta", botanical: "Cyperus rotundus", ratio: "15%", part: "Rhizome", active: "Cyperene, Cyperol" },
+          { sanskrit: "Haritaki", botanical: "Terminalia chebula", ratio: "15%", part: "Fruit", active: "Chebulic acid" }
+        ]
+      },
+      {
+        id: "SA-13160",
+        code: "SA-13160",
         name: "Triphala Churna",
         sanskritName: "त्रिफला चूर्ण (Three Sacred Fruits)",
-        category: "CHURNA",
+        category: "CHO",
         status: "PUBLISHED",
         imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80",
         tagPill: "DIGESTIVE DETOX",
         healthGoals: ["DIGESTION", "DETOX"],
         benefit: "Gentle natural bowel regulator, antioxidant cellular detox, and ocular health.",
         shortDescription: "Time-tested three-fruit formulation for gentle nocturnal colon cleanse and metabolic detox.",
-        monograph: "The revered triad of Haritaki, Bibhitaki, and Amalaki supports gentle colon regulation without dependency. It kindles Pachaka Agni, gently dislodges accumulated Ama from the villi of the small intestine, and provides potent free-radical scavenging polyphenols.",
-        contraindications: "Not recommended in active acute diarrhea, dysentery, or severe dehydration.",
+        monograph: "The revered triad of Haritaki, Bibhitaki, and Amalaki supports gentle colon regulation without dependency. Kindles Pachaka Agni and dislodges Ama from gastrointestinal channels.",
+        contraindications: "Active diarrhea or acute dehydration.",
         dosageSummary: "3g - 5g • At Bedtime",
-        anupana: "Lukewarm water or pure forest honey",
-        classicalRef: "Sushruta Samhita Sutrasthana 38 / AFI Vol. I",
-        rasa: "Pancharasa (5 tastes excluding Salty)",
-        virya: "Anushnasheeta (Balanced neutral potency)",
-        vipaka: "Madhura (Sweet post-digestive)",
+        anupana: "Lukewarm water or pure honey",
+        classicalRef: "Charaka Samhita / Sushruta Samhita Sutrasthana 38",
+        rasa: "Pancharasa (Excluding Lavana)",
+        virya: "Anushnasheeta",
+        vipaka: "Madhura",
         granularIngredients: [
-          { sanskrit: "Haritaki", botanical: "Terminalia chebula (Yellow Myrobalan)", ratio: "33.33% (1.67g)", part: "Fruit Pericarp", active: "Chebulinic acid, Tannins" },
-          { sanskrit: "Bibhitaki", botanical: "Terminalia bellirica (Belleric Myrobalan)", ratio: "33.33% (1.67g)", part: "Fruit Pericarp", active: "Gallic acid, Ellagic acid" },
-          { sanskrit: "Amalaki", botanical: "Phyllanthus emblica (Indian Gooseberry)", ratio: "33.33% (1.67g)", part: "Dried Fruit Pulp", active: "Natural Vitamin C, Emblicanin A & B" }
+          { sanskrit: "Haritaki", botanical: "Terminalia chebula", ratio: "33.3%", part: "Fruit Rind", active: "Chebulinic acid" },
+          { sanskrit: "Bibhitaki", botanical: "Terminalia bellirica", ratio: "33.3%", part: "Fruit Rind", active: "Gallic & Ellagic acid" },
+          { sanskrit: "Amalaki", botanical: "Emblica officinalis", ratio: "33.3%", part: "Dried Fruit", active: "Natural Vitamin C" }
         ]
       },
       {
-        id: "brahmi_vati",
-        name: "Brahmi Vati",
-        sanskritName: "ब्राह्मी वटी (Classical Tablet)",
-        category: "VATI",
+        id: "SA-92629",
+        code: "SA-92629",
+        name: "Ashwagandha Root",
+        sanskritName: "अश्वगंधा (Withania somnifera)",
+        category: "CHO",
         status: "PUBLISHED",
-        imageUrl: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80",
+        imageUrl: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600",
+        tagPill: "ADAPTOGEN",
+        healthGoals: ["STRESS_RELIEF", "IMMUNITY"],
+        benefit: "Somatic vitality, adrenal support, and deep restful restorative sleep.",
+        shortDescription: "Classical adaptogenic root promoting somatic rejuvenation, adrenal equilibrium, and restful sleep.",
+        monograph: "Supreme Rasayana for Vata and Kapha imbalances. Fortifies Ojas, nourishes Mamsa and Asthi Dhatus, down-regulates cortisol, and restores neuro-endocrine rhythm.",
+        contraindications: "Severe acute Pitta aggravation with excess internal heat.",
+        dosageSummary: "3-6g with warm milk",
+        anupana: "Warm cow milk or lukewarm water with a dash of ghee",
+        classicalRef: "Charaka Samhita Chikitsa Sthana 1.1 / AFI Vol. I",
+        rasa: "Tikta, Kashaya, Madhura",
+        virya: "Ushna",
+        vipaka: "Madhura",
+        granularIngredients: [
+          { sanskrit: "Ashwagandha Moola", botanical: "Withania somnifera", ratio: "90%", part: "Mature Root", active: "Withanolides, Withaferin A" },
+          { sanskrit: "Pippali", botanical: "Piper longum", ratio: "10%", part: "Fruit Spike", active: "Piperine bio-enhancer" }
+        ]
+      },
+      {
+        id: "SA-20904",
+        code: "SA-20904",
+        name: "Brahmi Vati",
+        sanskritName: "ब्राह्मी वटी (Medhya Rasayana Tablet)",
+        category: "GUL",
+        status: "PUBLISHED",
+        imageUrl: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600",
         tagPill: "NOOTROPIC",
         healthGoals: ["COGNITION", "STRESS_RELIEF"],
         benefit: "Deep mental clarity, cognitive retention, and nervous system tranquility.",
         shortDescription: "Classical neuro-protective tablet enhancing memory retention, focus, and reducing mental exhaustion.",
-        monograph: "Brahmi Vati is a premier Medhya Rasayana. By nourishing Majja Dhatu and supporting Sadhaka Pitta, it enhances Dhi (acquisition), Dhriti (retention), and Smriti (recall), while soothing nervous agitation caused by aggravated Prana Vata.",
-        contraindications: "Observe caution when co-administered with synthetic sedatives or anti-epileptic pharmaceutical agents.",
-        dosageSummary: "1 tablet • Morning with warm milk",
-        anupana: "A2 Warm Cow Milk or Saraswatharishta",
+        monograph: "Premier Medhya Rasayana supporting Dhi (acquisition), Dhriti (retention), and Smriti (recall), while soothing nervous agitation caused by aggravated Prana Vata.",
+        contraindications: "Consult physician before co-administration with prescription sedatives.",
+        dosageSummary: "1-2 tablets twice daily",
+        anupana: "Saraswatarishta or warm milk",
         classicalRef: "Bhaishajya Ratnavali Manasaroga Chikitsa / AFI",
-        rasa: "Tikta (Bitter), Kashaya (Astringent)",
-        virya: "Sheeta (Cooling Potency)",
-        vipaka: "Madhura (Sweet post-digestive)",
+        rasa: "Tikta, Kashaya",
+        virya: "Sheeta",
+        vipaka: "Madhura",
         granularIngredients: [
-          { sanskrit: "Brahmi Standardized", botanical: "Bacopa monnieri (Standardized Extract)", ratio: "45% (112mg)", part: "Whole Herb", active: "Bacosides A & B ≥ 20%" },
-          { sanskrit: "Shankhapushpi", botanical: "Convolvulus pluricaulis", ratio: "25% (62mg)", part: "Whole Plant", active: "Convolvine, Microphylic acid" },
-          { sanskrit: "Vacha Shuddha", botanical: "Acorus calamus (Purified Sweet Flag)", ratio: "15% (37mg)", part: "Shodhita Rhizome", active: "Beta-asarone detoxified" },
-          { sanskrit: "Swarna Makshika Bhasma", botanical: "Purified Calcined Chalcopyrite", ratio: "15% (37mg)", part: "Mineral Bhasma", active: "Micro-elemental Bio-chelated Iron/Copper" }
+          { sanskrit: "Brahmi", botanical: "Bacopa monnieri", ratio: "50%", part: "Whole Herb", active: "Bacosides A & B" },
+          { sanskrit: "Shankhapushpi", botanical: "Convolvulus pluricaulis", ratio: "25%", part: "Whole Plant", active: "Microphylic acid" },
+          { sanskrit: "Vacha", botanical: "Acorus calamus", ratio: "25%", part: "Purified Rhizome", active: "Beta-asarone detoxified" }
         ]
       },
       {
-        id: "chyawanprash_awaleha",
-        name: "Chyawanprash Awaleha",
+        id: "SA-76907",
+        code: "SA-76907",
+        name: "Chyawanprash Avaleha",
         sanskritName: "च्यवनप्राश अवलेह (Rasayana Jam)",
-        category: "RASAYANA",
+        category: "LEH",
         status: "PUBLISHED",
-        imageUrl: "https://images.unsplash.com/photo-1577937927133-66ef06acdf18?auto=format&fit=crop&w=600&q=80",
+        imageUrl: "https://images.unsplash.com/photo-1577401239170-897942555fb3?w=600",
         tagPill: "IMMUNITY BOOSTER",
-        healthGoals: ["IMMUNITY"],
-        benefit: "Comprehensive respiratory resistance, stamina, cellular longevity, and digestive Agni.",
-        shortDescription: "Classical rejuvenating herbal jam with 40+ botanical extracts for deep immune defense.",
-        monograph: "Originated by Sage Chyavana, this formulation is crafted around fresh steamed Amla pulp and Dashamoola decoction. It fortifies Pranavaha Srotas (respiratory pathways), rebuilds depleted tissues after illness, and serves as an ideal daily Rasayana for all ages.",
+        healthGoals: ["IMMUNITY", "RESPIRATORY"],
+        benefit: "Immuno-modulatory rejuvenation, lung health, and vitality for all seasons.",
+        shortDescription: "Premier classical Rasayana rich in natural Vitamin C and 40+ botanical herbs.",
+        monograph: "Originated by Sage Chyavana, formulated around wild steamed Amla pulp and Dashamoola decoction. Rebuilds depleted Dhatus and fortifies Pranavaha Srotas.",
         contraindications: "Uncontrolled diabetes mellitus (due to traditional organic jaggery/honey carrier matrix).",
-        dosageSummary: "1 tablespoon • Morning empty stomach",
+        dosageSummary: "1-2 tablespoons morning & evening",
         anupana: "Warm milk or lukewarm water",
-        classicalRef: "Charaka Samhita Chikitsa Sthana 1.28-34",
+        classicalRef: "Charaka Samhita Chikitsa Sthana 1.1.62-74",
         rasa: "Madhura, Amla, Tikta, Katu, Kashaya",
-        virya: "Sheeta-Ushna Samana (Balanced)",
-        vipaka: "Madhura (Nourishing)",
-        granularIngredients: [
-          { sanskrit: "Amalaki Fresh Pulp", botanical: "Phyllanthus emblica (Steamed fresh fruit)", ratio: "58% (5.8g)", part: "Fresh Fruit Pulp", active: "Stable Polyphenolic Ascorbate" },
-          { sanskrit: "Dashamoola Kwatha", botanical: "Ten Sacred Classical Roots Decoction", ratio: "18% (1.8g)", part: "Root Bark Extract", active: "Adaptogenic Phytosterols" },
-          { sanskrit: "Ashtavarga Rare Herbs", botanical: "Jeevaka, Rishabhaka, Meda, Mahameda, etc.", ratio: "8% (0.8g)", part: "Tuberous Roots", active: "Vitalizing Ojas precursors" },
-          { sanskrit: "Pippali", botanical: "Piper longum (Bioavailability vehicle)", ratio: "4% (0.4g)", part: "Fruit Spikes", active: "Piperine, Piperlonguminine" },
-          { sanskrit: "Madhu & Go Ghrita", botanical: "Forest Honey & A2 Grass-fed Cow Ghee", ratio: "12% (1.2g)", part: "Purified Anupana", active: "Bio-lipid delivery matrix" }
-        ]
-      },
-      {
-        id: "kumkumadi_tailam",
-        name: "Kumkumadi Tailam",
-        sanskritName: "कुंकुमादि तैलम् (Saffron Facial Oil)",
-        category: "TAILA",
-        status: "PUBLISHED",
-        imageUrl: "https://images.unsplash.com/photo-1608248597359-715d9a2444ba?auto=format&fit=crop&w=600&q=80",
-        tagPill: "SKIN RADIANCE",
-        healthGoals: ["SKIN_HEALTH"],
-        benefit: "Luminous complexion, pigmentation reduction, and cellular dermal repair.",
-        shortDescription: "Miraculous Ayurvedic facial elixir infused with pure Kashmiri Saffron for radiant skin luster.",
-        monograph: "Cooked slowly with pure Kashmiri Saffron, Sandalwood, and Manjistha in a sesame oil and goat milk base. It pacifies aggravated Bhrajaka Pitta, clarifies skin blemishes (Vyanga), stimulates micro-vascular circulation, and restores youthfulness.",
-        contraindications: "For external application only. Discontinue if extreme contact allergic dermatitis occurs.",
-        dosageSummary: "3-4 drops • Night massage onto cleansed face",
-        anupana: "Topical application, followed by gentle rose water mist",
-        classicalRef: "Ashtanga Hridaya Uttarasthana 31 / AFI Part I",
-        rasa: "Tikta, Kashaya, Madhura",
-        virya: "Anushna (Gentle warm)",
-        vipaka: "Madhura",
-        granularIngredients: [
-          { sanskrit: "Kashmiri Kunkuma", botanical: "Crocus sativus (Grade-1 Red Saffron)", ratio: "8g per Litre", part: "Stigmas & Styles", active: "Crocin, Safranal, Picrocrocin" },
-          { sanskrit: "Chandana Shweta & Rakta", botanical: "Santalum album & Pterocarpus santalinus", ratio: "15% decoction", part: "Heartwood Core", active: "Alpha-santalol, Santalin" },
-          { sanskrit: "Manjistha", botanical: "Rubia cordifolia (Indian Madder)", ratio: "12% decoction", part: "Roots & Stems", active: "Purpurin, Alizarin anti-oxidants" },
-          { sanskrit: "Yashtimadhu", botanical: "Glycyrrhiza glabra (Licorice Root)", ratio: "10% decoction", part: "Dried Roots", active: "Glabridin, Glycyrrhizin" },
-          { sanskrit: "Tila Thailam Base", botanical: "Cold Pressed Sesamum indicum", ratio: "55% oil vehicle", part: "Virgin Seeds", active: "Sesamin, Sesamol lipid barrier" }
-        ]
-      },
-      {
-        id: "amritarishta",
-        name: "Amritarishta",
-        sanskritName: "अमृतारिष्ट (Fermented Guduchi)",
-        category: "ARISHTA",
-        status: "PUBLISHED",
-        imageUrl: "https://images.unsplash.com/photo-1514733670139-4d87a1941d55?auto=format&fit=crop&w=600&q=80",
-        tagPill: "LIVER & FEVER DETOX",
-        healthGoals: ["IMMUNITY", "DETOX", "DIGESTION"],
-        benefit: "Hepato-protection, metabolic detoxification, and deep immune resilience.",
-        shortDescription: "Traditional fermented herbal elixir kindling digestive Agni and detoxifying sluggish liver function.",
-        monograph: "Amritarishta is prepared through classical natural bio-fermentation of Guduchi and Dashamoola. The self-generated natural ethanol extracts deep-seated micro-active bitter glycosides that regulate liver enzymes, clear chronic low-grade febrile conditions, and optimize immune response.",
-        contraindications: "Gastric ulcers in hyper-acute state; individuals strictly avoiding self-generated ethanol (<9% v/v).",
-        dosageSummary: "15ml to 20ml with equal water • After Meals",
-        anupana: "Equal volume of lukewarm water",
-        classicalRef: "Bhaishajya Ratnavali Jwaradhikara / AFI",
-        rasa: "Tikta (Intense Bitter), Kashaya",
-        virya: "Ushna (Bio-active warm)",
-        vipaka: "Madhura",
-        granularIngredients: [
-          { sanskrit: "Amrita / Guduchi", botanical: "Tinospora cordifolia (Heart-leaved Moonseed)", ratio: "40% (2.0g/15ml)", part: "Mature Stems", active: "Cordifolioside, Tinosporaside" },
-          { sanskrit: "Dashamoola Kwatha", botanical: "Ten Sacred Roots Decoction", ratio: "25% (1.25g/15ml)", part: "Barks & Roots", active: "Antipyretic bio-flavonoids" },
-          { sanskrit: "Katuki", botanical: "Picrorhiza kurroa (Kutki Rhizome)", ratio: "10% (0.5g/15ml)", part: "Root/Rhizome", active: "Picroside I & II hepatoprotective" },
-          { sanskrit: "Dhataki Pushpa", botanical: "Woodfordia fruticosa (Fire Flame Bush)", ratio: "10% (0.5g/15ml)", part: "Dried Flowers", active: "Natural wild yeast bio-fermentation" },
-          { sanskrit: "Purana Guda", botanical: "Aged Chemical-free Jaggery base", ratio: "15% base", part: "Cane Extract", active: "Self-generated ethanol ≤ 10% v/v" }
-        ]
-      },
-      {
-        id: "dashamula_kwatha",
-        name: "Dashamula Kwatha",
-        sanskritName: "दशमूल क्वाथ (Ten Sacred Roots)",
-        category: "KWATHA",
-        status: "DRAFT",
-        imageUrl: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=600&q=80",
-        tagPill: "VATA HARMONY",
-        healthGoals: ["JOINT_MOBILITY", "STRESS_RELIEF"],
-        benefit: "Profound Vata pacification, muscular stiffness relief, and neuro-muscular tonic.",
-        shortDescription: "Ancient ten-root decoction relieving joint stiffness, lower back aches, and neurological fatigue.",
-        monograph: "Dashamula comprises five tree barks (Brihat Panchamoola) and five whole small herbs (Laghu Panchamoola). It powerfully pacifies aggravated Vata Dosha in the pelvic floor (Apana Vata) and chest (Prana Vata), easing muscular spasms and structural pain.",
-        contraindications: "Severe dehydration and acute Pitta burning sensations.",
-        dosageSummary: "40ml warm decoction • Twice daily before meals",
-        anupana: "Lukewarm water or a pinch of Pippali powder",
-        classicalRef: "Sharangadhara Samhita Madhyama Khanda 2",
-        rasa: "Tikta (Bitter), Kashaya (Astringent)",
-        virya: "Ushna (Penetrating Heat)",
-        vipaka: "Katu (Pungent post-digestive)",
-        granularIngredients: [
-          { sanskrit: "Brihat Panchamoola", botanical: "Bilva, Agnimantha, Shyonaka, Patala, Gambhari", ratio: "50% (5 equal roots)", part: "Stem & Root Bark", active: "Lupenone, Scopoletin, Pectolinarigenin" },
-          { sanskrit: "Laghu Panchamoola", botanical: "Brihati, Kantakari, Gokshura, Shalaparni, Prishniparni", ratio: "50% (5 small shrubs)", part: "Whole Plants & Roots", active: "Solasodine, Tribuloside, Gangetin" }
-        ]
-      },
-      {
-        id: "gokshuradi_guggulu",
-        name: "Gokshuradi Guggulu",
-        sanskritName: "गोक्षुरादि गुग्गुलु (Renal Tablet)",
-        category: "VATI",
-        status: "PUBLISHED",
-        imageUrl: "https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&w=600&q=80",
-        tagPill: "URINARY & DETOX",
-        healthGoals: ["DETOX", "JOINT_MOBILITY"],
-        benefit: "Urinary tract purification, uric acid flushing, and renal fluid balance.",
-        shortDescription: "Balances renal fluids, flushes metabolic uric acid, and eases joint inflammation.",
-        monograph: "Gokshuradi Guggulu combines the diuretic and lithotriptic virtues of Gokshura with the deep penetrative anti-inflammatory resin of purified Guggulu. It cleanses Mutravaha Srotas (urinary channels), prevents crystal precipitation, and soothes joint stiffness.",
-        contraindications: "Caution during severe acute kidney failure requiring dialysis; pregnancy.",
-        dosageSummary: "2 tablets • Twice daily after food",
-        anupana: "Warm water, barley water, or Musta decoction",
-        classicalRef: "Bhaishajya Ratnavali Pramehadhikara / AFI",
-        rasa: "Madhura, Tikta, Kashaya, Katu",
         virya: "Sheeta-Ushna Samana",
         vipaka: "Madhura",
         granularIngredients: [
-          { sanskrit: "Gokshura Kwatha", botanical: "Tribulus terrestris (Puncturvine 28-fold decoction)", ratio: "52% (260mg)", part: "Spiny Fruits & Roots", active: "Protodioscin, Furostanol Saponins" },
-          { sanskrit: "Shuddha Guggulu", botanical: "Commiphora mukul (Triphala-purified oleo-gum-resin)", ratio: "28% (140mg)", part: "Purified Resin", active: "Guggulsterones Z & E" },
-          { sanskrit: "Triphala Standardized", botanical: "Haritaki, Bibhitaki, Amalaki myrobalans", ratio: "10% (50mg)", part: "Dried Fruits", active: "Gallic & Chebulic tannins" },
-          { sanskrit: "Trikatu & Musta", botanical: "Zingiber, Piper nigrum, P. longum, Cyperus rotundus", ratio: "10% (50mg)", part: "Rhizomes & Seeds", active: "Gingerol, Piperine deep digestive Agni" }
+          { sanskrit: "Amalaki Fresh Pulp", botanical: "Phyllanthus emblica", ratio: "60%", part: "Fresh Berries", active: "Stable Bio-ascorbates" },
+          { sanskrit: "Dashamoola Kwatha", botanical: "Ten Sacred Classical Roots", ratio: "20%", part: "Root Bark", active: "Adaptogenic Sterols" },
+          { sanskrit: "Pippali & Ghee/Honey", botanical: "Piper longum, Cow Ghee, Honey", ratio: "20%", part: "Carrier Matrix", active: "Bioavailability enhancers" }
+        ]
+      },
+      {
+        id: "SA-25363",
+        code: "SA-25363",
+        name: "Kumkumadi Thailam",
+        sanskritName: "कुंकुमादि तैलम् (Saffron Facial Elixir)",
+        category: "THA",
+        status: "PUBLISHED",
+        imageUrl: "https://images.unsplash.com/photo-1608248597359-253106517e44?w=600",
+        tagPill: "SKIN RADIANCE",
+        healthGoals: ["SKIN_HEALTH"],
+        benefit: "Facial radiance, hyperpigmentation correction, and epidermal glow.",
+        shortDescription: "Luxurious Kashmiri saffron and red sandalwood infused classical beauty oil.",
+        monograph: "Cooked slowly with pure Kashmiri Saffron, Sandalwood, and Manjistha in a virgin sesame oil base. Clarifies blemishes, stimulates micro-circulation, and pacifies Bhrajaka Pitta.",
+        contraindications: "External application only.",
+        dosageSummary: "3-5 drops external application",
+        anupana: "Gentle circular facial massage",
+        classicalRef: "Ashtanga Hrudayam / Bhaishajya Ratnavali",
+        rasa: "Tikta, Kashaya, Madhura",
+        virya: "Anushna",
+        vipaka: "Madhura",
+        granularIngredients: [
+          { sanskrit: "Kashmiri Kunkuma", botanical: "Crocus sativus", ratio: "10g/L", part: "Stigmas", active: "Crocin, Safranal" },
+          { sanskrit: "Chandana", botanical: "Santalum album & Pterocarpus santalinus", ratio: "20%", part: "Heartwood", active: "Santalol" },
+          { sanskrit: "Manjistha", botanical: "Rubia cordifolia", ratio: "20%", part: "Stems & Roots", active: "Purpurin, Alizarin" },
+          { sanskrit: "Tila Thailam", botanical: "Sesamum indicum", ratio: "50%", part: "Virgin Cold-pressed Oil", active: "Sesamin, Sesamol" }
+        ]
+      },
+      {
+        id: "SA-43264",
+        code: "SA-43264",
+        name: "Yogaraj Guggulu",
+        sanskritName: "योगराज गुग्गुलु (Vata & Joint Compound)",
+        category: "GUL",
+        status: "PUBLISHED",
+        imageUrl: "https://images.unsplash.com/photo-1550572017-edd951aa8f72?w=600",
+        tagPill: "JOINT MOBILITY",
+        healthGoals: ["JOINT_MOBILITY", "DETOX"],
+        benefit: "Joint flexibility, synovial comfort, and elimination of metabolic ama.",
+        shortDescription: "Time-honored detoxifying and anti-inflammatory classical Guggulu compound.",
+        monograph: "Classic polyherbal compound combining Shuddha Guggulu with Chitraka, Rasna, and carminative herbs. Cleanses deep neuromuscular channels and alleviates painful musculoskeletal stiffness.",
+        contraindications: "Caution during acute active ulcerative colitis or hyperacidity.",
+        dosageSummary: "2 tablets twice daily",
+        anupana: "Warm water or Dashamoolarishtam",
+        classicalRef: "Bhaishajya Ratnavali Amavata Chikitsa",
+        rasa: "Tikta, Katu, Kashaya",
+        virya: "Ushna",
+        vipaka: "Katu",
+        granularIngredients: [
+          { sanskrit: "Shuddha Guggulu", botanical: "Commiphora mukul", ratio: "50%", part: "Purified Gum-Resin", active: "Guggulsterones Z & E" },
+          { sanskrit: "Chitraka", botanical: "Plumbago zeylanica", ratio: "15%", part: "Root Bark", active: "Plumbagin" },
+          { sanskrit: "Rasna", botanical: "Pluchea lanceolata", ratio: "15%", part: "Leaves", active: "Flavonol glycosides" },
+          { sanskrit: "Trikatu", botanical: "Zingiber, Piper nigrum & longum", ratio: "20%", part: "Dried Fruits/Rhizomes", active: "Piperine, Gingerols" }
+        ]
+      },
+      {
+        id: "SA-72205",
+        code: "SA-72205",
+        name: "Shatavari Kalpa",
+        sanskritName: "शतावरी कल्प (Nourishing Granules)",
+        category: "LEH",
+        status: "PUBLISHED",
+        imageUrl: "https://images.unsplash.com/photo-1514733670139-4d87a1941d55?w=600",
+        tagPill: "NOURISHMENT & VITALITY",
+        healthGoals: ["IMMUNITY", "VITALITY"],
+        benefit: "Deep lactation support, hormonal balance, mucosal nourishment, and cellular cooling.",
+        shortDescription: "Sweet nourishing granules enriched with pure Shatavari for feminine vitality and digestive cooling.",
+        monograph: "Shatavari is Ayurveda premier female adaptogen and tissue builder (Stanyajanana and Shukra-Artava balya). Prepared as Kalpa granules with Elaichi in unrefined raw cane matrix to soothe Pitta and Vata.",
+        contraindications: "Active fluid retention without physician guidance.",
+        dosageSummary: "1 to 2 teaspoons with warm milk twice daily",
+        anupana: "Warm cow milk",
+        classicalRef: "Sahasrayogam / AFI",
+        rasa: "Madhura, Tikta",
+        virya: "Sheeta",
+        vipaka: "Madhura",
+        granularIngredients: [
+          { sanskrit: "Shatavari", botanical: "Asparagus racemosus", ratio: "40%", part: "Tuberous Roots", active: "Shatavarins I-IV, Sarsasapogenin" },
+          { sanskrit: "Elaichi", botanical: "Elettaria cardamomum", ratio: "5%", part: "Seeds", active: "Terpinyl acetate, Cineole" },
+          { sanskrit: "Sharkara", botanical: "Raw Cane Sugar Matrix", ratio: "55%", part: "Cane crystals", active: "Cooling palatable vehicle" }
+        ]
+      },
+      {
+        id: "SA-58259",
+        code: "SA-58259",
+        name: "Mahanarayan Thailam",
+        sanskritName: "महानारायण तैलम् (Master Abhyanga Oil)",
+        category: "THA",
+        status: "PUBLISHED",
+        imageUrl: "https://images.unsplash.com/photo-1512290900672-1f4963507d6d?w=600",
+        tagPill: "JOINT & MUSCLE CARE",
+        healthGoals: ["JOINT_MOBILITY"],
+        benefit: "Musculoskeletal strength, tendon relaxation, and alleviation of chronic stiffness.",
+        shortDescription: "Master classical abhyanga oil formulated with 50+ roots and botanicals.",
+        monograph: "Masterwork classical massage oil featuring Dashamoola, Shatavari, Bilva, and Ashwagandha processed into cold-pressed black sesame oil. Pacifies deep-seated Vata in bones, joints, and neuromuscular pathways.",
+        contraindications: "For external application only. Do not apply over open wounds or acute fractures.",
+        dosageSummary: "External Abhyanga oil massage",
+        anupana: "Followed by hot steam fomentation (Swedana)",
+        classicalRef: "Bhaishajya Ratnavali Vatavyadhi Chikitsa",
+        rasa: "Tikta, Madhura",
+        virya: "Anushna",
+        vipaka: "Madhura",
+        granularIngredients: [
+          { sanskrit: "Dashamoola & Ashwagandha", botanical: "Aegle, Withania & 10 Roots", ratio: "40%", part: "Decoction Roots", active: "Alkaloids, Phytosterols" },
+          { sanskrit: "Shatavari", botanical: "Asparagus racemosus", ratio: "20%", part: "Fresh Root Juice", active: "Steroidal saponins" },
+          { sanskrit: "Tila Thailam Base", botanical: "Sesamum indicum", ratio: "40%", part: "Cold-pressed Sesame Oil", active: "Sesamin, Sesamol transdermal carrier" }
         ]
       }
     ];
@@ -3323,7 +3842,7 @@
     ];
 
     let activeHealthGoal = "ALL";
-    const STORAGE_KEY_MEDICINES = 'ayurguide_medicines_catalogue_v3';
+    const STORAGE_KEY_MEDICINES = 'ayurguide_medicines_catalogue_v4';
 
     function saveMedicinesToStorage() {
       try {
@@ -3339,7 +3858,17 @@
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            medicines = parsed;
+            // Filter out any stale placeholder medicines that were never in the database
+            const cleaned = parsed.filter(m => {
+              const id = (m.id || '').toLowerCase();
+              const name = (m.name || '').toLowerCase();
+              if (id.includes('dashamula_kwatha') || name.includes('dashamula kwatha')) return false;
+              if (id.includes('gokshuradi_guggulu') || name.includes('gokshuradi guggulu')) return false;
+              return true;
+            });
+            if (cleaned.length > 0) {
+              medicines = cleaned;
+            }
           }
         }
       } catch (e) {
@@ -3357,6 +3886,71 @@
           m.updatedAt = m.createdAt || now.toISOString();
         }
       });
+    }
+
+    async function loadMedicinesFromServer() {
+      try {
+        const res = await fetch('/api/products');
+        if (res.ok) {
+          const json = await res.json();
+          if (json && Array.isArray(json.data) && json.data.length > 0) {
+            const serverProducts = json.data;
+            const mapped = serverProducts.map(sp => {
+              const localMatch = initialMedicines.find(im => 
+                (im.code && sp.code && im.code.toLowerCase() === sp.code.toLowerCase()) ||
+                (im.name && sp.name && im.name.toLowerCase() === sp.name.toLowerCase()) ||
+                (im.id && String(sp.id) === String(im.id))
+              );
+
+              return {
+                id: sp.code || `med_${sp.id}`,
+                code: sp.code || (localMatch ? localMatch.code : ''),
+                name: sp.name,
+                sanskritName: localMatch?.sanskritName || sp.sanskrit_name || sp.sanskritName || `${sp.name} (Classical Formulation)`,
+                category: sp.category || sp.category_name || (localMatch ? localMatch.category : 'Arishtam'),
+                status: (sp.status || 'Active').toUpperCase() === 'ACTIVE' ? 'PUBLISHED' : (sp.status || 'PUBLISHED').toUpperCase(),
+                imageUrl: sp.imageUrl || sp.image_url || (localMatch ? localMatch.imageUrl : 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600'),
+                tagPill: localMatch?.tagPill || (sp.category ? sp.category.toUpperCase() : 'CLASSICAL'),
+                healthGoals: localMatch?.healthGoals || sp.health_goals || ["IMMUNITY"],
+                benefit: sp.indications || sp.description || localMatch?.benefit || "Supports holistic vitality, tissue rejuvenation and metabolic balance.",
+                shortDescription: sp.description || localMatch?.shortDescription || "Classical Ayurvedic formulation prepared according to authentic traditional texts.",
+                monograph: localMatch?.monograph || sp.description || "Authentic classical preparation conforming strictly to the Ayurvedic Formulary of India (AFI).",
+                contraindications: localMatch?.contraindications || "None known when administered under qualified Ayurvedic medical supervision.",
+                dosageSummary: sp.usage || localMatch?.dosageSummary || "15-25 ml twice daily after meals with equal quantity of warm water.",
+                anupana: localMatch?.anupana || "Warm water or lukewarm milk as prescribed",
+                classicalRef: sp.classicalReference || localMatch?.classicalRef || "Ayurvedic Formulary of India",
+                rasa: localMatch?.rasa || "Tikta, Kashaya, Madhura",
+                virya: localMatch?.virya || "Ushna",
+                vipaka: localMatch?.vipaka || "Madhura",
+                granularIngredients: (localMatch?.granularIngredients && localMatch.granularIngredients.length > 0)
+                  ? localMatch.granularIngredients
+                  : (Array.isArray(sp.ingredients) && sp.ingredients.length > 0
+                      ? sp.ingredients.map(ing => ({
+                          sanskrit: typeof ing === 'string' ? ing : (ing.name || 'Classical Herb'),
+                          botanical: typeof ing === 'string' ? ing : (ing.botanicalName || ing.name || 'Botanical'),
+                          ratio: 'Standard Classical Proportion',
+                          part: 'Purified Herb',
+                          active: 'Phytochemical Actives'
+                        }))
+                      : [
+                          { sanskrit: sp.name, botanical: "Classical Botanical Compound", ratio: "100%", part: "Processed Form", active: "Bio-active markers" }
+                        ])
+              };
+            });
+
+            medicines = mapped;
+            saveMedicinesToStorage();
+            renderMedicines();
+            updateMetrics();
+            renderDashboardRecentMedicines();
+            if (typeof updateGlobalDraftAlertBar === 'function') {
+              updateGlobalDraftAlertBar();
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Unable to load medicines from server API:', e);
+      }
     }
 
     function showToast(message, type = 'info') {
@@ -3412,6 +4006,8 @@
         renderDashboardRecentMedicines();
       } else if (tabId === 'categoriesTab') {
         renderCategories();
+      } else if (tabId === 'usersTab') {
+        loadUsers();
       } else if (tabId === 'adminSettingsTab') {
         loadAdminSettingsTab();
       } else if (tabId === 'medicinesTab') {
@@ -3934,7 +4530,12 @@
       document.getElementById('formMedId').value = draft.editId || '';
       document.getElementById('formMedName').value = draft.name || '';
       document.getElementById('formMedSanskrit').value = draft.sanskrit || '';
-      document.getElementById('formMedCategory').value = draft.category || 'CHURNA';
+      const draftCat = draft.category || '';
+      const catMatch = categories.find(c => 
+        c.code.toUpperCase() === draftCat.toUpperCase() || 
+        c.name.toLowerCase() === draftCat.toLowerCase()
+      );
+      document.getElementById('formMedCategory').value = catMatch ? catMatch.code : (draftCat || 'ARI');
       document.getElementById('formMedStatus').value = draft.status || 'PUBLISHED';
       document.getElementById('formMedClassicalRef').value = draft.classicalRef || '';
       document.getElementById('formMedImageUrl').value = draft.imageUrl || '';
@@ -4215,7 +4816,12 @@
       const benefitVal = med.benefit || med.shortDescription || "";
       document.getElementById('formMedName').value = nameVal;
       document.getElementById('formMedSanskrit').value = med.sanskritName || "";
-      document.getElementById('formMedCategory').value = med.category || "CHURNA";
+      const targetCat = med.category || "";
+      const catMatch = categories.find(c => 
+        c.code.toUpperCase() === targetCat.toUpperCase() || 
+        c.name.toLowerCase() === targetCat.toLowerCase()
+      );
+      document.getElementById('formMedCategory').value = catMatch ? catMatch.code : (targetCat || "ARI");
       document.getElementById('formMedStatus').value = med.status || "PUBLISHED";
       document.getElementById('formMedClassicalRef').value = med.classicalRef || "";
       document.getElementById('formMedBenefit').value = benefitVal;
@@ -4788,7 +5394,10 @@
 
       const filtered = medicines.filter(m => {
         const matchesGoal = activeHealthGoal === "ALL" || (m.healthGoals && m.healthGoals.includes(activeHealthGoal));
-        const matchesCategory = categoryFilter === "ALL" || m.category === categoryFilter;
+        const matchesCategory = categoryFilter === "ALL" || 
+          m.category === categoryFilter || 
+          (categories.find(c => c.code === categoryFilter)?.name === m.category) ||
+          (categories.find(c => c.name.toLowerCase() === (m.category || '').toLowerCase())?.code === categoryFilter);
         const matchesStatus = statusFilter === "ALL" || (m.status || "PUBLISHED") === statusFilter;
 
         const herbString = (m.granularIngredients || []).map(i => `${i.sanskrit || ''} ${i.botanical || ''} ${i.active || ''}`).join(' ');
@@ -5234,70 +5843,359 @@
       renderDashboardRecentMedicines();
     }
 
-    // Role Promotion
-    function changeUserRole(userId, newRole) {
-      const u = users.find(x => x.id === userId);
-      if (!u) return;
-      u.role = newRole;
+    // ==========================================
+    // USER CLOUD GOVERNANCE LOGIC
+    // Synchronized with Supabase & Android App
+    // ==========================================
+
+    async function loadUsers() {
+      try {
+        const searchInput = document.getElementById('userSearchInput');
+        const statusFilter = document.getElementById('userStatusFilter');
+
+        const params = new URLSearchParams();
+        if (searchInput && searchInput.value.trim()) params.append('search', searchInput.value.trim());
+        if (statusFilter && statusFilter.value) params.append('status', statusFilter.value);
+
+        const res = await fetch(`/api/users?${params.toString()}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            users = json.data;
+            updateUserStats(users);
+            renderUsers();
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch remote users, using cached/local users:", err);
+      }
+      updateUserStats(users);
       renderUsers();
-      showToast(`Updated role for ${u.name} to ${newRole}.`);
     }
 
-    // View Mode Controller for Formulations
-    let medicineViewMode = 'cards';
-    function setMedicineViewMode(mode) {
-      medicineViewMode = mode;
-      const cardsContainer = document.getElementById('medicinesCardsContainer');
-      const tableContainer = document.getElementById('medicinesTableContainer');
-      const btnCards = document.getElementById('viewBtnCards');
-      const btnTable = document.getElementById('viewBtnTable');
+    function updateUserStats(userList) {
+      if (!Array.isArray(userList)) return;
+      const total = userList.length;
+      const active = userList.filter(u => (u.status || "Active").toLowerCase() === "active").length;
+      const suspended = userList.filter(u => (u.status || "").toLowerCase() === "suspended").length;
 
-      if (mode === 'cards') {
-        if (cardsContainer) cardsContainer.classList.remove('hidden');
-        if (tableContainer) tableContainer.classList.add('hidden');
-        if (btnCards) btnCards.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-moss-700 text-white shadow-xs";
-        if (btnTable) btnTable.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold text-moss-900 hover:text-moss-700 transition flex items-center gap-1.5";
-      } else {
-        if (cardsContainer) cardsContainer.classList.add('hidden');
-        if (tableContainer) tableContainer.classList.remove('hidden');
-        if (btnCards) btnCards.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold text-moss-900 hover:text-moss-700 transition flex items-center gap-1.5";
-        if (btnTable) btnTable.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-moss-700 text-white shadow-xs";
+      const elTotal = document.getElementById('statTotalUsers');
+      const elActive = document.getElementById('statActiveUsers');
+      const elSuspended = document.getElementById('statSuspendedUsers');
+      const elSynced = document.getElementById('statSyncedUsers');
+      const elBadge = document.getElementById('tabUserCountBadge');
+      const elCount = document.getElementById('userDisplayCount');
+
+      if (elTotal) elTotal.innerText = total;
+      if (elActive) elActive.innerText = active;
+      if (elSuspended) elSuspended.innerText = suspended;
+      if (elSynced) elSynced.innerText = total;
+      if (elBadge) elBadge.innerText = total;
+      if (elCount) elCount.innerText = total;
+    }
+
+    function resetUserFilters() {
+      const searchInput = document.getElementById('userSearchInput');
+      const statusFilter = document.getElementById('userStatusFilter');
+      if (searchInput) searchInput.value = '';
+      if (statusFilter) statusFilter.value = '';
+      loadUsers();
+    }
+
+    // User Account Status Management (Suspend / Activate)
+    async function toggleUserStatus(userId, currentStatus) {
+      const isCurrentlyActive = (currentStatus || 'Active').toLowerCase() === 'active';
+      const targetStatus = isCurrentlyActive ? 'Suspended' : 'Active';
+      const promptText = isCurrentlyActive 
+        ? "⚠️ Are you sure you want to SUSPEND this user?\n\nThey will be immediately blocked from accessing all Android App and Web Portal features."
+        : "Reactivate this user account and restore complete application access?";
+
+      if (!confirm(promptText)) return;
+
+      try {
+        const res = await fetch('/api/users/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: userId, status: targetStatus })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(`User status set to ${targetStatus}. Synchronized across platforms.`);
+          loadUsers();
+        } else {
+          showToast(data.error || 'Failed to update status', 'error');
+        }
+      } catch (err) {
+        showToast('Network error updating user status', 'error');
+      }
+    }
+
+    // Modal Control: Open Edit Profile
+    function openEditUserModal(userId) {
+      const u = users.find(x => x.id === userId);
+      if (!u) {
+        showToast('User not found', 'error');
+        return;
+      }
+
+      document.getElementById('editUserId').value = u.id || '';
+      document.getElementById('displayEditUserId').innerText = u.id || '';
+      document.getElementById('editUserName').value = u.name || '';
+      document.getElementById('editUserEmail').value = u.email || '';
+      document.getElementById('editUserPhone').value = u.phone || '';
+      document.getElementById('editUserStatus').value = (u.status || 'Active').charAt(0).toUpperCase() + (u.status || 'Active').slice(1).toLowerCase();
+      document.getElementById('editUserDesignation').value = u.designation || '';
+      document.getElementById('editUserPrakriti').value = u.prakriti || 'Pitta';
+      document.getElementById('editUserAdherence').value = u.adherencePercent || u.adherence_percent || 85;
+      document.getElementById('editUserClinicalNotes').value = u.clinicalNotes || u.clinical_notes || '';
+
+      checkSuspendedWarning(document.getElementById('editUserStatus').value);
+      openModal('editUserProfileModal');
+    }
+
+    function checkSuspendedWarning(status) {
+      const banner = document.getElementById('suspensionWarningBanner');
+      if (banner) {
+        if (status === 'Suspended') {
+          banner.classList.remove('hidden');
+        } else {
+          banner.classList.add('hidden');
+        }
+      }
+    }
+
+    // Submit Edit Profile Form
+    async function handleUpdateUser(event) {
+      event.preventDefault();
+      const btn = document.getElementById('btnSubmitEditUser');
+      if (btn) btn.disabled = true;
+
+      const payload = {
+        id: document.getElementById('editUserId').value,
+        name: document.getElementById('editUserName').value.trim(),
+        email: document.getElementById('editUserEmail').value.trim().toLowerCase(),
+        phone: document.getElementById('editUserPhone').value.trim(),
+        status: document.getElementById('editUserStatus').value,
+        designation: document.getElementById('editUserDesignation').value.trim(),
+        prakriti: document.getElementById('editUserPrakriti').value,
+        adherencePercent: parseInt(document.getElementById('editUserAdherence').value || '85', 10),
+        clinicalNotes: document.getElementById('editUserClinicalNotes').value.trim()
+      };
+
+      try {
+        const res = await fetch('/api/users/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(`Profile for ${payload.name} updated and synced with Supabase & Android.`);
+          closeModal('editUserProfileModal');
+          loadUsers();
+        } else {
+          showToast(data.error || 'Failed to update profile', 'error');
+        }
+      } catch (err) {
+        showToast('Network error while saving user profile', 'error');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    // Submit Register User Form
+    async function handleCreateUser(event) {
+      event.preventDefault();
+      const btn = document.getElementById('btnSubmitAddUser');
+      if (btn) btn.disabled = true;
+
+      const payload = {
+        name: document.getElementById('addUserName').value.trim(),
+        email: document.getElementById('addUserEmail').value.trim().toLowerCase(),
+        password: document.getElementById('addUserPassword').value || 'ayur123',
+        status: document.getElementById('addUserStatus').value,
+        designation: document.getElementById('addUserDesignation').value.trim(),
+        phone: document.getElementById('addUserPhone').value.trim(),
+        prakriti: document.getElementById('addUserPrakriti').value,
+        clinicalNotes: document.getElementById('addUserClinicalNotes').value.trim()
+      };
+
+      try {
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(`User ${payload.name} created and registered to Supabase Cloud.`);
+          closeModal('addUserModal');
+          document.getElementById('addUserForm').reset();
+          loadUsers();
+        } else {
+          showToast(data.error || 'Failed to create user account', 'error');
+        }
+      } catch (err) {
+        showToast('Network error creating user', 'error');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    // Delete User Profile
+    async function deleteUserAccount(userId, userName) {
+      if (!confirm(`Are you sure you want to permanently delete the profile for ${userName}?\n\nThis will remove their profile record from Supabase.`)) return;
+
+      try {
+        const res = await fetch('/api/users/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: userId })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(`Profile for ${userName} removed from Supabase.`);
+          loadUsers();
+        } else {
+          showToast(data.error || 'Failed to delete user profile', 'error');
+        }
+      } catch (err) {
+        showToast('Network error while deleting user profile', 'error');
       }
     }
 
     function renderUsers() {
       const tbody = document.getElementById('usersTableBody');
+      if (!tbody) return;
       tbody.innerHTML = "";
+
+      if (!users || users.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="py-12 text-center bg-parchment-50/50">
+              <span class="text-3xl">👥</span>
+              <p class="text-xs font-bold text-moss-800 mt-2">No Users Found</p>
+              <p class="text-[11px] text-gray-500 mt-0.5">Try clearing your search query or reset filters.</p>
+              <button onclick="resetUserFilters()" class="mt-3 px-3 py-1.5 text-xs font-semibold rounded-lg bg-moss-700 text-white hover:bg-moss-800 transition">
+                Reset Filters
+              </button>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
       users.forEach(u => {
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-parchment-50 transition border-b border-parchment-100";
+        tr.className = "hover:bg-parchment-50/70 transition border-b border-parchment-100";
+
+        const statusRaw = (u.status || "Active").toLowerCase();
+        const isSuspended = statusRaw === "suspended";
+        const isPending = statusRaw === "pending";
+
+        const statusBadgeClass = isSuspended 
+          ? "bg-red-100 text-red-800 border-red-200" 
+          : (isPending ? "bg-amber-100 text-amber-800 border-amber-200" : "bg-emerald-100 text-emerald-800 border-emerald-200");
+        const statusLabel = isSuspended ? "⛔ Suspended" : (isPending ? "⏳ Pending" : "✓ Active");
+
+        const prakriti = u.prakriti || "Pitta";
+        const prakritiBadgeColor = prakriti === "Vata" 
+          ? "bg-purple-100 text-purple-800 border-purple-200" 
+          : (prakriti === "Pitta" ? "bg-amber-100 text-amber-900 border-amber-200" : "bg-teal-100 text-teal-800 border-teal-200");
+
+        const initials = (u.name || "User").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+
         tr.innerHTML = `
-          <td class="py-3 px-4">
-            <div class="font-bold text-moss-900">${u.name}</div>
-            <div class="text-xs text-gray-500">${u.email}</div>
+          <td class="py-3.5 px-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl bg-moss-100 text-moss-800 font-bold flex items-center justify-center text-xs shrink-0 border border-moss-200 shadow-2xs">
+                ${u.avatarUrl || u.avatar_url ? `<img src="${u.avatarUrl || u.avatar_url}" class="w-full h-full object-cover rounded-2xl" onerror="this.parentElement.innerText='${initials}'" />` : initials}
+              </div>
+              <div>
+                <div class="font-bold text-moss-900">
+                  <span>${u.name}</span>
+                </div>
+                <div class="text-xs text-gray-500 font-mono">${u.email}</div>
+                <div class="text-[10px] text-gray-400 mt-0.5">ID: <span class="font-mono">${u.id}</span></div>
+              </div>
+            </div>
           </td>
-          <td class="py-3 px-4">
-            <select onchange="changeUserRole('${u.id}', this.value)" class="text-xs font-semibold bg-white border border-parchment-200 rounded-lg px-2.5 py-1 focus:ring-2 focus:ring-moss-500 outline-none">
-              <option value="ADMIN" ${u.role === 'ADMIN' ? 'selected' : ''}>⚡ Administrator</option>
-              <option value="PRACTITIONER" ${u.role === 'PRACTITIONER' ? 'selected' : ''}>⚕️ Practitioner (BAMS)</option>
-              <option value="PATIENT" ${u.role === 'PATIENT' ? 'selected' : ''}>🌿 Wellness Seeker</option>
-            </select>
+
+          <td class="py-3.5 px-4">
+            <div class="space-y-0.5">
+              <div class="text-xs font-semibold text-moss-900">
+                ${u.designation || 'Ayurvedic Healthcare Member'}
+              </div>
+              <div class="text-xs text-gray-500 font-mono">
+                ${u.phone || 'No phone recorded'}
+              </div>
+            </div>
           </td>
-          <td class="py-3 px-4 text-xs text-gray-600">
-            ${u.role === 'ADMIN' ? 'Full administration, catalogue governance, and role management' : u.role === 'PRACTITIONER' ? 'Clinical assessments, custom dosages, patient review' : 'Personal daily regimens & remedy catalog'}
+
+          <td class="py-3.5 px-4">
+            <div class="space-y-1 text-xs">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${prakritiBadgeColor}">
+                  🌿 ${prakriti}
+                </span>
+                <span class="text-[10px] text-gray-500 font-medium">
+                  Adherence: <strong class="text-moss-800">${u.adherencePercent || u.adherence_percent || 85}%</strong>
+                </span>
+              </div>
+              <p class="text-[11px] text-gray-600 italic truncate max-w-[220px]" title="${u.clinicalNotes || u.clinical_notes || 'No clinical notes'}">
+                ${u.clinicalNotes || u.clinical_notes || 'Standard classical regimen'}
+              </p>
+            </div>
           </td>
-          <td class="py-3 px-4">
-            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-              ✓ Verified
-            </span>
+
+          <td class="py-3.5 px-4">
+            <div class="space-y-1">
+              <span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${statusBadgeClass}">
+                ${statusLabel}
+              </span>
+              <div class="text-[10px] text-gray-400">
+                ${isSuspended ? 'Access revoked' : 'Active sync'}
+              </div>
+            </div>
           </td>
-          <td class="py-3 px-4 text-right">
-            <span class="text-xs font-semibold text-emerald-700">Active</span>
+
+          <td class="py-3.5 px-4 text-right">
+            <div class="flex items-center justify-end gap-1.5">
+              <button 
+                onclick="openEditUserModal('${u.id}')" 
+                class="px-2.5 py-1 text-xs font-semibold text-moss-800 bg-parchment-100 hover:bg-parchment-200 rounded-lg transition flex items-center gap-1 cursor-pointer"
+                title="Edit profile information & status">
+                ✏️ Edit
+              </button>
+
+              <button 
+                onclick="toggleUserStatus('${u.id}', '${u.status || 'Active'}')" 
+                class="px-2.5 py-1 text-xs font-semibold rounded-lg transition flex items-center gap-1 cursor-pointer ${isSuspended ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}"
+                title="${isSuspended ? 'Reactivate User Account' : 'Suspend Account & Revoke App Access'}">
+                ${isSuspended ? '✓ Reactivate' : '⛔ Suspend'}
+              </button>
+
+              <button 
+                onclick="deleteUserAccount('${u.id}', '${(u.name || 'User').replace(/'/g, "\\'")}')" 
+                class="p-1 text-gray-400 hover:text-red-600 rounded-lg transition cursor-pointer"
+                title="Delete User Record">
+                🗑️
+              </button>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
       });
     }
+
+    // Auto-sync polling every 12 seconds
+    setInterval(() => {
+      const usersTab = document.getElementById('usersTab');
+      if (usersTab && !usersTab.classList.contains('hidden')) {
+        loadUsers();
+      }
+    }, 12000);
 
     // ==========================================
     // SUPABASE CLOUD DATABASE INTEGRATION & LIVE MONITOR
@@ -6014,10 +6912,13 @@
       // Initialize dashboard data & cards
       loadCategoriesFromStorage();
       populateCategoryDropdowns();
+      loadCategoriesFromServer();
       loadMedicinesFromStorage();
       renderMedicines();
+      loadMedicinesFromServer();
       renderCategories();
       renderUsers();
+      loadUsers();
       updateMetrics();
       renderDashboardRecentMedicines();
       switchTab('dashboardTab');

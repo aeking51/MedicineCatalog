@@ -306,7 +306,7 @@ fun AdminDashboardScreen(
                         ) {
                             Column {
                                 Text(
-                                    text = "USER ACCESS & RBAC DIRECTORY",
+                                    text = "USER DIRECTORY & ACCOUNTS",
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 1.3.sp,
@@ -342,9 +342,9 @@ fun AdminDashboardScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            val adminCount = uiState.allUsers.count { it.role == UserRole.ADMIN }
-                            val doctorCount = uiState.allUsers.count { it.role == UserRole.PRACTITIONER }
-                            val patientCount = uiState.allUsers.count { it.role == UserRole.PATIENT }
+                            val activeCount = uiState.allUsers.count { it.status == UserStatus.ACTIVE }
+                            val suspendedCount = uiState.allUsers.count { it.status == UserStatus.SUSPENDED }
+                            val totalCount = uiState.allUsers.size
 
                             Box(
                                 modifier = Modifier
@@ -354,8 +354,8 @@ fun AdminDashboardScreen(
                                     .padding(vertical = 8.dp, horizontal = 10.dp)
                             ) {
                                 Column {
-                                    Text(text = "⚡ Admins", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = NaturalEarthGold)
-                                    Text(text = "$adminCount active", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = NaturalTextHeading)
+                                    Text(text = "👥 Total", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = NaturalMossDark)
+                                    Text(text = "$totalCount users", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = NaturalTextHeading)
                                 }
                             }
 
@@ -367,8 +367,8 @@ fun AdminDashboardScreen(
                                     .padding(vertical = 8.dp, horizontal = 10.dp)
                             ) {
                                 Column {
-                                    Text(text = "⚕️ Vaidyas", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = NaturalMossPrimary)
-                                    Text(text = "$doctorCount doctors", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = NaturalTextHeading)
+                                    Text(text = "✓ Active", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = NaturalMossPrimary)
+                                    Text(text = "$activeCount active", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = NaturalTextHeading)
                                 }
                             }
 
@@ -380,8 +380,8 @@ fun AdminDashboardScreen(
                                     .padding(vertical = 8.dp, horizontal = 10.dp)
                             ) {
                                 Column {
-                                    Text(text = "🌿 Seekers", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = NaturalTerracotta)
-                                    Text(text = "$patientCount patients", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = NaturalTextHeading)
+                                    Text(text = "⛔ Suspended", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = NaturalTerracotta)
+                                    Text(text = "$suspendedCount restricted", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = NaturalTextHeading)
                                 }
                             }
                         }
@@ -396,24 +396,15 @@ fun AdminDashboardScreen(
                 }
 
                 item {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        RoleFilterRow(
-                            selectedRole = uiState.userRoleFilter,
-                            onSelectRole = onSetUserRoleFilter,
-                            users = uiState.allUsers
-                        )
-
-                        StatusFilterRow(
-                            selectedStatus = uiState.userStatusFilter,
-                            onSelectStatus = onSetUserStatusFilter,
-                            users = uiState.allUsers
-                        )
-                    }
+                    StatusFilterRow(
+                        selectedStatus = uiState.userStatusFilter,
+                        onSelectStatus = onSetUserStatusFilter,
+                        users = uiState.allUsers
+                    )
                 }
 
                 val query = uiState.userSearchQuery.trim().lowercase()
                 val filteredUsers = uiState.allUsers.filter { user ->
-                    val matchesRole = uiState.userRoleFilter == null || user.role == uiState.userRoleFilter
                     val matchesStatus = uiState.userStatusFilter == null || user.status == uiState.userStatusFilter
                     val matchesQuery = query.isEmpty() ||
                         user.name.lowercase().contains(query) ||
@@ -421,7 +412,7 @@ fun AdminDashboardScreen(
                         user.phone.lowercase().contains(query) ||
                         user.designation.lowercase().contains(query) ||
                         user.clinicalNotes.lowercase().contains(query)
-                    matchesRole && matchesStatus && matchesQuery
+                    matchesStatus && matchesQuery
                 }
 
                 if (filteredUsers.isEmpty()) {
@@ -1253,43 +1244,6 @@ private fun AdminMedicineCard(
 }
 
 @Composable
-private fun RoleFilterRow(
-    selectedRole: UserRole?,
-    onSelectRole: (UserRole?) -> Unit,
-    users: List<AppUser>
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        FilterChip(
-            selected = selectedRole == null,
-            onClick = { onSelectRole(null) },
-            label = { Text("All Roles (${users.size})", fontSize = 11.sp) },
-            colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = NaturalMossPrimary,
-                selectedLabelColor = Color.White
-            )
-        )
-
-        UserRole.values().forEach { role ->
-            val count = users.count { it.role == role }
-            FilterChip(
-                selected = selectedRole == role,
-                onClick = { onSelectRole(if (selectedRole == role) null else role) },
-                label = { Text("${role.iconEmoji} ${role.badgeLabel} ($count)", fontSize = 11.sp) },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = NaturalMossPrimary,
-                    selectedLabelColor = Color.White
-                )
-            )
-        }
-    }
-}
-
-@Composable
 private fun StatusFilterRow(
     selectedStatus: UserStatus?,
     onSelectStatus: (UserStatus?) -> Unit,
@@ -1454,26 +1408,14 @@ private fun AdminUserCard(
                         modifier = Modifier
                             .size(42.dp)
                             .clip(CircleShape)
-                            .background(
-                                when (user.role) {
-                                    UserRole.ADMIN -> NaturalEarthGold.copy(alpha = 0.2f)
-                                    UserRole.PRACTITIONER -> NaturalSageContainer
-                                    UserRole.PATIENT -> NaturalTerracotta.copy(alpha = 0.15f)
-                                    UserRole.GUEST -> NaturalSageContainer.copy(alpha = 0.6f)
-                                }
-                            ),
+                            .background(NaturalSageContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = user.name.take(1).uppercase(),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
-                            color = when (user.role) {
-                                UserRole.ADMIN -> NaturalEarthGold
-                                UserRole.PRACTITIONER -> NaturalMossPrimary
-                                UserRole.PATIENT -> NaturalTerracotta
-                                UserRole.GUEST -> NaturalMossPrimary
-                            }
+                            color = NaturalMossDark
                         )
                     }
 
@@ -1498,14 +1440,12 @@ private fun AdminUserCard(
                             }
                         }
                         Text(
-                            text = "${user.designation} • ${user.email}",
+                            text = if (user.designation.isNotBlank()) "${user.designation} • ${user.email}" else user.email,
                             fontSize = 10.sp,
                             color = NaturalOliveMuted
                         )
                     }
                 }
-
-                RoleBadge(role = user.role)
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -1614,7 +1554,7 @@ private fun AdminUserCard(
                     }
                 }
 
-                // Primary actions: Manage Role & Status
+                // Primary actions: Manage Status & Profile
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -1630,7 +1570,7 @@ private fun AdminUserCard(
                     ) {
                         Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(12.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Role & Status", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text("Account Status", fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -1683,7 +1623,7 @@ private fun UserDetailRoleDialog(
                 ) {
                     Column {
                         Text(
-                            text = "USER ACCESS & ROLE MANAGEMENT",
+                            text = "USER ACCOUNT GOVERNANCE",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.1.sp,
@@ -1725,11 +1665,13 @@ private fun UserDetailRoleDialog(
                                 color = NaturalTextHeading
                             )
                         }
-                        Text(
-                            text = "🏷️ Designation: ${user.designation}",
-                            fontSize = 11.sp,
-                            color = NaturalTextHeading
-                        )
+                        if (user.designation.isNotBlank()) {
+                            Text(
+                                text = "🏷️ Designation: ${user.designation}",
+                                fontSize = 11.sp,
+                                color = NaturalTextHeading
+                            )
+                        }
                         Text(
                             text = "🌿 Prakriti: ${user.prakriti.symbol} ${user.prakriti.displayName}",
                             fontSize = 11.sp,
@@ -1741,91 +1683,6 @@ private fun UserDetailRoleDialog(
                                 fontSize = 11.sp,
                                 color = NaturalOliveMuted
                             )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = "ASSIGN APPLICATION ROLE:",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = NaturalOliveMuted
-                )
-
-                if (rbacWarning != null) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "⚠️ $rbacWarning",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = NaturalTerracotta
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                UserRole.values().forEach { role ->
-                    val isChosen = selectedRole == role
-                    val isElevation = role == UserRole.ADMIN || role == UserRole.PRACTITIONER
-                    val canSelect = !isElevation || isChiefAdmin
-
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 3.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .border(
-                                1.dp,
-                                if (isChosen) NaturalMossPrimary else NaturalCardBorder,
-                                RoundedCornerShape(12.dp)
-                            )
-                            .clickable {
-                                if (isElevation && !isChiefAdmin) {
-                                    rbacWarning = "Only Administrator can elevate a user to Practitioner or Admin."
-                                } else {
-                                    rbacWarning = null
-                                    selectedRole = role
-                                    onRoleChange(role)
-                                }
-                            },
-                        color = if (isChosen) NaturalSageContainer else if (!canSelect) NaturalBackground.copy(alpha = 0.5f) else NaturalBackground
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(text = role.iconEmoji, fontSize = 16.sp)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = role.displayName,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = NaturalTextHeading
-                                    )
-                                    if (isElevation && !isChiefAdmin) {
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = "🔒 Requires Admin",
-                                            fontSize = 9.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = NaturalTerracotta
-                                        )
-                                    }
-                                }
-                                Text(
-                                    text = role.description,
-                                    fontSize = 9.sp,
-                                    color = NaturalOliveMuted,
-                                    lineHeight = 12.sp
-                                )
-                            }
-                            if (isChosen) {
-                                Icon(Icons.Default.Check, contentDescription = null, tint = NaturalMossPrimary, modifier = Modifier.size(16.dp))
-                            }
                         }
                     }
                 }
@@ -2120,52 +1977,9 @@ private fun AddUserDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 AdminInputField(label = "Phone Number", value = phone, onValueChange = { phone = it }, placeholder = "e.g. +91 98765 43210")
                 Spacer(modifier = Modifier.height(8.dp))
-                AdminInputField(label = "Designation / Title", value = designation, onValueChange = { designation = it }, placeholder = "e.g. Ayurvedic Vaidya / Patient")
+                AdminInputField(label = "Designation / Title", value = designation, onValueChange = { designation = it }, placeholder = "e.g. Wellness Member / Guest")
                 Spacer(modifier = Modifier.height(8.dp))
-                AdminInputField(label = "Clinical Notes / Specialization", value = clinicalNotes, onValueChange = { clinicalNotes = it }, placeholder = "e.g. Panchakarma specialist / Vata anxiety history")
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(text = "ROLE:", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = NaturalOliveMuted)
-                if (!isChiefAdmin) {
-                    Text(
-                        text = "🔒 Default role is Wellness Seeker. Only Administrator can assign Practitioner or Admin roles.",
-                        fontSize = 9.sp,
-                        color = NaturalOliveMuted,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    val selectableRoles = if (isChiefAdmin) {
-                        UserRole.values().toList()
-                    } else {
-                        listOf(UserRole.PATIENT)
-                    }
-
-                    selectableRoles.forEach { role ->
-                        val isChosen = selectedRole == role
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .border(1.dp, if (isChosen) NaturalMossPrimary else NaturalCardBorder, RoundedCornerShape(8.dp))
-                                .clickable { selectedRole = role },
-                            color = if (isChosen) NaturalSageContainer else NaturalBackground
-                        ) {
-                            Box(modifier = Modifier.padding(vertical = 6.dp), contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = "${role.iconEmoji} ${role.badgeLabel}",
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = NaturalTextHeading
-                                )
-                            }
-                        }
-                    }
-                }
+                AdminInputField(label = "Clinical Notes", value = clinicalNotes, onValueChange = { clinicalNotes = it }, placeholder = "Clinical history, health goals, or notes")
 
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -2294,50 +2108,9 @@ private fun EditUserDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 AdminInputField(label = "Phone Number", value = phone, onValueChange = { phone = it }, placeholder = "+91 98765 43210")
                 Spacer(modifier = Modifier.height(8.dp))
-                AdminInputField(label = "Designation / Title", value = designation, onValueChange = { designation = it }, placeholder = "e.g. Ayurvedic Vaidya / Seeker")
+                AdminInputField(label = "Designation / Title", value = designation, onValueChange = { designation = it }, placeholder = "e.g. Member / Seeker")
                 Spacer(modifier = Modifier.height(8.dp))
-                AdminInputField(label = "Clinical Notes / Specialization", value = clinicalNotes, onValueChange = { clinicalNotes = it }, placeholder = "Clinical history, specialty, notes")
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(text = "ROLE ASSIGNMENT:", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = NaturalOliveMuted)
-                if (rbacWarning != null) {
-                    Text(text = "⚠️ $rbacWarning", fontSize = 9.sp, color = NaturalTerracotta)
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    UserRole.values().forEach { role ->
-                        val isChosen = selectedRole == role
-                        val isElevation = (role == UserRole.ADMIN || role == UserRole.PRACTITIONER) && role != user.role
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .border(1.dp, if (isChosen) NaturalMossPrimary else NaturalCardBorder, RoundedCornerShape(8.dp))
-                                .clickable {
-                                    if (isElevation && !isChiefAdmin) {
-                                        rbacWarning = "Only Administrator can elevate a user to Practitioner or Admin."
-                                    } else {
-                                        rbacWarning = null
-                                        selectedRole = role
-                                    }
-                                },
-                            color = if (isChosen) NaturalSageContainer else NaturalBackground
-                        ) {
-                            Box(modifier = Modifier.padding(vertical = 6.dp), contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = "${role.iconEmoji} ${role.badgeLabel}",
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = NaturalTextHeading
-                                )
-                            }
-                        }
-                    }
-                }
+                AdminInputField(label = "Clinical Notes", value = clinicalNotes, onValueChange = { clinicalNotes = it }, placeholder = "Clinical history, notes")
 
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -2482,7 +2255,7 @@ private fun DeleteUserConfirmDialog(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "Role: ${user.role.displayName} • Prakriti: ${user.prakriti.displayName}\nThis action will immediately revoke application access and record an audit log event.",
+                        text = "Prakriti: ${user.prakriti.displayName} • Status: ${user.status.label}\nThis action will immediately revoke application access and record an audit log event.",
                         fontSize = 11.sp,
                         color = NaturalOliveMuted
                     )

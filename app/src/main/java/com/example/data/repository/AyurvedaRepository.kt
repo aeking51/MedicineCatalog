@@ -20,12 +20,12 @@ object AyurvedaRepository {
 
     val allMedicines: List<AyurvedaMedicine> = listOf(
         AyurvedaMedicine(
-            id = "dashamoolarishtam",
-            slNo = 0,
+            id = "SA-88225",
+            slNo = 1,
             name = "Dashamoolarishtam",
             sanskritName = "दशमूलारिष्टम् (Sharangadhara Samhita)",
             classicalReference = "Sharangadhara Samhita",
-            category = FormulationCategory.ARISHTA,
+            category = FormulationCategory.ARISHTAM,
             packing = "450 ml",
             tagPill = "VITALITY & DETOX",
             healthGoals = listOf(HealthGoal.DETOX, HealthGoal.DIGESTION, HealthGoal.IMMUNITY),
@@ -71,25 +71,25 @@ object AyurvedaRepository {
             batchNumber = "SIT-DSH-2026-001"
         ),
         AyurvedaMedicine(
-            id = "abhayarishtam",
-            slNo = 1,
+            id = "SA-00001",
+            slNo = 2,
             name = "Abhayarishtam",
-            sanskritName = "अभयारिष्टम् (Ashtamgahrudayam)",
-            classicalReference = "Ashtamgahrudayam",
-            category = FormulationCategory.ARISHTA,
-            packing = "450 ml",
+            sanskritName = "अभयारिष्टम् (Ashtangahrudayam)",
+            classicalReference = "Ashtangahrudayam, Arshorogadhikaram",
+            category = FormulationCategory.ARISHTAM,
+            packing = "450 ml, 200 ml",
             tagPill = "DIGESTIVE ELIXIR",
             healthGoals = listOf(HealthGoal.DIGESTION, HealthGoal.DETOX),
-            shortDescription = "Classical fermented decoction elixir for relieving hemorrhoids, abdominal distension and obstinate constipation.",
+            shortDescription = "Classic Ayurvedic fermented formulation indicated primarily for hemorrhoids, sluggish digestion, and chronic constipation.",
             primaryBenefit = "Arshas (Hemorrhoids) relief, Apana Vata normalization and bowel peristalsis",
             doshaImpact = "Vata & Kapha Shamaka (Kindles digestive Agni)",
             targetDoshas = listOf(DoshaType.VATA, DoshaType.KAPHA),
             mainIngredientsText = "Abhaya (Terminalia chebula), Dhatri (Emblica officinalis), Kapitha, Vishala",
-            usageInstructionsText = "5-25 ml Twice daily after meals with equal quantity of water",
+            usageInstructionsText = "15 to 25 ml twice daily after meals with equal quantity of warm water.",
             photoUrl = ClassicalPhotoPresets.ARISHTA_BOTTLE,
             constituents = listOf("Bio-generated Alcohol (5-10%)", "Tannins", "Chebulic Acid", "Anthraquinones"),
             ingredients = listOf(
-                AyurvedaIngredient(name = "Abhaya (Haritaki)", botanicalName = "Terminalia chebula", partUsed = "Fruit Pericarp", classicalRole = "Deepana, Pachana, Arshoghna (Dispels Piles)"),
+                AyurvedaIngredient(name = "Abhaya (Haritaki)", botanicalName = "Terminalia chebula", partUsed = "Fruit Pericarp", classicalRole = "Deepana, Pachana, Arshoghna"),
                 AyurvedaIngredient(name = "Dhatri (Amalaki)", botanicalName = "Emblica officinalis", partUsed = "Dried Fruit", classicalRole = "Rasayana, Pitta balancing"),
                 AyurvedaIngredient(name = "Kapitha", botanicalName = "Feronia elephantum", partUsed = "Fruit Pulp", classicalRole = "Grahi, Agnivardhana"),
                 AyurvedaIngredient(name = "Vishala", botanicalName = "Citrullus colocynthis", partUsed = "Root", classicalRole = "Srotoshodhana, Bhedana")
@@ -102,47 +102,46 @@ object AyurvedaRepository {
             ),
             dosage = DosageInfo(
                 summary = "15-25 ml • Twice Daily After Meals",
-                standardDose = "5-25 ml",
+                standardDose = "15 to 25 ml",
                 frequency = "Twice Daily",
                 timing = "After Meals",
-                anupana = "Equal volume of lukewarm water",
+                anupana = "Equal quantity of warm water",
                 caution = "Not recommended for children under 5 without Vaidya consultation."
             ),
             indications = listOf(
                 "Arshas (Hemorrhoids / Piles)",
-                "Udara (Ascitis / Abdominal Enlargement)",
-                "Muthra vibanda (Anuria / Urinary retention)",
-                "Vibanda (Chronic Constipation)",
-                "Agnimandya (Loss of appetite / Weak digestion)"
+                "Udara (Abdominal disorders)",
+                "Vibanda (Constipation)",
+                "Agnimandya (Impaired digestion)"
             ),
-            contraindications = listOf("Severe active peptic ulcers", "Acute diarrhea (Atisara)"),
-            pathyaWholesome = listOf("Buttermilk (Takra)", "Fiber-rich leafy vegetables", "Warm water", "Barley porridge"),
-            apathyaAvoid = listOf("Excessive dry spicy foods", "Dry baked snacks", "Suppression of natural urges (Vega dharana)"),
+            contraindications = listOf("Severe active peptic ulcers", "Acute diarrhea"),
+            pathyaWholesome = listOf("Buttermilk (Takra)", "Fiber-rich leafy vegetables", "Warm water"),
+            apathyaAvoid = listOf("Excessive dry spicy foods", "Suppression of natural urges"),
             stockUnits = 120,
             batchNumber = "SIT-ARI-2026-001"
         ),
         AyurvedaMedicine(
-            id = "amrutharishtam",
-            slNo = 2,
-            name = "Amrutharishtam",
-            sanskritName = "अमृतारिष्टम् (A.F.I. Part 1 Bhaisajya Ratnavali)",
-            classicalReference = "A.F.I. Part 1 Bhaisajya Ratnavali",
-            category = FormulationCategory.ARISHTA,
+            id = "SA-00002",
+            slNo = 3,
+            name = "Amritarishtam",
+            sanskritName = "अमृतारिष्टम् (Bhaishajya Ratnavali)",
+            classicalReference = "Bhaishajya Ratnavali, Jwaradhikaram",
+            category = FormulationCategory.ARISHTAM,
             packing = "450 ml",
             tagPill = "IMMUNO-FEBRIFUGE",
             healthGoals = listOf(HealthGoal.IMMUNITY, HealthGoal.DETOX),
-            shortDescription = "Premier Ayurvedic formulation for acute and relapsing fevers, tonsillitis, oedema, and poor metabolic fire.",
+            shortDescription = "Premier Ayurvedic formulation for acute and relapsing fevers, tonsillitis, and sluggish digestion.",
             primaryBenefit = "Jwara (Fever) resolution, immunomodulation, and deep lymphatic Ama clearance",
             doshaImpact = "Tridosha Shamaka (Primarily Pitta-Kapha Hara)",
             targetDoshas = listOf(DoshaType.PITTA, DoshaType.KAPHA),
             mainIngredientsText = "Amritha (Guduchi), Bilwa, Syonaka, Gambhari",
-            usageInstructionsText = "5-25 ml Twice daily after meals with equal quantity of water",
+            usageInstructionsText = "15 to 25 ml twice daily after food with equal quantity of water.",
             photoUrl = ClassicalPhotoPresets.ARISHTA_BOTTLE,
             constituents = listOf("Guduchi Alkaloids", "Flavonoids", "Glycosides", "Bitter Tonics"),
             ingredients = listOf(
-                AyurvedaIngredient(name = "Amritha (Guduchi)", botanicalName = "Tinospora cordifolia", partUsed = "Stem", classicalRole = "Jwaraghna (Antipyretic), Rasayana, Dahaprashamana"),
-                AyurvedaIngredient(name = "Bilwa", botanicalName = "Aegle marmelos", partUsed = "Root Bark", classicalRole = "Dashamula constituent, anti-inflammatory"),
-                AyurvedaIngredient(name = "Syonaka", botanicalName = "Oroxylum indicum", partUsed = "Root Bark", classicalRole = "Shothahara (Resolves edema)"),
+                AyurvedaIngredient(name = "Amritha (Guduchi)", botanicalName = "Tinospora cordifolia", partUsed = "Stem", classicalRole = "Jwaraghna (Antipyretic), Rasayana"),
+                AyurvedaIngredient(name = "Bilwa", botanicalName = "Aegle marmelos", partUsed = "Root Bark", classicalRole = "Dashamula constituent"),
+                AyurvedaIngredient(name = "Syonaka", botanicalName = "Oroxylum indicum", partUsed = "Root Bark", classicalRole = "Shothahara"),
                 AyurvedaIngredient(name = "Gambhari", botanicalName = "Gmelina arborea", partUsed = "Root Bark", classicalRole = "Dhatupushtikara, Deepana")
             ),
             dravyaguna = DravyagunaProfile(
@@ -153,407 +152,133 @@ object AyurvedaRepository {
             ),
             dosage = DosageInfo(
                 summary = "15-25 ml • Twice Daily After Meals",
-                standardDose = "5-25 ml",
+                standardDose = "15 to 25 ml",
                 frequency = "Twice Daily",
                 timing = "After Meals",
                 anupana = "Equal volume of boiled and cooled water",
-                caution = "Take after food to avoid gastric irritation in high Pitta individuals."
+                caution = "Take after food to avoid gastric irritation."
             ),
             indications = listOf(
-                "Jwara (Acute, chronic & recurrent fevers)",
-                "Tundikeri (Uvulitis)",
-                "Galayu (Tonsillitis)",
-                "Sotha (Oedema / Tissue Swelling)",
-                "Agnimandya (Loss of appetite)"
+                "Jwara (Chronic & intermittent fevers)",
+                "Jeerna Jwara (Post-fever debility)",
+                "Ajeerna (Indigestion)",
+                "Yakrit roga (Hepatic sluggishness)"
             ),
             contraindications = listOf("Active hyperacidity during empty stomach"),
-            pathyaWholesome = listOf("Light green gram soup (Mudga Yusha)", "Pappadam", "Boiled vegetables", "Warm water"),
-            apathyaAvoid = listOf("Oily heavy curds", "Day sleeping (Diva swapna)", "Cold refrigerated beverages"),
+            pathyaWholesome = listOf("Green gram soup (Mudga Yusha)", "Boiled vegetables", "Warm water"),
+            apathyaAvoid = listOf("Oily heavy curds", "Day sleeping", "Cold refrigerated beverages"),
             stockUnits = 95,
             batchNumber = "SIT-ARI-2026-002"
         ),
         AyurvedaMedicine(
-            id = "arjunarishtam",
+            id = "SA-00003",
             slNo = 4,
-            name = "Arjunarishtam",
-            sanskritName = "अर्जुनारिष्टम् (A.F.I. Part 1 Bhaisajya Ratnavali)",
-            classicalReference = "A.F.I. Part 1 Bhaisajya Ratnavali",
-            category = FormulationCategory.ARISHTA,
-            packing = "450 ml",
-            tagPill = "CARDIO TONIC",
-            healthGoals = listOf(HealthGoal.IMMUNITY),
-            shortDescription = "Renowned Ayurvedic cardio-protective tonic strengthening myocardial tone and relieving exhaustion.",
-            primaryBenefit = "Hridroga (Heart disease) support, vascular elasticity, and physical vitality",
-            doshaImpact = "Pitta & Kapha Pacifying (Tridosha Balancer)",
-            targetDoshas = listOf(DoshaType.PITTA, DoshaType.KAPHA, DoshaType.VATA),
-            mainIngredientsText = "Arjuna, Mrdwika (Raisins), Madhuka (Madhuca indica)",
-            usageInstructionsText = "5-25 ml Twice daily after meals with equal quantity of water",
+            name = "Ashokarishtam",
+            sanskritName = "अशोकारिष्टम् (Bhaishajya Ratnavali)",
+            classicalReference = "Bhaishajya Ratnavali, Pradaradhikaram",
+            category = FormulationCategory.ARISHTAM,
+            packing = "450 ml, 200 ml",
+            tagPill = "HORMONAL HARMONY",
+            healthGoals = listOf(HealthGoal.IMMUNITY, HealthGoal.DETOX),
+            shortDescription = "Classical uterine tonic indicated for hormonal harmony, excessive menstrual bleeding, and pelvic comfort.",
+            primaryBenefit = "Menstrual cycle regulation, pelvic strength, and uterine tissue nourishment",
+            doshaImpact = "Pitta-Kapha Shamaka",
+            targetDoshas = listOf(DoshaType.PITTA, DoshaType.KAPHA),
+            mainIngredientsText = "Ashoka (Saraca asoca), Dhataki (Woodfordia fruticosa), Musta (Cyperus rotundus), Haritaki",
+            usageInstructionsText = "15 to 25 ml twice daily after food or as directed by the physician.",
             photoUrl = ClassicalPhotoPresets.ARISHTA_BOTTLE,
-            constituents = listOf("Arjunolic Acid", "Flavonoids", "Bio-calcium", "Triterpenoids"),
+            constituents = listOf("Saracin", "Tannins", "Phytosterols", "Natural Bio-ethanol"),
             ingredients = listOf(
-                AyurvedaIngredient(name = "Arjuna", botanicalName = "Terminalia arjuna", partUsed = "Stem Bark", classicalRole = "Hridya (Cardiotonic), Sandhaniya, Kashaya-dominant"),
-                AyurvedaIngredient(name = "Mrdwika (Draksha)", botanicalName = "Vitis vinifera", partUsed = "Dried Fruit", classicalRole = "Rasayana, Preenana (Nourishing)"),
-                AyurvedaIngredient(name = "Madhuka", botanicalName = "Madhuca indica", partUsed = "Flower", classicalRole = "Balya, Brumhana")
+                AyurvedaIngredient(name = "Ashoka", botanicalName = "Saraca asoca", partUsed = "Stem Bark", classicalRole = "Kashaya, Grahi, Artava-regulatory"),
+                AyurvedaIngredient(name = "Dhataki", botanicalName = "Woodfordia fruticosa", partUsed = "Flowers", classicalRole = "Fermentation agent"),
+                AyurvedaIngredient(name = "Musta", botanicalName = "Cyperus rotundus", partUsed = "Rhizome", classicalRole = "Deepana, Pachana, Srotoshodhana"),
+                AyurvedaIngredient(name = "Haritaki", botanicalName = "Terminalia chebula", partUsed = "Fruit Pericarp", classicalRole = "Tridosha shamaka")
             ),
             dravyaguna = DravyagunaProfile(
-                rasa = listOf("Kashaya (Astringent)", "Madhura (Sweet)"),
+                rasa = listOf("Kashaya (Astringent)", "Tikta (Bitter)"),
                 virya = "Sheeta (Cooling)",
                 vipaka = "Katu (Pungent)",
                 guna = listOf("Laghu (Light)", "Ruksha (Dry)")
             ),
             dosage = DosageInfo(
-                summary = "15-25 ml • Twice Daily After Meals",
-                standardDose = "5-25 ml",
-                frequency = "Twice Daily",
-                timing = "After meals",
-                anupana = "Equal quantity of lukewarm water",
-                caution = "Safe for long-term cardiovascular support under medical supervision."
-            ),
-            indications = listOf(
-                "Hridgadha (Heart diseases / Angina / Palpitations)",
-                "Balakshaya (Debility & General Weakness)",
-                "Swasa (Breathlessness on exertion)"
-            ),
-            contraindications = listOf("None reported under standard posology"),
-            pathyaWholesome = listOf("Pomegranate", "Cow's ghee in moderation", "Garlic infused milk", "Daily gentle walking"),
-            apathyaAvoid = listOf("Excessive saturated fats", "Stressful mental agitation", "Excessive sodium intake"),
-            stockUnits = 68,
-            batchNumber = "SIT-ARI-2026-004"
-        ),
-        AyurvedaMedicine(
-            id = "aravindasavam",
-            slNo = 1,
-            name = "Aravindasavam",
-            sanskritName = "अरविन्दासवम् (A.F.I. Part 1 Bhaisajya Ratnavali)",
-            classicalReference = "A.F.I. Part 1 Bhaisajya Ratnavali",
-            category = FormulationCategory.ASAVA,
-            packing = "450 ml",
-            tagPill = "PAEDIATRIC TONIC",
-            healthGoals = listOf(HealthGoal.IMMUNITY, HealthGoal.DIGESTION),
-            shortDescription = "Celebrated Ayurvedic elixir for infants and growing children, enhancing physical strength, immunity and intellect.",
-            primaryBenefit = "Bala roga (Pediatric complaints) relief, growth promotion, and digestive kindle",
-            doshaImpact = "Balances Vata, Pitta, and Kapha in pediatrics",
-            targetDoshas = listOf(DoshaType.TRIDOSHIC),
-            mainIngredientsText = "Aravinda (Nelumbo nucifera), Ushira, Kashmari, Neelotpala",
-            usageInstructionsText = "5-25 ml Twice daily with equal quantity of water",
-            photoUrl = ClassicalPhotoPresets.ARISHTA_BOTTLE,
-            constituents = listOf("Lotus Bioflavonoids", "Saponins", "Essential Micro-nutrients"),
-            ingredients = listOf(
-                AyurvedaIngredient(name = "Aravinda (Kamala)", botanicalName = "Nelumbo nucifera", partUsed = "Lotus Flower", classicalRole = "Medhya, Balya, Hridya"),
-                AyurvedaIngredient(name = "Ushira", botanicalName = "Vetiveria zizanioides", partUsed = "Root", classicalRole = "Cooling, Dahaprashamana"),
-                AyurvedaIngredient(name = "Kashmari", botanicalName = "Gmelina arborea", partUsed = "Fruit", classicalRole = "Brumhana, Rasayana"),
-                AyurvedaIngredient(name = "Neelotpala", botanicalName = "Nymphaea stellata", partUsed = "Blue Water Lily", classicalRole = "Pitta shamaka, Nervine soother")
-            ),
-            dravyaguna = DravyagunaProfile(
-                rasa = listOf("Madhura (Sweet)", "Kashaya (Astringent)", "Tikta (Bitter)"),
-                virya = "Sheeta (Cooling)",
-                vipaka = "Madhura (Sweet)",
-                guna = listOf("Laghu (Light)")
-            ),
-            dosage = DosageInfo(
-                summary = "5-15 ml (Children: 2.5-10 ml) • Twice Daily",
-                standardDose = "5-25 ml",
+                summary = "15-25 ml • Twice Daily After Food",
+                standardDose = "15 to 25 ml",
                 frequency = "Twice Daily",
                 timing = "After food",
-                anupana = "Equal volume of boiled warm water",
-                caution = "Adjust dose according to the age and body weight of child."
+                anupana = "Equal volume of lukewarm water",
+                caution = "Not recommended during active pregnancy."
             ),
             indications = listOf(
-                "Bala roga (General pediatric disorders)",
-                "Karshya (Emaciation / Failure to thrive)",
-                "Balakshaya (Weakness & Loss of vitality)",
-                "Atisara (Pediatric Diarrhoea)",
-                "Agnimandya (Loss of appetite / Poor nutrient absorption)"
+                "Asrigdara (Menorrhagia)",
+                "Pradara (Leucorrhea)",
+                "Katishoola (Low back pain)",
+                "Shweta Pradara (Pelvic discomfort)"
             ),
-            contraindications = listOf("None under age-appropriate dosing"),
-            pathyaWholesome = listOf("Warm rice porridge", "Cow milk", "Fresh fruit stews", "Ghee"),
-            apathyaAvoid = listOf("Junk foods with artificial preservatives", "Excessive cold sweets"),
-            stockUnits = 80,
-            batchNumber = "SIT-ASA-2026-001"
+            contraindications = listOf("Pregnancy", "Amenorrhea without medical consultation"),
+            pathyaWholesome = listOf("Nutritious light meals", "Pomegranate", "Milk", "Ghee"),
+            apathyaAvoid = listOf("Excessive pungent spices", "Late night heavy meals", "Physical strain"),
+            stockUnits = 110,
+            batchNumber = "SIT-ARI-2026-003"
         ),
         AyurvedaMedicine(
-            id = "aviltholadi_bhasmam",
-            slNo = 1,
-            name = "Aviltholadi Bhasmam",
-            sanskritName = "अविल्तोलादि भस्मम् (Sahasrayogam)",
-            classicalReference = "Sahasrayogam",
-            category = FormulationCategory.BHASMA_KSHARA,
-            packing = "50 g",
-            tagPill = "METABOLIC ALKALI",
-            healthGoals = listOf(HealthGoal.DETOX, HealthGoal.DIGESTION),
-            shortDescription = "Traditional Ayurvedic alkaline medicinal calx for scraping profound deep Ama, ascites, edema and abdominal masses.",
-            primaryBenefit = "Sopha (Oedema), Gulma (Abdominal tumors), and Udara (Ascites) resolution",
-            doshaImpact = "Kapha-Vata Shamaka & Chedana (Deep tissue scraping)",
-            targetDoshas = listOf(DoshaType.KAPHA, DoshaType.VATA),
-            mainIngredientsText = "Puthikatwak, Apamarga, Danthi, Arka",
-            usageInstructionsText = "1 g at a time mixed with hot water",
-            photoUrl = ClassicalPhotoPresets.HERBAL_POWDER_CHOORNAM,
-            constituents = listOf("Purified Bio-alkalis", "Potassium carbonate", "Organic micro-elements"),
+            id = "SA-13160",
+            slNo = 5,
+            name = "Triphala Churna",
+            sanskritName = "त्रिफला चूर्ण (Three Sacred Fruits)",
+            classicalReference = "Charaka Samhita",
+            category = FormulationCategory.CHOORNAMS,
+            packing = "100 g, 200 g",
+            tagPill = "DIGESTIVE DETOX",
+            healthGoals = listOf(HealthGoal.DIGESTION, HealthGoal.DETOX),
+            shortDescription = "Classic three-fruit formulation for gentle colon cleanse and systemic detox.",
+            primaryBenefit = "Gentle bowel motility, antioxidant protection, ocular health",
+            doshaImpact = "Tridoshic Harmony (Balances Vata, Pitta, Kapha)",
+            targetDoshas = listOf(DoshaType.TRIDOSHIC, DoshaType.PITTA, DoshaType.KAPHA),
+            constituents = listOf("Tannins", "Gallic Acid", "Vitamin C", "Chebulagic Acid"),
             ingredients = listOf(
-                AyurvedaIngredient(name = "Puthikatwak", botanicalName = "Holoptelea integrifolia", partUsed = "Bark ash", classicalRole = "Ksharana, Lekhana (Scraping)"),
-                AyurvedaIngredient(name = "Apamarga", botanicalName = "Achyranthes aspera", partUsed = "Whole plant ash", classicalRole = "Kshara, Srotoshodhana"),
-                AyurvedaIngredient(name = "Danthi", botanicalName = "Baliospermum montanum", partUsed = "Root", classicalRole = "Bhedana, Rechana"),
-                AyurvedaIngredient(name = "Arka", botanicalName = "Calotropis procera", partUsed = "Latex & Wood", classicalRole = "Dipana, Vata-Kapha hara")
+                AyurvedaIngredient(name = "Amalaki (Indian Gooseberry)", botanicalName = "Emblica officinalis", partUsed = "Dried Pericarp", classicalRole = "Natural Vitamin C, cooling Pitta regulator"),
+                AyurvedaIngredient(name = "Bibhitaki (Belliric Myrobalan)", botanicalName = "Terminalia bellirica", partUsed = "Fruit Peel", classicalRole = "Pacifies Kapha, supports mucosal health"),
+                AyurvedaIngredient(name = "Haritaki (Chebulic Myrobalan)", botanicalName = "Terminalia chebula", partUsed = "Dried Fruit", classicalRole = "Scrapes Ama and pacifies Vata")
             ),
             dravyaguna = DravyagunaProfile(
-                rasa = listOf("Katu (Pungent)", "Lavana (Salty)"),
-                virya = "Ushna (Hot / Piercing)",
-                vipaka = "Katu (Pungent)",
-                guna = listOf("Tikshna (Sharp)", "Laghu (Light)")
-            ),
-            dosage = DosageInfo(
-                summary = "500mg - 1g • Twice Daily",
-                standardDose = "1 g at a time",
-                frequency = "Twice Daily",
-                timing = "Before or with meals",
-                anupana = "Hot water or buttermilk",
-                caution = "Strictly consume under Vaidya supervision due to concentrated Kshara potency."
-            ),
-            indications = listOf(
-                "Sopha (Oedema / Peripheral Swelling)",
-                "Gulma (Chronic obstructive disorders / Phantom tumors)",
-                "Udara (Ascitis / Fluid accumulation in abdomen)"
-            ),
-            contraindications = listOf("Pregnancy", "Severe dehydration", "Erosive gastritis"),
-            pathyaWholesome = listOf("Takra (Spiced buttermilk)", "Barley water", "Dry warm foods"),
-            apathyaAvoid = listOf("Excessive heavy oily curds", "Day sleep", "High sodium intake"),
-            stockUnits = 42,
-            batchNumber = "SIT-BHA-2026-001"
-        ),
-        AyurvedaMedicine(
-            id = "dhanwantharam_gulika",
-            slNo = 6,
-            name = "Dhanwantharam Gulika",
-            sanskritName = "धन्वन्तरं गुळिका (A.F.I. Part 1 Sahasrayogam)",
-            classicalReference = "A.F.I. Part 1 Sahasrayogam",
-            category = FormulationCategory.GULIKA,
-            packing = "100 Nos.",
-            tagPill = "VATA CARMINATIVE",
-            healthGoals = listOf(HealthGoal.DIGESTION, HealthGoal.STRESS_RELIEF),
-            shortDescription = "Classic pill formulation from Sahasrayogam for respiratory dyspnea, colic, hiccups, hiccups and abdominal distension.",
-            primaryBenefit = "Normalizes downward flow of Apana & Prana Vata, eases gastric spasms",
-            doshaImpact = "Vata & Kapha Anulomana",
-            targetDoshas = listOf(DoshaType.VATA, DoshaType.KAPHA),
-            mainIngredientsText = "Ela (Cardamom), Viswa (Dry Ginger), Haritaki, Jathiphala",
-            usageInstructionsText = "Internal: 1-2 tablets twice daily chewed or dissolved in warm water",
-            photoUrl = ClassicalPhotoPresets.GULIKA_TABLETS,
-            constituents = listOf("Essential Volatile Oils", "Gingerols", "Tannins", "Cardamom Resins"),
-            ingredients = listOf(
-                AyurvedaIngredient(name = "Ela (Cardamom)", botanicalName = "Elettaria cardamomum", partUsed = "Seed", classicalRole = "Rochana, Deepana, Hridya"),
-                AyurvedaIngredient(name = "Viswa (Dry Ginger)", botanicalName = "Zingiber officinale", partUsed = "Rhizome", classicalRole = "Pachana, Vata-Kapha Shamaka"),
-                AyurvedaIngredient(name = "Haritaki", botanicalName = "Terminalia chebula", partUsed = "Fruit", classicalRole = "Anulomana (Peristaltic mover)"),
-                AyurvedaIngredient(name = "Jathiphala", botanicalName = "Myristica fragrans", partUsed = "Nut", classicalRole = "Grahi, Shoolahara")
-            ),
-            dravyaguna = DravyagunaProfile(
-                rasa = listOf("Katu (Pungent)", "Madhura (Sweet)", "Tikta (Bitter)"),
-                virya = "Ushna (Warm)",
-                vipaka = "Madhura",
-                guna = listOf("Laghu (Light)", "Sugandha (Aromatic)")
-            ),
-            dosage = DosageInfo(
-                summary = "1 - 2 Tablets • As needed or Twice Daily",
-                standardDose = "1-2 Tablets (500mg - 1g)",
-                frequency = "Twice Daily or SOS",
-                timing = "With first morsel of food or after meals",
-                anupana = "Warm cumin water (Jeeraka jala) or ginger decoction",
-                caution = "Safe across age groups and postpartum care."
-            ),
-            indications = listOf(
-                "Swasa (Dyspnea & Respiratory distress)",
-                "Kasa (Cough & Bronchial congestion)",
-                "Hikka (Persistent Hiccups)",
-                "Chardi (Vomiting & Nausea)",
-                "Shoola (Abdominal Colic & Spasms)",
-                "Anaha (Abdominal distension / Flatulence)",
-                "Rajayakshma (Tuberculosis adjunctive care)"
-            ),
-            contraindications = listOf("None known"),
-            pathyaWholesome = listOf("Warm ginger tea", "Light soups", "Cooked warm meals"),
-            apathyaAvoid = listOf("Cold chilled salads", "Carbonated soda", "Excessive heavy pulses"),
-            stockUnits = 140,
-            batchNumber = "SIT-GUL-2026-006"
-        ),
-        AyurvedaMedicine(
-            id = "arogyavardhini_gulika",
-            slNo = 1,
-            name = "Arogyavardhini Gulika",
-            sanskritName = "आरोग्यवर्धिनी गुळिका (A.F.I. Part 1 Rasa Ratna Samuchayam)",
-            classicalReference = "A.F.I. Part 1 Rasa Ratna Samuchayam",
-            category = FormulationCategory.GULIKA,
-            packing = "100 Nos.",
-            tagPill = "HEPATIC & METABOLIC",
-            healthGoals = listOf(HealthGoal.SKIN_HEALTH, HealthGoal.DETOX, HealthGoal.DIGESTION),
-            shortDescription = "High-efficacy herbo-mineral tablet for liver disorders, sluggish metabolism, skin conditions and hyperlipidemia.",
-            primaryBenefit = "Deep hepatoprotection, blood purification, and metabolic Ama incineration",
-            doshaImpact = "Balances Pitta & Kapha (Deepana & Pachana)",
-            targetDoshas = listOf(DoshaType.PITTA, DoshaType.KAPHA),
-            mainIngredientsText = "Shuddha Paradha, Shuddha Gandhaka, Loha bhasma, Abraka bhasma, Triphala",
-            usageInstructionsText = "Internal: 1-2 tablets twice daily after food with warm water or milk",
-            photoUrl = ClassicalPhotoPresets.GULIKA_TABLETS,
-            constituents = listOf("Purified Mineral Calces", "Picrorhiza Bitters (Kutki)", "Triphala Tannins"),
-            ingredients = listOf(
-                AyurvedaIngredient(name = "Katuki (Picrorhiza)", botanicalName = "Picrorhiza kurroa", partUsed = "Rhizome", classicalRole = "Bhedana, Pitta-rechana, Yakrid-rakshaka"),
-                AyurvedaIngredient(name = "Triphala (3 Myrobalans)", botanicalName = "Emblica, Terminalia sp.", partUsed = "Fruit pericarp", classicalRole = "Tridoshahara, Rasayana"),
-                AyurvedaIngredient(name = "Loha Bhasma", botanicalName = "Incinerated Iron Calx", partUsed = "Purified Bhasma", classicalRole = "Panduhara, Balya"),
-                AyurvedaIngredient(name = "Abhrak Bhasma", botanicalName = "Incinerated Mica Calx", partUsed = "Purified Bhasma", classicalRole = "Rasayana, Deepana")
-            ),
-            dravyaguna = DravyagunaProfile(
-                rasa = listOf("Tikta (Bitter)", "Kashaya (Astringent)"),
-                virya = "Sheeta (Balanced)",
-                vipaka = "Katu (Pungent)",
+                rasa = listOf("Pancha-Rasa (5 tastes except Salty)"),
+                virya = "Sheeta & Anushna (Balanced temperature)",
+                vipaka = "Madhura (Sweet post-digestive)",
                 guna = listOf("Laghu (Light)", "Ruksha (Dry)")
             ),
             dosage = DosageInfo(
-                summary = "1 - 2 Tablets (250mg - 500mg) • Twice Daily",
-                standardDose = "1-2 Tablets",
-                frequency = "Twice Daily",
-                timing = "After Meals",
-                anupana = "Warm water, honey, or lukewarm milk",
-                caution = "Administer under physician direction. Contraindicated during pregnancy."
+                summary = "3g - 6g • At Bedtime with warm water",
+                standardDose = "3-6g with warm water at bedtime",
+                frequency = "Once daily before sleep",
+                timing = "30-45 minutes after dinner before bed",
+                anupana = "Warm water or pure honey",
+                caution = "Avoid during acute diarrhea or severe dehydration."
             ),
-            indications = listOf(
-                "Skin diseases (Kushta / Eczema / Psoriasis)",
-                "Dyslipidemia (Elevated cholesterol & triglycerides)",
-                "Obesity (Medoroga / Adipose tissue accumulation)",
-                "Jwara (Chronic low-grade fevers)",
-                "Yakrit roga (Fatty liver / Hepatic congestion)"
-            ),
-            contraindications = listOf("Pregnancy & Lactation", "Severe renal impairment"),
-            pathyaWholesome = listOf("Mudga (Green gram)", "Bitter gourd", "Warm water", "Barley"),
-            apathyaAvoid = listOf("Fried greasy food", "Excessive alcohol", "Heavy animal fats"),
-            stockUnits = 110,
-            batchNumber = "SIT-GUL-2026-001"
+            indications = listOf("Constipation", "Eye disorders", "Detoxification", "Agnimandya"),
+            contraindications = listOf("Dysentery", "Acute dehydration"),
+            pathyaWholesome = listOf("Warm water throughout the day", "Steamed vegetables", "Moong dal soup"),
+            apathyaAvoid = listOf("Fried heavy snacks", "Cold curd", "Processed flour"),
+            stockUnits = 200,
+            batchNumber = "SIT-CHO-2026-001"
         ),
         AyurvedaMedicine(
-            id = "chandraprabha_gulika",
-            slNo = 3,
-            name = "Chandraprabha Gulika",
-            sanskritName = "चन्द्रप्रभा गुळिका (Bhaisajya Ratnavali)",
-            classicalReference = "Bhaisajya Ratnavali",
-            category = FormulationCategory.GULIKA,
-            packing = "100 Nos.",
-            tagPill = "URO-GENITAL TONIC",
-            healthGoals = listOf(HealthGoal.DETOX, HealthGoal.IMMUNITY),
-            shortDescription = "Premier classical formulation illuminating reproductive, urinary, and endocrine health with 37 bioactives.",
-            primaryBenefit = "Mutrakrcchra (Dysuria), Prameha (Glycemic / Urinary balance), and lumbar vitality",
-            doshaImpact = "Tridosha Rasayana (Restores Ojas and kidney channels)",
-            targetDoshas = listOf(DoshaType.TRIDOSHIC),
-            mainIngredientsText = "Chandraprabha, Vacha, Musta, Bhunimba, Shilajit, Guggulu",
-            usageInstructionsText = "Internal: 1-2 tablets twice daily with water or milk",
-            photoUrl = ClassicalPhotoPresets.GULIKA_TABLETS,
-            constituents = listOf("Fulvic Acid (Shilajit)", "Guggulsterones", "Essential Bitters"),
-            ingredients = listOf(
-                AyurvedaIngredient(name = "Shuddha Shilajit", botanicalName = "Asphaltum punjabianum", partUsed = "Purified Mineral Resin", classicalRole = "Yogavahi, Rasayana, Mehadhara"),
-                AyurvedaIngredient(name = "Shuddha Guggulu", botanicalName = "Commiphora mukul", partUsed = "Purified Oleo-resin", classicalRole = "Vedanasthapana, Medohara"),
-                AyurvedaIngredient(name = "Chandraprabha (Karpoora)", botanicalName = "Cinnamomum camphora", partUsed = "Extract", classicalRole = "Srotovishodhana, Vata-hara"),
-                AyurvedaIngredient(name = "Musta", botanicalName = "Cyperus rotundus", partUsed = "Tuber", classicalRole = "Deepana, Pachana, Kaphahara")
-            ),
-            dravyaguna = DravyagunaProfile(
-                rasa = listOf("Tikta (Bitter)", "Katu (Pungent)", "Kashaya (Astringent)", "Madhura (Sweet)"),
-                virya = "Sheeta (Balanced Cooling)",
-                vipaka = "Madhura (Nourishing post-digestive)",
-                guna = listOf("Laghu (Light)", "Snigdha (Nourishing)")
-            ),
-            dosage = DosageInfo(
-                summary = "1 - 2 Tablets (500mg - 1g) • Twice Daily",
-                standardDose = "1-2 Tablets",
-                frequency = "Twice Daily",
-                timing = "After Meals",
-                anupana = "Warm Cow's Milk or lukewarm water",
-                caution = "Take after food. Consult Vaidya during active uric acid flares."
-            ),
-            indications = listOf(
-                "Polyuria (Prameha / Diabetic urinary symptoms)",
-                "Dysuria (Mutrakrcchra / Painful micturition)",
-                "Renal Calculi (Ashmari prevention)",
-                "Anuria / Urinary frequency",
-                "Hydrocele & Scrotal enlargement",
-                "Anemia (Pandu) & Lower back exhaustion"
-            ),
-            contraindications = listOf("Severe hyperkalemia"),
-            pathyaWholesome = listOf("Barley (Yava)", "Moong dal", "Old shali rice", "Pomegranate"),
-            apathyaAvoid = listOf("Excessive curd", "Fermented foods", "Sedentary lifestyle"),
-            stockUnits = 88,
-            batchNumber = "SIT-GUL-2026-003"
-        ),
-        AyurvedaMedicine(
-            id = "manasamithram_gulika",
-            slNo = 23,
-            name = "Manasamithram Gulika",
-            sanskritName = "मानसामित्रं गुळिका (A.F.I. Part 1 Sahasrayogam)",
-            classicalReference = "A.F.I. Part 1 Sahasrayogam",
-            category = FormulationCategory.GULIKA,
-            packing = "100 Nos.",
-            tagPill = "MEDHYA NOOTROPIC",
-            healthGoals = listOf(HealthGoal.COGNITION, HealthGoal.STRESS_RELIEF),
-            shortDescription = "Prestigious neuro-psychiatric Ayurvedic tablet calming Prana Vata, anxiety, insomnia, and speech impediments.",
-            primaryBenefit = "Mental tranquility, deep restorative sleep, and nervous system nourishment",
-            doshaImpact = "Calms aggravated Prana Vata and Sadhaka Pitta",
-            targetDoshas = listOf(DoshaType.VATA, DoshaType.PITTA),
-            mainIngredientsText = "Bala, Nagabala, Bilva, Prisniparni, Pravala pishti, Swarna Bhasma",
-            usageInstructionsText = "Internal: 1 tablet once or twice daily with warm milk",
-            photoUrl = ClassicalPhotoPresets.GULIKA_TABLETS,
-            constituents = listOf("Purified Coral (Pravala)", "Silver & Gold micro-bhasmas", "Nervine Alkaloids"),
-            ingredients = listOf(
-                AyurvedaIngredient(name = "Bala & Nagabala", botanicalName = "Sida cordifolia sp.", partUsed = "Root", classicalRole = "Balya, Brumhana, Vata-shamaka"),
-                AyurvedaIngredient(name = "Bilwa", botanicalName = "Aegle marmelos", partUsed = "Root", classicalRole = "Dashamula nerve calmer"),
-                AyurvedaIngredient(name = "Pravala Pishti", botanicalName = "Processed Coral calx", partUsed = "Purified Marine Calx", classicalRole = "Pitta-shamaka, Medhya"),
-                AyurvedaIngredient(name = "Swarna Bhasma", botanicalName = "Purified Gold Calx", partUsed = "Micro-calx", classicalRole = "Supreme Rasayana, Ojas booster")
-            ),
-            dravyaguna = DravyagunaProfile(
-                rasa = listOf("Madhura (Sweet)", "Tikta (Bitter)"),
-                virya = "Sheeta (Cooling)",
-                vipaka = "Madhura (Nourishing)",
-                guna = listOf("Guru (Grounding)", "Snigdha (Unctuous)")
-            ),
-            dosage = DosageInfo(
-                summary = "1 Tablet • Night Before Sleep or Twice Daily",
-                standardDose = "1 Tablet (250mg)",
-                frequency = "Once or Twice Daily",
-                timing = "30 mins before sleep or after breakfast",
-                anupana = "Warm Cow's Milk, Saraswatharishtam, or Brahmi Ghrita",
-                caution = "Take only under classical Ayurvedic prescription."
-            ),
-            indications = listOf(
-                "Psychiatric diseases (Unmada / Mental agitation)",
-                "Epilepsy (Apasmara adjunctive support)",
-                "Speech disorders & Stuttering",
-                "Chronic stress & Panic tendencies",
-                "Anxiety neurosis & Insomnia"
-            ),
-            contraindications = listOf("Do not exceed prescribed dosage"),
-            pathyaWholesome = listOf("Meditation", "Warm milk with nutmeg", "Cow's ghee", "Sweet fruits"),
-            apathyaAvoid = listOf("Excessive caffeine", "Violent screen stimulation", "Irregular sleep hours"),
-            stockUnits = 55,
-            batchNumber = "SIT-GUL-2026-023"
-        ),
-        AyurvedaMedicine(
-            id = "ashwagandha_root",
+            id = "SA-92629",
+            slNo = 6,
             name = "Ashwagandha Root",
             sanskritName = "अश्वगंधा (Withania somnifera)",
-            category = FormulationCategory.CHURNA,
+            classicalReference = "Charaka Samhita Chikitsa Sthana 1.1 / AFI Vol. I",
+            category = FormulationCategory.CHOORNAMS,
+            packing = "450 ml",
             tagPill = "ADAPTOGEN",
             healthGoals = listOf(HealthGoal.STRESS_RELIEF, HealthGoal.IMMUNITY),
-            shortDescription = "Supports stress reduction and cognitive focus. Part of your Morning Ritual.",
-            primaryBenefit = "Somatic vitality, adrenal support, and deep restful sleep",
+            shortDescription = "Supports stress reduction and cognitive focus. Classical adaptogenic root promoting vitality and restful sleep.",
+            primaryBenefit = "Somatic vitality, adrenal support, and deep restful restorative sleep.",
             doshaImpact = "Vata & Kapha Pacifying (Vata-Kapha Shamaka)",
             targetDoshas = listOf(DoshaType.VATA, DoshaType.KAPHA),
             constituents = listOf("Flavonoids", "Alkaloids", "Withanolides", "Sitoindosides"),
             ingredients = listOf(
-                AyurvedaIngredient(
-                    name = "Ashwagandha Root",
-                    sanskritName = "अश्वगंधा",
-                    botanicalName = "Withania somnifera",
-                    partUsed = "Sun-dried Rhizome & Root",
-                    classicalRole = "Balya (Strength giver), Rasayana (Rejuvenator), Medhya (Nervine tonic)"
-                ),
-                AyurvedaIngredient(
-                    name = "Black Pepper (Bioenhancer)",
-                    sanskritName = "मरिच",
-                    botanicalName = "Piper nigrum",
-                    partUsed = "Dried Fruit",
-                    classicalRole = "Deepana & Sroto-shodhana (Improves cellular assimilation)"
-                )
+                AyurvedaIngredient(name = "Ashwagandha Root", botanicalName = "Withania somnifera", partUsed = "Sun-dried Root", classicalRole = "Balya, Rasayana, Medhya"),
+                AyurvedaIngredient(name = "Black Pepper (Bioenhancer)", botanicalName = "Piper nigrum", partUsed = "Dried Fruit", classicalRole = "Deepana & Sroto-shodhana")
             ),
             dravyaguna = DravyagunaProfile(
                 rasa = listOf("Tikta (Bitter)", "Kashaya (Astringent)", "Madhura (Sweet)"),
@@ -562,165 +287,80 @@ object AyurvedaRepository {
                 guna = listOf("Laghu (Light)", "Snigdha (Unctuous)")
             ),
             dosage = DosageInfo(
-                summary = "500mg • After Breakfast",
-                standardDose = "500mg - 1000mg (1/2 to 1 teaspoon powder)",
+                summary = "3-6g with warm milk • After Breakfast",
+                standardDose = "3-6g with warm milk",
                 frequency = "Twice Daily",
                 timing = "Morning after meal & 30 mins before sleep",
-                anupana = "Warm Cow's Milk, Ghee, or warm water with honey",
+                anupana = "Warm cow milk or ghee",
                 caution = "Use with care in high Pitta conditions with burning sensations."
             ),
-            indications = listOf("Chronic mental fatigue", "Anxiety & restlessness", "Muscle debility", "Insomnia"),
-            contraindications = listOf("Acute high fever (Ama condition)", "Severe thyrotoxicosis without supervision"),
+            indications = listOf("Somatic vitality", "Adrenal support", "Restorative sleep", "Stress relief"),
+            contraindications = listOf("Acute high fever", "Severe thyrotoxicosis without supervision"),
             pathyaWholesome = listOf("Warm whole milk", "Soaked almonds", "Ghee", "Warm stewed apples"),
             apathyaAvoid = listOf("Excessive caffeine", "Cold raw dry salads", "Late night eating"),
-            isDailyVitality = false
+            stockUnits = 180,
+            batchNumber = "SIT-CHO-2026-002"
         ),
         AyurvedaMedicine(
-            id = "triphala_churna",
-            name = "Triphala Churna",
-            sanskritName = "त्रिफला चूर्ण (Three Sacred Fruits)",
-            category = FormulationCategory.CHURNA,
-            tagPill = "DIGESTIVE DETOX",
-            shortDescription = "Classic three-fruit formulation for gentle colon cleanse and systemic detox.",
-            primaryBenefit = "Gentle bowel motility, antioxidant protection, ocular health",
-            doshaImpact = "Tridoshic Harmony (Balances Vata, Pitta, Kapha)",
-            targetDoshas = listOf(DoshaType.TRIDOSHIC, DoshaType.PITTA, DoshaType.KAPHA),
-            constituents = listOf("Tannins", "Gallic Acid", "Vitamin C", "Chebulagic Acid"),
-            ingredients = listOf(
-                AyurvedaIngredient(
-                    name = "Amalaki (Indian Gooseberry)",
-                    sanskritName = "आमलकी",
-                    botanicalName = "Emblica officinalis",
-                    partUsed = "Dried Pericarp",
-                    classicalRole = "Rich natural Vitamin C, cooling Pitta regulator, Rasayana"
-                ),
-                AyurvedaIngredient(
-                    name = "Bibhitaki (Belliric Myrobalan)",
-                    sanskritName = "बिभीतकी",
-                    botanicalName = "Terminalia bellirica",
-                    partUsed = "Fruit Peel",
-                    classicalRole = "Pacifies Kapha, supports lungs and mucosal health"
-                ),
-                AyurvedaIngredient(
-                    name = "Haritaki (Chebulic Myrobalan)",
-                    sanskritName = "हरीतकी",
-                    botanicalName = "Terminalia chebula",
-                    partUsed = "Dried Fruit",
-                    classicalRole = "King of Medicines; scrapes Ama (toxins) and pacifies Vata"
-                )
-            ),
-            dravyaguna = DravyagunaProfile(
-                rasa = listOf("Pancha-Rasa (Contains 5 tastes except salty Lavana)"),
-                virya = "Sheeta & Anushna (Balanced temperature)",
-                vipaka = "Madhura (Sweet post-digestive)",
-                guna = listOf("Laghu (Light)", "Ruksha (Dry)")
-            ),
-            dosage = DosageInfo(
-                summary = "3g - 5g • At Bedtime",
-                standardDose = "1/2 to 1 teaspoon (3g - 5g)",
-                frequency = "Once daily before sleep",
-                timing = "30-45 minutes after dinner before bed",
-                anupana = "Warm water or equal parts ghee and raw honey",
-                caution = "Avoid during acute diarrhea or early pregnancy."
-            ),
-            indications = listOf("Sluggish bowel habits", "Toxin accumulation (Ama)", "Eye fatigue", "Weak metabolism"),
-            contraindications = listOf("Dysentery", "Acute dehydration"),
-            pathyaWholesome = listOf("Warm water throughout the day", "Steamed vegetables", "Moong dal soup"),
-            apathyaAvoid = listOf("Fried heavy snacks", "Cold curd", "Processed flour")
-        ),
-        AyurvedaMedicine(
-            id = "brahmi_vati",
+            id = "SA-20904",
+            slNo = 7,
             name = "Brahmi Vati",
-            sanskritName = "ब्राह्मी वटी (Classical Cognitive Tablet)",
-            category = FormulationCategory.VATI,
+            sanskritName = "ब्राह्मी वटी (Bhaishajya Ratnavali)",
+            classicalReference = "Bhaishajya Ratnavali Manasaroga Chikitsa / AFI",
+            category = FormulationCategory.GULIKA_TABLETS_CAPSULES,
+            packing = "450 ml",
             tagPill = "NOOTROPIC",
-            shortDescription = "Enhances memory retention, concentration, and soothes emotional agitation.",
-            primaryBenefit = "Brain fog clearance, memory enhancement, nervous equilibrium",
+            healthGoals = listOf(HealthGoal.COGNITION, HealthGoal.STRESS_RELIEF),
+            shortDescription = "Classical neuro-protective tablet enhancing memory retention, focus, and reducing mental exhaustion.",
+            primaryBenefit = "Deep mental clarity, cognitive retention, and nervous system tranquility.",
             doshaImpact = "Pacifies Sadhaka Pitta & Prana Vata",
             targetDoshas = listOf(DoshaType.VATA, DoshaType.PITTA),
             constituents = listOf("Bacosides A & B", "Alkaloids", "Sterols"),
             ingredients = listOf(
-                AyurvedaIngredient(
-                    name = "Brahmi Herb",
-                    sanskritName = "ब्राह्मी",
-                    botanicalName = "Bacopa monnieri",
-                    partUsed = "Whole Aerial Plant",
-                    classicalRole = "Medhya Rasayana (Potent neuroprotective adaptogen)"
-                ),
-                AyurvedaIngredient(
-                    name = "Shankhpushpi",
-                    sanskritName = "शंखपुष्पी",
-                    botanicalName = "Convolvulus pluricaulis",
-                    partUsed = "Whole Herb",
-                    classicalRole = "Calms nervous excitement and promotes cerebral microcirculation"
-                ),
-                AyurvedaIngredient(
-                    name = "Vacha (Sweet Flag)",
-                    sanskritName = "वचा",
-                    botanicalName = "Acorus calamus",
-                    partUsed = "Purified Rhizome",
-                    classicalRole = "Speech clarity, cognitive sharpness, clears srotas"
-                )
+                AyurvedaIngredient(name = "Brahmi Herb", botanicalName = "Bacopa monnieri", partUsed = "Whole Aerial Plant", classicalRole = "Medhya Rasayana"),
+                AyurvedaIngredient(name = "Shankhpushpi", botanicalName = "Convolvulus pluricaulis", partUsed = "Whole Herb", classicalRole = "Calms nervous excitement"),
+                AyurvedaIngredient(name = "Vacha (Sweet Flag)", botanicalName = "Acorus calamus", partUsed = "Purified Rhizome", classicalRole = "Speech clarity, cognitive sharpness")
             ),
             dravyaguna = DravyagunaProfile(
                 rasa = listOf("Tikta (Bitter)", "Kashaya (Astringent)"),
-                virya = "Sheeta (Cooling to mind & blood)",
+                virya = "Sheeta (Cooling)",
                 vipaka = "Madhura",
                 guna = listOf("Laghu (Light)", "Sara (Promotes gentle movement)")
             ),
             dosage = DosageInfo(
-                summary = "1-2 Tablets • After Meals",
-                standardDose = "1 to 2 tablets (250mg - 500mg)",
+                summary = "1-2 tablets twice daily • Anupana: Saraswatarishta or warm milk",
+                standardDose = "1-2 tablets twice daily",
                 frequency = "Twice daily",
                 timing = "After breakfast and lunch",
-                anupana = "Warm water, warm milk, or Brahmi Ghrita",
+                anupana = "Saraswatarishta or warm milk",
                 caution = "Take after food if prone to mild gastric sensitivity."
             ),
             indications = listOf("Examination stress", "Poor memory recall", "Mental fatigue", "Restless thoughts"),
             contraindications = listOf("Hypersensitivity to herbal bitters"),
             pathyaWholesome = listOf("A2 Cow Ghee", "Walnuts", "Pomegranate", "Fresh coconut water"),
-            apathyaAvoid = listOf("Excessive green chilies", "Fermented alcohol", "Excessive screen time before bed")
+            apathyaAvoid = listOf("Excessive green chilies", "Fermented alcohol", "Excessive screen time"),
+            stockUnits = 140,
+            batchNumber = "SIT-GUL-2026-001"
         ),
         AyurvedaMedicine(
-            id = "chyawanprash_awaleha",
-            name = "Chyawanprash Awaleha",
-            sanskritName = "च्यवनप्राश अवलेह (The Grand Vitality Jam)",
-            category = FormulationCategory.RASAYANA,
+            id = "SA-76907",
+            slNo = 8,
+            name = "Chyawanprash Avaleha",
+            sanskritName = "च्यवनप्राश अवलेह (Charaka Samhita)",
+            classicalReference = "Charaka Samhita Chikitsa Sthana 1.1.62-74",
+            category = FormulationCategory.LEHYAMS,
+            packing = "450 ml",
             tagPill = "IMMUNITY BOOSTER",
-            shortDescription = "Classical multi-herb botanical jam prepared in fresh amla, ghee, and honey.",
-            primaryBenefit = "Deep immune barrier (Ojas), respiratory defense, tissue anti-aging",
+            healthGoals = listOf(HealthGoal.IMMUNITY),
+            shortDescription = "Classical multi-herb botanical jam prepared in fresh amla, ghee, and honey for deep immune defense.",
+            primaryBenefit = "Immuno-modulatory rejuvenation, lung health, and vitality for all seasons.",
             doshaImpact = "Tridoshic Balancer (Nourishes all 7 Dhatus)",
             targetDoshas = listOf(DoshaType.TRIDOSHIC, DoshaType.VATA, DoshaType.KAPHA),
             constituents = listOf("Bioflavonoids", "Ascorbic Acid", "Essential Fatty Acids", "Polyphenols"),
             ingredients = listOf(
-                AyurvedaIngredient(
-                    name = "Fresh Amla (Gooseberry)",
-                    sanskritName = "आमलकी",
-                    botanicalName = "Phyllanthus emblica",
-                    partUsed = "Pulp of Fresh Wild Berries",
-                    classicalRole = "Dominant ingredient (60%+); supreme Rasayana and cellular protector"
-                ),
-                AyurvedaIngredient(
-                    name = "Dashamula Complex",
-                    sanskritName = "दशमूल",
-                    botanicalName = "Ten Sacred Roots",
-                    partUsed = "Decoction of 10 Classical Roots",
-                    classicalRole = "Strengthens respiratory system and deep organ vitality"
-                ),
-                AyurvedaIngredient(
-                    name = "Pippali (Long Pepper)",
-                    sanskritName = "पिप्पली",
-                    botanicalName = "Piper longum",
-                    partUsed = "Dried Spikes",
-                    classicalRole = "Pranavaha Srotas rejuvenator; clears bronchial phlegm"
-                ),
-                AyurvedaIngredient(
-                    name = "Pure Cow's Ghee & Sesame Oil",
-                    sanskritName = "घृत एवं तैल",
-                    botanicalName = "A2 Ghee & Sesamum indicum",
-                    partUsed = "Cold-pressed / Cultured base",
-                    classicalRole = "Lipid carrier driving herbs deep into cellular membranes"
-                )
+                AyurvedaIngredient(name = "Fresh Amla (Gooseberry)", botanicalName = "Phyllanthus emblica", partUsed = "Pulp of Fresh Wild Berries", classicalRole = "Dominant ingredient (60%+); supreme Rasayana"),
+                AyurvedaIngredient(name = "Dashamula Complex", botanicalName = "Ten Sacred Roots", partUsed = "Decoction of 10 Roots", classicalRole = "Strengthens respiratory system"),
+                AyurvedaIngredient(name = "Pippali (Long Pepper)", botanicalName = "Piper longum", partUsed = "Dried Spikes", classicalRole = "Pranavaha Srotas rejuvenator")
             ),
             dravyaguna = DravyagunaProfile(
                 rasa = listOf("Madhura (Sweet)", "Amla (Sour)", "Tikta (Bitter)", "Katu (Pungent)"),
@@ -729,58 +369,39 @@ object AyurvedaRepository {
                 guna = listOf("Guru (Nourishing / Heavy)", "Snigdha (Unctuous)")
             ),
             dosage = DosageInfo(
-                summary = "10g - 15g • Early Morning",
-                standardDose = "1 tablespoon (12g - 15g)",
-                frequency = "Once or twice daily",
-                timing = "Morning on empty stomach or before breakfast",
-                anupana = "Warm cow's milk or warm water",
-                caution = "Diabetic individuals should consult practitioner due to jaggery/honey content."
+                summary = "1-2 tablespoons morning & evening • Anupana: Warm milk",
+                standardDose = "1-2 tablespoons morning & evening",
+                frequency = "Twice daily",
+                timing = "Morning on empty stomach and bedtime",
+                anupana = "Warm milk",
+                caution = "Diabetic individuals should consult practitioner due to traditional honey matrix."
             ),
-            indications = listOf("Frequent seasonal colds", "General debility", "Weak lungs", "Post-illness fatigue"),
+            indications = listOf("Immuno-modulatory rejuvenation", "Lung health", "Vitality for all seasons", "General debility"),
             contraindications = listOf("Acute uncontrolled hyperglycemia"),
-            pathyaWholesome = listOf("Warm nourishing grains", "Warm milk with a pinch of turmeric", "Dates"),
-            apathyaAvoid = listOf("Refrigerated drinks", "Ice creams", "Stale leftover food")
+            pathyaWholesome = listOf("Warm nourishing grains", "Warm milk with turmeric", "Dates"),
+            apathyaAvoid = listOf("Refrigerated drinks", "Ice creams", "Stale leftover food"),
+            stockUnits = 160,
+            batchNumber = "SIT-LEH-2026-001"
         ),
         AyurvedaMedicine(
-            id = "kumkumadi_tailam",
-            name = "Kumkumadi Tailam",
-            sanskritName = "कुमकुमादि तैलम् (Miraculous Saffron Oil)",
-            category = FormulationCategory.TAILA,
+            id = "SA-25363",
+            slNo = 9,
+            name = "Kumkumadi Thailam",
+            sanskritName = "कुंकुमादि तैलम् (Ashtanga Hrudayam)",
+            classicalReference = "Ashtanga Hrudayam / Bhaishajya Ratnavali",
+            category = FormulationCategory.THAILAMS,
+            packing = "450 ml",
             tagPill = "SKIN RADIANCE",
-            shortDescription = "Artisanal saffron-infused elixir crafted for blemishes and golden skin luster.",
-            primaryBenefit = "Clears pigmentation, softens texture, imparts natural radiance",
+            healthGoals = listOf(HealthGoal.SKIN_HEALTH),
+            shortDescription = "Miraculous Ayurvedic facial elixir infused with pure Kashmiri Saffron for radiant skin luster.",
+            primaryBenefit = "Facial radiance, hyperpigmentation correction, and epidermal glow.",
             doshaImpact = "Pacifies Pitta and Rakta (Blood tissue)",
             targetDoshas = listOf(DoshaType.PITTA),
             constituents = listOf("Crocin", "Safranal", "Glycyrrhizin", "Santalols"),
             ingredients = listOf(
-                AyurvedaIngredient(
-                    name = "Kashmiri Saffron",
-                    sanskritName = "कुंकुम",
-                    botanicalName = "Crocus sativus",
-                    partUsed = "Crimson Stigmas",
-                    classicalRole = "Varnya (Complexion enhancer) and blood purifier"
-                ),
-                AyurvedaIngredient(
-                    name = "Rakta Chandana (Red Sandalwood)",
-                    sanskritName = "रक्त चन्दन",
-                    botanicalName = "Pterocarpus santalinus",
-                    partUsed = "Heartwood",
-                    classicalRole = "Deeply cooling, eliminates sun pigmentation and redness"
-                ),
-                AyurvedaIngredient(
-                    name = "Manjistha (Indian Madder)",
-                    sanskritName = "मञ्जिष्ठा",
-                    botanicalName = "Rubia cordifolia",
-                    partUsed = "Stems & Roots",
-                    classicalRole = "Premier lymph and micro-capillary purifier"
-                ),
-                AyurvedaIngredient(
-                    name = "Pure Sesame Oil base",
-                    sanskritName = "तिल तैल",
-                    botanicalName = "Sesamum indicum",
-                    partUsed = "Cold-pressed seed oil",
-                    classicalRole = "Penetrates all 7 layers of the epidermis (*Twak*)"
-                )
+                AyurvedaIngredient(name = "Kashmiri Saffron", botanicalName = "Crocus sativus", partUsed = "Crimson Stigmas", classicalRole = "Varnya (Complexion enhancer)"),
+                AyurvedaIngredient(name = "Rakta Chandana", botanicalName = "Pterocarpus santalinus", partUsed = "Heartwood", classicalRole = "Deeply cooling, eliminates sun pigmentation"),
+                AyurvedaIngredient(name = "Manjistha", botanicalName = "Rubia cordifolia", partUsed = "Stems & Roots", classicalRole = "Premier lymph and micro-capillary purifier")
             ),
             dravyaguna = DravyagunaProfile(
                 rasa = listOf("Madhura", "Tikta"),
@@ -789,176 +410,142 @@ object AyurvedaRepository {
                 guna = listOf("Snigdha (Hydrating)", "Sukshma (Deeply penetrative)")
             ),
             dosage = DosageInfo(
-                summary = "3-4 Drops • Night Ritual",
-                standardDose = "3 to 5 drops",
+                summary = "3-5 drops external application • Anupana: Gentle circular facial massage",
+                standardDose = "3-5 drops external application",
                 frequency = "Once daily before sleep",
-                timing = "Night after washing face with pure rosewater",
-                anupana = "Topical application gently massaged upwards",
+                timing = "Night after washing face",
+                anupana = "Gentle circular facial massage",
                 caution = "For external facial use only."
             ),
-            indications = listOf("Uneven skin tone", "Under-eye dark circles", "Blemish scars", "Dry patches"),
+            indications = listOf("Facial radiance", "Hyperpigmentation correction", "Epidermal glow", "Blemish scars"),
             contraindications = listOf("Active cystic pus-filled acne flare-up"),
             pathyaWholesome = listOf("Amla juice", "Watermelon", "Cilantro tea", "Hydrating water"),
-            apathyaAvoid = listOf("Excessive direct sun without shade", "Excessive deep-fried salty snacks")
+            apathyaAvoid = listOf("Excessive direct sun", "Deep-fried salty snacks"),
+            stockUnits = 90,
+            batchNumber = "SIT-THI-2026-001"
         ),
         AyurvedaMedicine(
-            id = "amritarishta",
-            name = "Amritarishta",
-            sanskritName = "अमृतातर्ष (Fermented Giloy Nectar)",
-            category = FormulationCategory.ARISHTA,
-            tagPill = "LIVER & FEVER DETOX",
-            shortDescription = "Naturally fermented herbal tonic targeting deep metabolic endotoxins.",
-            primaryBenefit = "Clears stubborn metabolic toxins, strengthens spleen and liver function",
-            doshaImpact = "Pacifies Pitta and Kapha",
-            targetDoshas = listOf(DoshaType.PITTA, DoshaType.KAPHA),
-            constituents = listOf("Tinosporaside", "Cordifolioside", "Self-generated herbal bio-alcohols"),
+            id = "SA-43264",
+            slNo = 10,
+            name = "Yogaraj Guggulu",
+            sanskritName = "योगराज गुग्गुलु (Bhaishajya Ratnavali)",
+            classicalReference = "Bhaishajya Ratnavali Amavata Chikitsa",
+            category = FormulationCategory.GULIKA_TABLETS_CAPSULES,
+            packing = "450 ml",
+            tagPill = "JOINT MOBILITY",
+            healthGoals = listOf(HealthGoal.JOINT_MOBILITY, HealthGoal.DETOX),
+            shortDescription = "Time-honored detoxifying and anti-inflammatory classical Guggulu compound for joint mobility.",
+            primaryBenefit = "Joint flexibility, synovial comfort, and elimination of metabolic ama.",
+            doshaImpact = "Deep Vata-Kapha Shamaka and Ama-pachana",
+            targetDoshas = listOf(DoshaType.VATA, DoshaType.KAPHA),
+            constituents = listOf("Guggulsterones Z & E", "Essential Resins", "Piperine"),
             ingredients = listOf(
-                AyurvedaIngredient(
-                    name = "Guduchi (Giloy / Amrita)",
-                    sanskritName = "गुडूची",
-                    botanicalName = "Tinospora cordifolia",
-                    partUsed = "Fresh Stems",
-                    classicalRole = "Jwarahara (Fever pacifier) and deep immunomodulator"
-                ),
-                AyurvedaIngredient(
-                    name = "Dashamula",
-                    sanskritName = "दशमूल",
-                    botanicalName = "Ten Root Decoction",
-                    partUsed = "Roots",
-                    classicalRole = "Relieves inflammatory body aches"
-                ),
-                AyurvedaIngredient(
-                    name = "Dhataki Flowers",
-                    sanskritName = "धातकी",
-                    botanicalName = "Woodfordia fruticosa",
-                    partUsed = "Dried Blossoms",
-                    classicalRole = "Natural fermentation initiator producing fine biological delivery"
-                )
+                AyurvedaIngredient(name = "Shuddha Guggulu", botanicalName = "Commiphora mukul", partUsed = "Purified Oleo-gum-resin", classicalRole = "Anti-inflammatory, scrapes Ama"),
+                AyurvedaIngredient(name = "Chitraka", botanicalName = "Plumbago zeylanica", partUsed = "Root Bark", classicalRole = "Agni deepana, digests metabolic waste"),
+                AyurvedaIngredient(name = "Rasna", botanicalName = "Pluchea lanceolata", partUsed = "Leaves", classicalRole = "Premier Vata-pacifier for joints")
             ),
             dravyaguna = DravyagunaProfile(
-                rasa = listOf("Tikta (Intensely bitter)", "Kashaya (Astringent)"),
-                virya = "Ushna (Penetrative)",
-                vipaka = "Madhura",
-                guna = listOf("Laghu (Rapidly absorbed)", "Tikshna")
-            ),
-            dosage = DosageInfo(
-                summary = "15ml - 20ml • After Lunch & Dinner",
-                standardDose = "15ml to 25ml",
-                frequency = "Twice daily",
-                timing = "Immediately after lunch and dinner",
-                anupana = "Diluted with equal quantity (1:1) of warm water",
-                caution = "Do not take undiluted on completely empty stomach."
-            ),
-            indications = listOf("Post-viral lethargy", "Low digestive fire", "Chronic recurrent low-grade fever"),
-            contraindications = listOf("Acute bleeding ulcers", "Children under 5 without medical supervision"),
-            pathyaWholesome = listOf("Light khichdi", "Boiled vegetable broth", "Pomegranate"),
-            apathyaAvoid = listOf("Heavy red meat", "Excessive sour pickles", "Stale curd")
-        ),
-        AyurvedaMedicine(
-            id = "dashamula_kwatha",
-            name = "Dashamula Kwatha",
-            sanskritName = "दशमूल क्वाथ (Ten Roots Decoction)",
-            category = FormulationCategory.KWATHA,
-            tagPill = "VATA HARMONY",
-            shortDescription = "Sacred decoction of ten forest roots that grounds aggravated Vata dosha.",
-            primaryBenefit = "Joint comfort, nerve relaxation, easing menstrual cramps & stiffness",
-            doshaImpact = "Supreme Vata Shamaka (Grounds erratic nervous energy)",
-            targetDoshas = listOf(DoshaType.VATA),
-            constituents = listOf("Flavonoid Glycosides", "Sitosterols", "Lupenone"),
-            ingredients = listOf(
-                AyurvedaIngredient(
-                    name = "Bilva (Bael root)",
-                    sanskritName = "बिल्व",
-                    botanicalName = "Aegle marmelos",
-                    partUsed = "Root Bark",
-                    classicalRole = "Pacifies Vata-Kapha and supports intestinal gut lining"
-                ),
-                AyurvedaIngredient(
-                    name = "Agnimantha",
-                    sanskritName = "अग्निमन्थ",
-                    botanicalName = "Premna integrifolia",
-                    partUsed = "Root",
-                    classicalRole = "Anti-inflammatory and relieves nerve tension"
-                ),
-                AyurvedaIngredient(
-                    name = "Gokshura (Small Caltrops)",
-                    sanskritName = "गोक्षुर",
-                    botanicalName = "Tribulus terrestris",
-                    partUsed = "Roots & Fruit",
-                    classicalRole = "Urinary soothing and lower back support"
-                )
-            ),
-            dravyaguna = DravyagunaProfile(
-                rasa = listOf("Kashaya (Astringent)", "Tikta (Bitter)"),
-                virya = "Ushna (Warm & soothing)",
+                rasa = listOf("Tikta (Bitter)", "Katu (Pungent)", "Kashaya (Astringent)"),
+                virya = "Ushna (Heating)",
                 vipaka = "Katu",
-                guna = listOf("Guru", "Ruksha")
+                guna = listOf("Laghu", "Ruksha", "Sukshma")
             ),
             dosage = DosageInfo(
-                summary = "40ml - 50ml • Twice Daily",
-                standardDose = "40ml to 60ml freshly steeped",
+                summary = "2 tablets twice daily • Anupana: Warm water or Dashamoolarishtam",
+                standardDose = "2 tablets twice daily",
                 frequency = "Twice daily",
-                timing = "30 minutes before meals",
-                anupana = "Warm water or with a pinch of fresh ginger paste",
-                caution = "Take warm; do not drink cold decoctions."
+                timing = "After meals",
+                anupana = "Warm water or Dashamoolarishtam",
+                caution = "Not suitable during active gastritis or pregnancy."
             ),
-            indications = listOf("Lower back ache", "Sciatica stiffness", "Severe postpartum recovery", "Dry cough"),
-            contraindications = listOf("Dehydration with severe burning sensation"),
-            pathyaWholesome = listOf("Warm cooked oatmeal", "Ghee", "Warm sesame oil massages"),
-            apathyaAvoid = listOf("Cold windy exposure", "Carbonated chilled water", "Dry dry cereals")
+            indications = listOf("Joint flexibility", "Synovial comfort", "Amavata (Rheumatoid stiffness)", "Musculoskeletal spasms"),
+            contraindications = listOf("Pregnancy", "Active peptic ulceration"),
+            pathyaWholesome = listOf("Warm cooked barley", "Garlic-infused milk", "Warm water"),
+            apathyaAvoid = listOf("Cold refrigerated foods", "Curd at night", "Sedentary daytime sleep"),
+            stockUnits = 135,
+            batchNumber = "SIT-GUL-2026-002"
         ),
         AyurvedaMedicine(
-            id = "gokshuradi_guggulu",
-            name = "Gokshuradi Guggulu",
-            sanskritName = "गोक्षुरादि गुग्गुलु (Renal & Fluid Balance Tablet)",
-            category = FormulationCategory.VATI,
-            tagPill = "URINARY & DETOX",
-            shortDescription = "Synergistic resin tablet for kidney micro-circulation and fluid balance.",
-            primaryBenefit = "Uric acid equilibrium, urinary comfort, joint stiffness relief",
-            doshaImpact = "Pacifies Vata, Pitta, and Kapha in urinary channels",
+            id = "SA-72205",
+            slNo = 11,
+            name = "Shatavari Kalpa",
+            sanskritName = "शतावरी कल्प (API)",
+            classicalReference = "Ayurvedic Pharmacopoeia of India (API)",
+            category = FormulationCategory.LEHYAMS,
+            packing = "450 ml",
+            tagPill = "FEMALE VITALITY",
+            healthGoals = listOf(HealthGoal.IMMUNITY),
+            shortDescription = "Delicious Shatavari granules enriched with cardamom for female vitality, maternal health, and Pitta balance.",
+            primaryBenefit = "Hormonal balance, maternal vitality, and reproductive tissue nourishment.",
+            doshaImpact = "Pitta-Vata Shamaka, Balya and Stanya-janana",
             targetDoshas = listOf(DoshaType.PITTA, DoshaType.VATA),
-            constituents = listOf("Guggulsterones", "Saponins", "Resins"),
+            constituents = listOf("Shatavarins I-IV", "Saponins", "Sterols"),
             ingredients = listOf(
-                AyurvedaIngredient(
-                    name = "Gokshura",
-                    sanskritName = "गोक्षुर",
-                    botanicalName = "Tribulus terrestris",
-                    partUsed = "Fruit & Root",
-                    classicalRole = "Mutrala (Diuretic without potassium loss) and kidney tonic"
-                ),
-                AyurvedaIngredient(
-                    name = "Shuddha Guggulu (Purified Resin)",
-                    sanskritName = "शुद्ध गुग्गुलु",
-                    botanicalName = "Commiphora mukul",
-                    partUsed = "Purified Exudate",
-                    classicalRole = "Scrapes metabolic crystallization from micro-channels"
-                ),
-                AyurvedaIngredient(
-                    name = "Musta (Nut Grass)",
-                    sanskritName = "मुस्ता",
-                    botanicalName = "Cyperus rotundus",
-                    partUsed = "Rhizome",
-                    classicalRole = "Digestive fire promoter, relieves burning micturition"
-                )
+                AyurvedaIngredient(name = "Shatavari", botanicalName = "Asparagus racemosus", partUsed = "Tuberous Root", classicalRole = "Stanyajanana, Shukra-Artava balya, Rasayana"),
+                AyurvedaIngredient(name = "Elaichi (Cardamom)", botanicalName = "Elettaria cardamomum", partUsed = "Seeds", classicalRole = "Aromatic digestive enhancer"),
+                AyurvedaIngredient(name = "Khanda Sharkara", botanicalName = "Raw Cane Sugar Matrix", partUsed = "Crystallized Cane", classicalRole = "Pitta soothing vehicle")
             ),
             dravyaguna = DravyagunaProfile(
-                rasa = listOf("Madhura", "Tikta", "Katu"),
-                virya = "Sheeta-Ushna (Neutralizing)",
+                rasa = listOf("Madhura (Sweet)", "Tikta (Bitter)"),
+                virya = "Sheeta (Cooling)",
                 vipaka = "Madhura",
-                guna = listOf("Laghu", "Ruksha")
+                guna = listOf("Guru (Heavy)", "Snigdha (Nourishing)")
             ),
             dosage = DosageInfo(
-                summary = "2 Tablets • Twice Daily",
-                standardDose = "1 to 2 tablets (500mg each)",
+                summary = "1-2 teaspoons twice daily • Anupana: Warm milk",
+                standardDose = "1-2 teaspoons twice daily",
                 frequency = "Twice daily",
-                timing = "After breakfast and after dinner",
-                anupana = "Warm water or Punarnavadi Kwatha",
-                caution = "Stay well hydrated throughout the day while taking."
+                timing = "Morning & Evening with milk",
+                anupana = "Warm cow milk",
+                caution = "Safe for nursing mothers; consult practitioner if diabetic."
             ),
-            indications = listOf("Elevated uric acid", "Joint aches with swelling", "Urinary tract irritation"),
-            contraindications = listOf("Kidney failure requiring dialysis without nephrologist approval"),
-            pathyaWholesome = listOf("Barley water", "Cucumber", "Coriander seed infusion", "Fresh coconut water"),
-            apathyaAvoid = listOf("High purine red meat", "Refined white sugar", "Alcohol", "Sour vinegar")
+            indications = listOf("Hormonal balance", "Maternal vitality", "Reproductive tissue nourishment", "Lactation support"),
+            contraindications = listOf("None under recommended dosage"),
+            pathyaWholesome = listOf("Warm milk", "Dates", "Almonds", "Ghee"),
+            apathyaAvoid = listOf("Excessive spicy pungent foods", "Skipping meals"),
+            stockUnits = 125,
+            batchNumber = "SIT-LEH-2026-002"
+        ),
+        AyurvedaMedicine(
+            id = "SA-58259",
+            slNo = 12,
+            name = "Mahanarayan Thailam",
+            sanskritName = "महानारायण तैलम् (Bhaishajya Ratnavali)",
+            classicalReference = "Bhaishajya Ratnavali Vatavyadhi Chikitsa",
+            category = FormulationCategory.THAILAMS,
+            packing = "450 ml",
+            tagPill = "MUSCULOSKELETAL",
+            healthGoals = listOf(HealthGoal.JOINT_MOBILITY),
+            shortDescription = "Master classical abhyanga oil formulated with 50+ roots and botanicals for deep tissue rejuvenation.",
+            primaryBenefit = "Musculoskeletal strength, tendon relaxation, and alleviation of chronic stiffness.",
+            doshaImpact = "Profound Vata Pacifier",
+            targetDoshas = listOf(DoshaType.VATA),
+            constituents = listOf("Flavonoid Glycosides", "Sesamin", "Bioactive Terpenoids"),
+            ingredients = listOf(
+                AyurvedaIngredient(name = "Bilva, Ashwagandha & Bala", botanicalName = "Aegle, Withania & Sida sp.", partUsed = "Decoction Roots", classicalRole = "Vata-shamaka, Brumhana, Balya"),
+                AyurvedaIngredient(name = "Dashamoola Complex", botanicalName = "Ten Sacred Roots", partUsed = "Root Barks", classicalRole = "Deep neuromuscular relief"),
+                AyurvedaIngredient(name = "Tila Thailam (Pure Sesame Oil)", botanicalName = "Sesamum indicum", partUsed = "Cold-pressed seeds", classicalRole = "Transdermal absorption carrier")
+            ),
+            dravyaguna = DravyagunaProfile(
+                rasa = listOf("Madhura", "Tikta"),
+                virya = "Ushna (Warm)",
+                vipaka = "Madhura",
+                guna = listOf("Snigdha", "Guru", "Sukshma")
+            ),
+            dosage = DosageInfo(
+                summary = "External Abhyanga oil massage • Anupana: Followed by hot steam fomentation (Swedana)",
+                standardDose = "External Abhyanga oil massage",
+                frequency = "Daily or as needed",
+                timing = "Before bath or morning Abhyanga routine",
+                anupana = "Followed by hot steam fomentation (Swedana)",
+                caution = "For external massage use only."
+            ),
+            indications = listOf("Musculoskeletal strength", "Tendon relaxation", "Alleviation of chronic stiffness", "Vata Vyadhi"),
+            contraindications = listOf("Open wounds", "Acute inflammatory swelling (Taruna Jwara)"),
+            pathyaWholesome = listOf("Warm bath after massage", "Warm nourishing meals", "Gentle stretching"),
+            apathyaAvoid = listOf("Cold showers immediately after oil application", "Cold air currents"),
+            stockUnits = 145,
+            batchNumber = "SIT-THI-2026-002"
         )
     )
 

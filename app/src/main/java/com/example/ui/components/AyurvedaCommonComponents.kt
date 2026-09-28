@@ -145,67 +145,6 @@ fun AyurTopHeader(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(
-                                if (theme.isGlass) {
-                                    when (userRole) {
-                                        UserRole.ADMIN -> Color(0x66B91C1C)
-                                        UserRole.PRACTITIONER -> Color(0x66047857)
-                                        UserRole.PATIENT -> Color(0x66B45309)
-                                        UserRole.GUEST -> Color(0x661D4ED8)
-                                    }
-                                } else {
-                                    when (userRole) {
-                                        UserRole.ADMIN -> theme.terracotta.copy(alpha = 0.15f)
-                                        UserRole.PRACTITIONER -> theme.sageContainer
-                                        UserRole.PATIENT -> theme.parchmentContainer
-                                        UserRole.GUEST -> theme.sageContainer.copy(alpha = 0.7f)
-                                    }
-                                }
-                            )
-                            .then(
-                                if (theme.isGlass) {
-                                    Modifier.border(
-                                        1.dp,
-                                        when (userRole) {
-                                            UserRole.ADMIN -> Color(0xFFFCA5A5)
-                                            UserRole.PRACTITIONER -> Color(0xFF6EE7B7)
-                                            UserRole.PATIENT -> Color(0xFFFDE68A)
-                                            UserRole.GUEST -> Color(0xFF93C5FD)
-                                        },
-                                        RoundedCornerShape(6.dp)
-                                    )
-                                } else Modifier
-                            )
-                            .clickable(onClick = onProfileClick)
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = "${userRole.iconEmoji} ${userRole.badgeLabel}",
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = if (theme.isGlass) {
-                                Color.White
-                            } else {
-                                when (userRole) {
-                                    UserRole.ADMIN -> theme.terracotta
-                                    UserRole.PRACTITIONER -> theme.primaryBrandDark
-                                    UserRole.PATIENT -> theme.earthGold
-                                    UserRole.GUEST -> theme.primaryBrand
-                                }
-                            },
-                            style = if (theme.isGlass) TextStyle(
-                                shadow = Shadow(
-                                    color = Color(0xCC000000),
-                                    offset = Offset(0f, 1f),
-                                    blurRadius = 3f
-                                )
-                            ) else TextStyle.Default
-                        )
-                    }
                 }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
@@ -429,7 +368,7 @@ fun AyurBottomNav(
     modifier: Modifier = Modifier
 ) {
     val theme = AyurTheme.colors
-    val showAdminTab = currentUserRole == UserRole.ADMIN || currentUserRole == UserRole.PRACTITIONER
+    val showAdminTab = currentUserRole == UserRole.ADMIN
     val navShape = if (theme.isGlass) RoundedCornerShape(30.dp) else RoundedCornerShape(0.dp)
 
     Box(
@@ -493,8 +432,8 @@ fun AyurBottomNav(
                     )
                     if (showAdminTab) {
                         NavItem(
-                            emoji = if (currentUserRole == UserRole.ADMIN) "⚡" else "⚕️",
-                            label = if (currentUserRole == UserRole.ADMIN) "Admin" else "Clinic",
+                            emoji = "⚡",
+                            label = "Admin",
                             isSelected = currentTab == AppTab.ADMIN,
                             onClick = { onTabSelected(AppTab.ADMIN) },
                             testTag = "nav_admin",
@@ -567,7 +506,7 @@ fun AyurNavigationRail(
     modifier: Modifier = Modifier
 ) {
     val theme = AyurTheme.colors
-    val showAdminTab = currentUserRole == UserRole.ADMIN || currentUserRole == UserRole.PRACTITIONER
+    val showAdminTab = currentUserRole == UserRole.ADMIN
     val railShape = if (theme.isGlass) RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp) else RoundedCornerShape(0.dp)
 
     Surface(
@@ -662,8 +601,8 @@ fun AyurNavigationRail(
                 )
                 if (showAdminTab) {
                     NavRailItem(
-                        emoji = if (currentUserRole == UserRole.ADMIN) "⚡" else "⚕️",
-                        label = if (currentUserRole == UserRole.ADMIN) "Admin" else "Clinic",
+                        emoji = "⚡",
+                        label = "Admin",
                         isSelected = currentTab == AppTab.ADMIN,
                         onClick = { onTabSelected(AppTab.ADMIN) },
                         testTag = "rail_nav_admin"

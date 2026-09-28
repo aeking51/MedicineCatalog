@@ -124,9 +124,31 @@ ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE manufacturers ENABLE ROW LEVEL SECURITY;
 
+-- 9. Profiles / Users Table (Synchronized across Android App and Web Admin)
+CREATE TABLE IF NOT EXISTS profiles (
+    id VARCHAR(100) PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    role VARCHAR(50) DEFAULT 'PATIENT',
+    status VARCHAR(50) DEFAULT 'Active',
+    prakriti VARCHAR(50) DEFAULT 'Pitta',
+    designation VARCHAR(150) DEFAULT '',
+    phone VARCHAR(50) DEFAULT '',
+    avatar_url TEXT DEFAULT '',
+    clinical_notes TEXT DEFAULT '',
+    adherence_percent INTEGER DEFAULT 85,
+    password_hash VARCHAR(255) DEFAULT '',
+    salt VARCHAR(100) DEFAULT '',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
 CREATE POLICY "Public Read Categories" ON categories FOR SELECT USING (true);
 CREATE POLICY "Public Read Products" ON products FOR SELECT USING (true);
 CREATE POLICY "Public Read Ingredients" ON ingredients FOR SELECT USING (true);
+CREATE POLICY "Public Read Profiles" ON profiles FOR SELECT USING (true);
 
 CREATE POLICY "Full Access Categories" ON categories FOR ALL USING (true);
 CREATE POLICY "Full Access Products" ON products FOR ALL USING (true);
@@ -134,10 +156,20 @@ CREATE POLICY "Full Access Ingredients" ON ingredients FOR ALL USING (true);
 CREATE POLICY "Full Access Admins" ON admins FOR ALL USING (true);
 CREATE POLICY "Full Access Audit Logs" ON audit_logs FOR ALL USING (true);
 CREATE POLICY "Full Access Manufacturers" ON manufacturers FOR ALL USING (true);
+CREATE POLICY "Full Access Profiles" ON profiles FOR ALL USING (true);
 
 -- Seed Administrators
 INSERT INTO admins (username, email, password_hash, salt, name, role, avatar) VALUES
 ('admin', 'admin@sitaramayurveda.com', 'bcf5ca0d4948aee6a761e3d09a25b3497d39ca25fe0506eb36329bf3368a4128', 'a1b2c3d4e5f60718293a4b5c6d7e8f90', 'Dr. D. Ramanathan', 'Chief Medical Administrator', 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=120'),
 ('sitaram_admin', 'sys.jerin@gmail.com', 'bcf5ca0d4948aee6a761e3d09a25b3497d39ca25fe0506eb36329bf3368a4128', 'a1b2c3d4e5f60718293a4b5c6d7e8f90', 'Jerin Administrator', 'Lead Systems Administrator', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120')
 ON CONFLICT (username) DO NOTHING;
+
+-- Seed User Profiles (Single source of truth synchronized across platforms)
+INSERT INTO profiles (id, name, email, role, status, prakriti, designation, phone, avatar_url, clinical_notes, adherence_percent, password_hash, salt) VALUES
+('user_admin_jerin', 'Jerin MR', 'sys.jerin@gmail.com', 'ADMIN', 'Active', 'Tridoshic', 'Chief Administrator & System Director', '+91 98450 11001', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120', 'Primary system administrator. Full clinical pharmacopoeia, formulation inventory, and user directory management.', 98, 'bcf5ca0d4948aee6a761e3d09a25b3497d39ca25fe0506eb36329bf3368a4128', 'a1b2c3d4e5f60718293a4b5c6d7e8f90'),
+('user_practitioner_meera', 'Dr. Meera Nambiar', 'dr.meera@ayurguide.org', 'PRACTITIONER', 'Active', 'Pitta', 'Senior Ayurvedic Physician (BAMS, MD)', '+91 98450 22002', 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=120', 'Specialist in Dravyaguna (Herbal pharmacology) & Kayachikitsa.', 94, 'bcf5ca0d4948aee6a761e3d09a25b3497d39ca25fe0506eb36329bf3368a4128', 'a1b2c3d4e5f60718293a4b5c6d7e8f90'),
+('user_patient_arjun', 'Arjun Mehta', 'arjun.m@example.com', 'PATIENT', 'Active', 'Vata', 'Wellness Seeker', '+91 98450 44004', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120', 'Practicing Dinacharya routine and herbal tea regimen for grounding nervous system.', 88, 'bcf5ca0d4948aee6a761e3d09a25b3497d39ca25fe0506eb36329bf3368a4128', 'a1b2c3d4e5f60718293a4b5c6d7e8f90'),
+('user_admin_ramanathan', 'Dr. D. Ramanathan', 'admin@sitaramayurveda.com', 'ADMIN', 'Active', 'Tridoshic', 'Chief Medical Administrator', '+91 98450 00000', 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=120', 'Chief Medical Administrator & Formulary Director.', 99, 'bcf5ca0d4948aee6a761e3d09a25b3497d39ca25fe0506eb36329bf3368a4128', 'a1b2c3d4e5f60718293a4b5c6d7e8f90')
+ON CONFLICT (id) DO NOTHING;
+
 

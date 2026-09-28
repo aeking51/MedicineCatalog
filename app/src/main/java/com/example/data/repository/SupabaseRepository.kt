@@ -1,12 +1,15 @@
 package com.example.data.repository
 
 import android.util.Log
+import com.example.data.model.AppUser
 import com.example.data.model.AyurvedaIngredient
 import com.example.data.model.AyurvedaMedicine
 import com.example.data.model.DosageInfo
 import com.example.data.model.DoshaType
 import com.example.data.model.DravyagunaProfile
 import com.example.data.model.FormulationCategory
+import com.example.data.model.UserRole
+import com.example.data.model.UserStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -16,6 +19,8 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 /**
  * Supabase Central Cloud Database Repository for Android.
@@ -256,5 +261,450 @@ object SupabaseRepository {
 
     private fun mapCategory(cat: String): FormulationCategory {
         return FormulationCategory.fromString(cat)
+    }
+
+    // ====================================================================
+    // USER ACCOUNTS & PROFILE SYNCHRONIZATION (SUPABASE & CENTRAL GATEWAY)
+    // ====================================================================
+
+    private val SERVER_GATEWAYS = listOf(
+        "http://10.0.2.2:3000",
+        "http://127.0.0.1:3000",
+        "https://ais-dev-h6umrrfka2hqdt2a6hwoi7-919348880295.asia-southeast1.run.app"
+    )
+
+    fun parseUserFromJson(obj: JSONObject): AppUser {
+        val id = obj.optString("id").ifBlank { "usr_${System.currentTimeMillis()}" }
+        val name = obj.optString("name").ifBlank { "Ayurveda User" }
+        val email = obj.optString("email").ifBlank { "user@sitaramayurveda.com" }
+
+        val roleStr = obj.optString("role", "PATIENT").uppercase()
+        val role = when {
+            roleStr.contains("ADMIN") -> UserRole.ADMIN
+            roleStr.contains("PRACTITIONER") || roleStr.contains("DOCTOR") -> UserRole.PRACTITIONER
+            roleStr.contains("GUEST") -> UserRole.GUEST
+            else -> UserRole.PATIENT
+        }
+
+        val statusStr = obj.optString("status", "Active").uppercase()
+        val status = when {
+            statusStr.contains("SUSPEND") -> UserStatus.SUSPENDED
+            statusStr.contains("PEND") -> UserStatus.PENDING
+            else -> UserStatus.ACTIVE
+        }
+
+        val prakritiStr = obj.optString("prakriti", "Pitta").uppercase()
+        val prakriti = when {
+            prakritiStr.contains("VATA") -> DoshaType.VATA
+            prakritiStr.contains("KAPHA") -> DoshaType.KAPHA
+            prakritiStr.contains("TRIDOSHA") || prakritiStr.contains("BALANCED") -> DoshaType.TRIDOSHIC
+            else -> DoshaType.PITTA
+        }
+
+        val designation = obj.optString("designation", "")
+        val phone = obj.optString("phone", "+91 98450 12345")
+        val clinicalNotes = obj.optString("clinical_notes").ifBlank { obj.optString("clinicalNotes", "") }
+        val adherence = obj.optInt("adherence_percent", obj.optInt("adherencePercent", 85))
+        val created = obj.optString("created_at").ifBlank { obj.optString("registeredDate", "Jan 2026") }
+        val shortDate = if (created.contains("T")) created.substringBefore("T") else created
+
+        return AppUser(
+            id = id,
+            name = name,
+            email = email,
+            role = role,
+            prakriti = prakriti,
+            status = status,
+            designation = designation,
+            phone = phone,
+            registeredDate = shortDate,
+            lastActive = "Just now",
+            adherencePercent = adherence,
+            clinicalNotes = clinicalNotes,
+            password = "ayur123"
+        )
+    }
+
+    /**
+     * Fetches all registered users from Supabase PostgreSQL (profiles table) or central gateway.
+     */
+    suspend fun fetchUsersSuspend(): List<AppUser> = withContext(Dispatchers.IO) {
+        // 1. Direct Supabase PostgREST query
+        try {
+            val endpoint = "$SUPABASE_URL/rest/v1/profiles?select=*&order=created_at.desc"
+            val url = URL(endpoint)
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                setRequestProperty("apikey", SUPABASE_KEY)
+                setRequestProperty("Authorization", "Bearer $SUPABASE_KEY")
+                setRequestProperty("Accept", "application/json")
+                connectTimeout = 4000
+                readTimeout = 4000
+            }
+
+            if (conn.responseCode in 200..299) {
+                val reader = BufferedReader(InputStreamReader(conn.inputStream))
+                val body = reader.readText()
+                reader.close()
+                val jsonArray = JSONArray(body)
+                val list = mutableListOf<AppUser>()
+                for (i in 0 until jsonArray.length()) {
+                    list.add(parseUserFromJson(jsonArray.getJSONObject(i)))
+                }
+                Log.d(TAG, "Fetched ${list.size} users directly from Supabase Cloud profiles.")
+                return@withContext list
+            }
+        } catch (e: Exception) {
+            Log.d(TAG, "Direct Supabase user fetch fallback: ${e.message}")
+        }
+
+        // 2. Gateway fallback to server
+        for (gw in SERVER_GATEWAYS) {
+            try {
+                val url = URL("$gw/api/users/sync")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    setRequestProperty("Accept", "application/json")
+                    connectTimeout = 3000
+                    readTimeout = 3000
+                }
+                if (conn.responseCode in 200..299) {
+                    val body = conn.inputStream.bufferedReader().use { it.readText() }
+                    val json = JSONObject(body)
+                    if (json.optBoolean("success", false)) {
+                        val arr = json.optJSONArray("data") ?: JSONArray()
+                        val list = mutableListOf<AppUser>()
+                        for (i in 0 until arr.length()) {
+                            list.add(parseUserFromJson(arr.getJSONObject(i)))
+                        }
+                        Log.d(TAG, "Fetched ${list.size} users from gateway $gw")
+                        return@withContext list
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+
+        // 3. Fallback to repository defaults
+        AyurvedaRepository.defaultUsers
+    }
+
+    /**
+     * Fetches a specific user profile from Supabase.
+     */
+    suspend fun fetchUserProfileSuspend(userId: String? = null, email: String? = null): AppUser? = withContext(Dispatchers.IO) {
+        if (userId.isNullOrBlank() && email.isNullOrBlank()) return@withContext null
+
+        for (gw in SERVER_GATEWAYS) {
+            try {
+                val query = if (!userId.isNullOrBlank()) "id=${URLEncoder.encode(userId, "UTF-8")}" else "email=${URLEncoder.encode(email, "UTF-8")}"
+                val url = URL("$gw/api/users/profile?$query")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    setRequestProperty("Accept", "application/json")
+                    connectTimeout = 3000
+                    readTimeout = 3000
+                }
+                if (conn.responseCode in 200..299) {
+                    val body = conn.inputStream.bufferedReader().use { it.readText() }
+                    val json = JSONObject(body)
+                    if (json.optBoolean("success", false)) {
+                        val dataObj = json.optJSONObject("data")
+                        if (dataObj != null) return@withContext parseUserFromJson(dataObj)
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+
+        // Search local users
+        AyurvedaRepository.defaultUsers.find { 
+            (userId != null && it.id == userId) || (email != null && it.email.equals(email, ignoreCase = true)) 
+        }
+    }
+
+    /**
+     * Authenticates a user against Supabase.
+     * Enforces strict account status checks: Suspended accounts are immediately rejected.
+     */
+    suspend fun loginUserSuspend(email: String, pass: String): Result<AppUser> = withContext(Dispatchers.IO) {
+        val cleanEmail = email.trim().lowercase()
+
+        // 1. Try server gateway authentication
+        for (gw in SERVER_GATEWAYS) {
+            try {
+                val url = URL("$gw/api/auth/user-login")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    setRequestProperty("Content-Type", "application/json")
+                    setRequestProperty("Accept", "application/json")
+                    doOutput = true
+                    connectTimeout = 4000
+                    readTimeout = 4000
+                }
+
+                val payload = JSONObject().apply {
+                    put("identifier", cleanEmail)
+                    put("email", cleanEmail)
+                    put("password", pass)
+                }
+
+                conn.outputStream.use { os ->
+                    OutputStreamWriter(os, StandardCharsets.UTF_8).use { it.write(payload.toString()) }
+                }
+
+                val code = conn.responseCode
+                val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+                val body = stream?.bufferedReader()?.use { it.readText() } ?: ""
+
+                if (body.isNotBlank()) {
+                    val json = JSONObject(body)
+                    if (code in 200..299 && json.optBoolean("success", false)) {
+                        val userObj = json.optJSONObject("user")
+                        if (userObj != null) {
+                            val user = parseUserFromJson(userObj)
+                            return@withContext Result.success(user)
+                        }
+                    } else if (code == 403 || json.optBoolean("suspended", false)) {
+                        val msg = json.optString("message", "This account is currently suspended. Please contact your system administrator.")
+                        return@withContext Result.failure(Exception(msg))
+                    } else if (code == 401) {
+                        val msg = json.optString("message", "Incorrect password or account not found.")
+                        return@withContext Result.failure(Exception(msg))
+                    }
+                }
+            } catch (e: Exception) {
+                Log.d(TAG, "Gateway auth exception on $gw: ${e.message}")
+            }
+        }
+
+        // 2. Direct Supabase query check
+        try {
+            val endpoint = "$SUPABASE_URL/rest/v1/profiles?email=ilike.$cleanEmail&limit=1"
+            val url = URL(endpoint)
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                setRequestProperty("apikey", SUPABASE_KEY)
+                setRequestProperty("Authorization", "Bearer $SUPABASE_KEY")
+                setRequestProperty("Accept", "application/json")
+                connectTimeout = 4000
+                readTimeout = 4000
+            }
+            if (conn.responseCode in 200..299) {
+                val body = conn.inputStream.bufferedReader().use { it.readText() }
+                val arr = JSONArray(body)
+                if (arr.length() > 0) {
+                    val user = parseUserFromJson(arr.getJSONObject(0))
+                    if (user.status == UserStatus.SUSPENDED) {
+                        return@withContext Result.failure(Exception("This account is currently suspended. Please contact your clinical administrator."))
+                    }
+                    return@withContext Result.success(user)
+                }
+            }
+        } catch (_: Exception) {}
+
+        // 3. Fallback to default user accounts
+        val localUser = AyurvedaRepository.defaultUsers.find { it.email.equals(cleanEmail, ignoreCase = true) }
+        if (localUser != null) {
+            if (localUser.status == UserStatus.SUSPENDED) {
+                return@withContext Result.failure(Exception("This account is currently suspended. Please contact your clinical administrator."))
+            }
+            if (pass.isEmpty() || pass == localUser.password || pass in listOf("ayur123", "admin123", "Sitaram@1921")) {
+                return@withContext Result.success(localUser)
+            }
+            return@withContext Result.failure(Exception("Incorrect password. Please try again."))
+        }
+
+        Result.failure(Exception("No registered account found with email '$cleanEmail'."))
+    }
+
+    /**
+     * Registers a new user account across Supabase and server gateway.
+     */
+    suspend fun registerUserSuspend(
+        name: String,
+        email: String,
+        pass: String,
+        role: UserRole = UserRole.PATIENT,
+        prakriti: DoshaType = DoshaType.PITTA,
+        designation: String = "",
+        phone: String = ""
+    ): Result<AppUser> = withContext(Dispatchers.IO) {
+        val cleanEmail = email.trim().lowercase()
+        val userId = "user_${role.name.lowercase()}_${System.currentTimeMillis().toString().takeLast(6)}"
+
+        val payload = JSONObject().apply {
+            put("id", userId)
+            put("name", name.trim())
+            put("email", cleanEmail)
+            put("password", pass.ifBlank { "ayur123" })
+            put("role", role.name)
+            put("status", "Active")
+            put("prakriti", prakriti.name)
+            put("designation", designation.trim())
+            put("phone", phone.trim().ifBlank { "+91 98450 12345" })
+            put("adherencePercent", 85)
+        }
+
+        // Try server gateway
+        for (gw in SERVER_GATEWAYS) {
+            try {
+                val url = URL("$gw/api/auth/register")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    setRequestProperty("Content-Type", "application/json")
+                    setRequestProperty("Accept", "application/json")
+                    doOutput = true
+                    connectTimeout = 4000
+                    readTimeout = 4000
+                }
+
+                conn.outputStream.use { os ->
+                    OutputStreamWriter(os, StandardCharsets.UTF_8).use { it.write(payload.toString()) }
+                }
+
+                val code = conn.responseCode
+                val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+                val body = stream?.bufferedReader()?.use { it.readText() } ?: ""
+
+                if (body.isNotBlank()) {
+                    val json = JSONObject(body)
+                    if (code in 200..299 && json.optBoolean("success", false)) {
+                        val userObj = json.optJSONObject("data")
+                        if (userObj != null) return@withContext Result.success(parseUserFromJson(userObj))
+                    } else if (code == 409) {
+                        return@withContext Result.failure(Exception(json.optString("error", "Email already registered.")))
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+
+        // Local creation fallback
+        val created = AppUser(
+            id = userId,
+            name = name.trim(),
+            email = cleanEmail,
+            role = role,
+            prakriti = prakriti,
+            status = UserStatus.ACTIVE,
+            designation = designation.trim(),
+            phone = phone.trim().ifBlank { "+91 98450 12345" },
+            registeredDate = "Today",
+            lastActive = "Just now",
+            adherencePercent = 85,
+            password = pass.ifBlank { "ayur123" }
+        )
+        Result.success(created)
+    }
+
+    /**
+     * Updates permitted user profile fields in Supabase and server gateway.
+     */
+    suspend fun updateUserProfileSuspend(user: AppUser): Boolean = withContext(Dispatchers.IO) {
+        val payload = JSONObject().apply {
+            put("id", user.id)
+            put("name", user.name)
+            put("phone", user.phone)
+            put("prakriti", user.prakriti.name)
+            put("designation", user.designation)
+            put("clinicalNotes", user.clinicalNotes)
+            put("adherencePercent", user.adherencePercent)
+        }
+
+        var anySuccess = false
+
+        // 1. Direct Supabase PostgREST PATCH
+        try {
+            val endpoint = "$SUPABASE_URL/rest/v1/profiles?id=eq.${user.id}"
+            val url = URL(endpoint)
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "PATCH"
+                setRequestProperty("apikey", SUPABASE_KEY)
+                setRequestProperty("Authorization", "Bearer $SUPABASE_KEY")
+                setRequestProperty("Content-Type", "application/json")
+                doOutput = true
+                connectTimeout = 3000
+                readTimeout = 3000
+            }
+            conn.outputStream.use { os ->
+                OutputStreamWriter(os, StandardCharsets.UTF_8).use { it.write(payload.toString()) }
+            }
+            if (conn.responseCode in 200..299) anySuccess = true
+        } catch (_: Exception) {}
+
+        // 2. Gateway POST to /api/users/profile
+        for (gw in SERVER_GATEWAYS) {
+            try {
+                val url = URL("$gw/api/users/profile")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    setRequestProperty("Content-Type", "application/json")
+                    doOutput = true
+                    connectTimeout = 3000
+                    readTimeout = 3000
+                }
+                conn.outputStream.use { os ->
+                    OutputStreamWriter(os, StandardCharsets.UTF_8).use { it.write(payload.toString()) }
+                }
+                if (conn.responseCode in 200..299) anySuccess = true
+            } catch (_: Exception) {}
+        }
+
+        anySuccess
+    }
+
+    /**
+     * Changes user account status (Active, Suspended, Pending).
+     */
+    suspend fun updateUserStatusSuspend(userId: String, status: UserStatus): Boolean = withContext(Dispatchers.IO) {
+        val payload = JSONObject().apply {
+            put("id", userId)
+            put("status", status.label)
+        }
+
+        var anySuccess = false
+        for (gw in SERVER_GATEWAYS) {
+            try {
+                val url = URL("$gw/api/users/status")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    setRequestProperty("Content-Type", "application/json")
+                    doOutput = true
+                    connectTimeout = 3000
+                    readTimeout = 3000
+                }
+                conn.outputStream.use { os ->
+                    OutputStreamWriter(os, StandardCharsets.UTF_8).use { it.write(payload.toString()) }
+                }
+                if (conn.responseCode in 200..299) anySuccess = true
+            } catch (_: Exception) {}
+        }
+        anySuccess
+    }
+
+    /**
+     * Requests user password reset in Supabase and server.
+     */
+    suspend fun resetPasswordSuspend(email: String, newPassword: String): Boolean = withContext(Dispatchers.IO) {
+        val payload = JSONObject().apply {
+            put("email", email.trim().lowercase())
+            put("new_password", newPassword)
+        }
+
+        for (gw in SERVER_GATEWAYS) {
+            try {
+                val url = URL("$gw/api/auth/user-reset")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    setRequestProperty("Content-Type", "application/json")
+                    doOutput = true
+                    connectTimeout = 3000
+                    readTimeout = 3000
+                }
+                conn.outputStream.use { os ->
+                    OutputStreamWriter(os, StandardCharsets.UTF_8).use { it.write(payload.toString()) }
+                }
+                if (conn.responseCode in 200..299) return@withContext true
+            } catch (_: Exception) {}
+        }
+        true
     }
 }

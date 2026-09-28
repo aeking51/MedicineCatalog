@@ -803,52 +803,6 @@ private fun SignupFormContent(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Default Account Role: Wellness Seeker
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .border(1.dp, NaturalCardBorder, RoundedCornerShape(12.dp)),
-            color = NaturalBackground
-        ) {
-            Row(
-                modifier = Modifier.padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(NaturalSageContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "🧘", fontSize = 18.sp)
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "Account Role: Wellness Seeker",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = NaturalTextHeading
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        RoleBadge(role = UserRole.PATIENT)
-                    }
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "New accounts default to Wellness Seeker. Practitioner & Admin access is designated by Sanctuary Admin.",
-                        fontSize = 9.sp,
-                        color = NaturalOliveMuted,
-                        lineHeight = 13.sp
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
         // Constitution / Prakriti Selector
         Text(text = "PRIMARY PRAKRITI CONSTITUTION", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = NaturalOliveMuted)
         Spacer(modifier = Modifier.height(6.dp))

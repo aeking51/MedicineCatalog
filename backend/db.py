@@ -431,6 +431,46 @@ def get_admin_by_id(admin_id):
         }
     return None
 
+def get_admin_by_email(email):
+    if not email:
+        return None
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT id, username, email, name, role, avatar, created_at FROM admins WHERE lower(email) = ?", (str(email).strip().lower(),))
+    row = c.fetchone()
+    conn.close()
+    if row:
+        return {
+            "id": row['id'],
+            "username": row['username'],
+            "email": row['email'],
+            "name": row['name'],
+            "role": row['role'],
+            "avatar": row['avatar'] or "",
+            "created_at": row['created_at']
+        }
+    return None
+
+def get_admin_by_username(username):
+    if not username:
+        return None
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT id, username, email, name, role, avatar, created_at FROM admins WHERE lower(username) = ?", (str(username).strip().lower(),))
+    row = c.fetchone()
+    conn.close()
+    if row:
+        return {
+            "id": row['id'],
+            "username": row['username'],
+            "email": row['email'],
+            "name": row['name'],
+            "role": row['role'],
+            "avatar": row['avatar'] or "",
+            "created_at": row['created_at']
+        }
+    return None
+
 def update_admin_profile(admin_id, name, email, username, avatar=None):
     conn = get_connection()
     c = conn.cursor()
@@ -1097,7 +1137,7 @@ def create_user(data, admin_email=None):
     pwd_hash, salt = hash_password(raw_password)
     now = datetime.utcnow().isoformat()
 
-    role = data.get("role") or "USER"
+    role = (data.get("role") or "PRACTITIONER").upper()
     status = (data.get("status") or "Active").capitalize()
     prakriti = data.get("prakriti") or "Pitta"
     designation = data.get("designation") or ""
@@ -1178,6 +1218,13 @@ def update_user(user_id, data, admin_email=None, is_admin=False):
         if "adherencePercent" in data or "adherence_percent" in data:
             updates.append("adherence_percent = ?")
             params.append(int(data.get("adherencePercent") or data.get("adherence_percent") or 85))
+
+        if "password" in data and data["password"]:
+            pwd_hash, salt = hash_password(str(data["password"]))
+            updates.append("password_hash = ?")
+            params.append(pwd_hash)
+            updates.append("salt = ?")
+            params.append(salt)
 
     params.append(user_id)
     c.execute(f"UPDATE users SET {', '.join(updates)} WHERE id = ?", params)

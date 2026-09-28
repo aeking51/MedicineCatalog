@@ -3,12 +3,12 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/",
-      "destination": "/admin.html"
+      "source": "/admin",
+      "destination": "/index.html"
     },
     {
-      "source": "/admin",
-      "destination": "/admin.html"
+      "source": "/monograph",
+      "destination": "/monograph.html"
     }
   ]
 }

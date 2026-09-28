@@ -3915,9 +3915,10 @@
         }
       }
       banner.innerHTML = `
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <span class="text-base">⚠️</span>
           <span><strong>Database Notice:</strong> ${message}</span>
+          <button onclick="openSupabaseSettings()" class="ml-2 px-2.5 py-1 text-[11px] font-bold bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg transition cursor-pointer">Configure Supabase Key</button>
         </div>
         <button onclick="this.parentElement.remove()" class="text-amber-700 hover:text-amber-900 font-bold ml-3 text-sm cursor-pointer">&times;</button>
       `;

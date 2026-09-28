@@ -358,7 +358,7 @@ class SitaramAdminHandler(http.server.BaseHTTPRequestHandler):
                     self.send_json(200, {"success": True, "data": mfgs, "count": len(mfgs)})
                     return
 
-                elif path == "/api/audit-logs":
+                elif path in ("/api/audit-logs", "/api/activity-logs"):
                     logs = db.get_audit_logs(100)
                     self.send_json(200, {"success": True, "data": logs, "count": len(logs)})
                     return
@@ -708,6 +708,17 @@ class SitaramAdminHandler(http.server.BaseHTTPRequestHandler):
                 for pid in ids:
                     db.delete_product(pid, admin_email)
                 self.send_json(200, {"success": True, "count": len(ids)})
+                return
+
+            elif path in ("/api/audit-logs", "/api/activity-logs"):
+                action = body.get("action", "ADMIN_ACTION")
+                entity_type = body.get("entityType") or body.get("entity_type") or "SYSTEM"
+                entity_id = body.get("entityId") or body.get("entity_id") or ""
+                details = body.get("details", "")
+                actor = body.get("adminEmail") or body.get("admin_email") or admin_email or "admin@sitaramayurveda.com"
+                client_ip = self.client_address[0] if self.client_address else "127.0.0.1"
+                db.log_audit(actor, action, entity_type, entity_id, details, client_ip)
+                self.send_json(200, {"success": True, "message": "Activity log recorded."})
                 return
 
             # Category Mutations

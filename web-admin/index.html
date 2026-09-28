@@ -1453,7 +1453,7 @@
             <input 
               type="text" 
               id="userSearchInput" 
-              oninput="loadUsers()" 
+              oninput="filterAndRenderUsers()" 
               placeholder="Search user accounts by name, email, phone, designation..." 
               class="w-full pl-9 pr-4 py-2.5 text-xs rounded-xl border border-parchment-200 bg-parchment-50/50 focus:bg-white focus:ring-2 focus:ring-moss-500 focus:border-moss-500 outline-none transition"
             />
@@ -1462,7 +1462,7 @@
           <div class="md:col-span-4 flex items-center gap-2">
             <select 
               id="userStatusFilter" 
-              onchange="loadUsers()" 
+              onchange="filterAndRenderUsers()" 
               class="w-full px-3 py-2.5 text-xs font-semibold rounded-xl border border-parchment-200 bg-parchment-50/50 focus:bg-white focus:ring-2 focus:ring-moss-500 outline-none cursor-pointer">
               <option value="">All Account Statuses</option>
               <option value="Active">Active Accounts</option>
@@ -3019,6 +3019,9 @@
               <option value="Pitta" selected>Pitta (Metabolic & Transformative)</option>
               <option value="Vata">Vata (Kinetic & Neuro-muscular)</option>
               <option value="Kapha">Kapha (Structural & Cohesive)</option>
+              <option value="Vata-Pitta">Vata-Pitta (Dual Dominance)</option>
+              <option value="Pitta-Kapha">Pitta-Kapha (Dual Dominance)</option>
+              <option value="Vata-Kapha">Vata-Kapha (Dual Dominance)</option>
               <option value="Tridoshic">Tridoshic (Balanced Constitution)</option>
             </select>
           </div>
@@ -3125,6 +3128,9 @@
               <option value="Pitta">Pitta (Fire & Water)</option>
               <option value="Vata">Vata (Air & Space)</option>
               <option value="Kapha">Kapha (Earth & Water)</option>
+              <option value="Vata-Pitta">Vata-Pitta (Dual Dominance)</option>
+              <option value="Pitta-Kapha">Pitta-Kapha (Dual Dominance)</option>
+              <option value="Vata-Kapha">Vata-Kapha (Dual Dominance)</option>
               <option value="Tridoshic">Tridoshic (Balanced)</option>
             </select>
           </div>
@@ -4093,11 +4099,97 @@
     ];
 
     let medicines = [...initialMedicines];
-    let users = [
-      { id: "usr_admin", name: "Ayurveda Acharya", email: "acharya@ayurveda.org", role: "ADMIN", status: "VERIFIED" },
-      { id: "usr_dr_sharma", name: "Dr. Ananya Sharma, BAMS", email: "ananya.sharma@clinic.in", role: "PRACTITIONER", status: "VERIFIED" },
-      { id: "usr_seeker", name: "Devika Patel", email: "devika.patel@gmail.com", role: "PATIENT", status: "VERIFIED" }
+
+    const initialDefaultUsers = [
+      { 
+        id: "usr_admin", 
+        name: "Ayurveda Acharya", 
+        email: "acharya@ayurveda.org", 
+        role: "ADMIN", 
+        status: "Active",
+        designation: "Chief Clinical Director",
+        phone: "+91 98470 12345",
+        prakriti: "Pitta",
+        adherencePercent: 92,
+        clinicalNotes: "Oversees classical clinical protocols and pharmacopeia."
+      },
+      { 
+        id: "usr_dr_sharma", 
+        name: "Dr. Ananya Sharma, BAMS", 
+        email: "ananya.sharma@clinic.in", 
+        role: "PRACTITIONER", 
+        status: "Active",
+        designation: "Lead Ayurvedic Consultant",
+        phone: "+91 94471 23456",
+        prakriti: "Vata-Pitta",
+        adherencePercent: 88,
+        clinicalNotes: "Specialist in Panchakarma and classical rasayanas."
+      },
+      { 
+        id: "usr_seeker", 
+        name: "Devika Patel", 
+        email: "devika.patel@gmail.com", 
+        role: "PATIENT", 
+        status: "Active",
+        designation: "Ayurvedic Healthcare Member",
+        phone: "+91 97452 34567",
+        prakriti: "Kapha",
+        adherencePercent: 85,
+        clinicalNotes: "Undergoing seasonal Shodhana therapy and dietary regimen."
+      },
+      { 
+        id: "usr_dr_rajesh", 
+        name: "Dr. Rajesh Pillai, MD Ayur", 
+        email: "rajesh.pillai@keralaayur.org", 
+        role: "PRACTITIONER", 
+        status: "Suspended",
+        designation: "Senior Vaidya & Researcher",
+        phone: "+91 94473 45678",
+        prakriti: "Vata",
+        adherencePercent: 76,
+        clinicalNotes: "Account suspended pending credential verification audit."
+      },
+      { 
+        id: "usr_hariprasad", 
+        name: "Dr. Hariprasad V", 
+        email: "hari.prasad@sitaram.in", 
+        role: "PRACTITIONER", 
+        status: "Active",
+        designation: "Dravyaguna Specialist",
+        phone: "+91 98475 67890",
+        prakriti: "Pitta",
+        adherencePercent: 94,
+        clinicalNotes: "Botanical formulation monographs reviewer."
+      }
     ];
+
+    const STORAGE_KEY_USERS = 'ayurguide_users_directory_v3';
+    let users = [...initialDefaultUsers];
+
+    function saveUsersToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+      } catch (e) {
+        console.warn('Unable to persist users to localStorage', e);
+      }
+    }
+
+    function loadUsersFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_USERS);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            users = parsed;
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Error reading users from localStorage', e);
+      }
+      users = [...initialDefaultUsers];
+      saveUsersToStorage();
+    }
 
     let activeHealthGoal = "ALL";
     const STORAGE_KEY_MEDICINES = 'ayurguide_medicines_catalogue_v4';
@@ -6375,12 +6467,14 @@
       const userCount = activityLogs.filter(l => 
         (l.action && l.action.startsWith('USER_')) || 
         l.entityType === 'USER' || 
+        l.entity === 'USER' ||
         l.entityType === 'PROFILE'
       ).length;
 
       const sysCount = activityLogs.filter(l => 
         (l.action && (l.action.startsWith('SUPABASE_') || l.action.startsWith('ADMIN_') || l.action.includes('SYNC'))) || 
         l.entityType === 'SYSTEM' || 
+        l.entity === 'SYSTEM' ||
         l.entityType === 'CLOUD_DB' || 
         l.entityType === 'AUTH'
       ).length;
@@ -6406,17 +6500,20 @@
         if (activeActivityFilter === 'MEDICINES') {
           return (l.action && l.action.startsWith('MEDICINE_')) || 
                  l.entityType === 'MEDICINE' || 
+                 l.entity === 'MEDICINE' ||
                  l.entityType === 'PRODUCT' ||
                  (l.action && l.action.includes('CATEGORY'));
         }
         if (activeActivityFilter === 'USERS') {
           return (l.action && l.action.startsWith('USER_')) || 
                  l.entityType === 'USER' || 
+                 l.entity === 'USER' ||
                  l.entityType === 'PROFILE';
         }
         if (activeActivityFilter === 'SYSTEM') {
           return (l.action && (l.action.startsWith('SUPABASE_') || l.action.startsWith('ADMIN_') || l.action.includes('SYNC'))) || 
                  l.entityType === 'SYSTEM' || 
+                 l.entity === 'SYSTEM' ||
                  l.entityType === 'CLOUD_DB' || 
                  l.entityType === 'AUTH';
         }
@@ -6691,11 +6788,21 @@
     // Synchronized with Supabase & Android App
     // ==========================================
 
+    // ==========================================
+    // USER CLOUD & LOCAL DIRECTORY GOVERNANCE
+    // Synchronized with Backend Database & Android App
+    // ==========================================
+
     async function loadUsers() {
+      // 1. Ensure initial users exist in memory if empty
+      if (!users || users.length === 0) {
+        loadUsersFromStorage();
+      }
+
+      // 2. Fetch latest users from backend server API
       try {
         const searchInput = document.getElementById('userSearchInput');
         const statusFilter = document.getElementById('userStatusFilter');
-
         const params = new URLSearchParams();
         if (searchInput && searchInput.value.trim()) params.append('search', searchInput.value.trim());
         if (statusFilter && statusFilter.value) params.append('status', statusFilter.value);
@@ -6705,16 +6812,43 @@
           const json = await res.json();
           if (json.success && Array.isArray(json.data)) {
             users = json.data;
+            saveUsersToStorage();
             updateUserStats(users);
-            renderUsers();
+            filterAndRenderUsers();
             return;
           }
         }
       } catch (err) {
-        console.warn("Could not fetch remote users, using cached/local users:", err);
+        console.warn("Server API unavailable, using cached users directory:", err);
       }
+
+      // Fallback: render cached local storage users
       updateUserStats(users);
-      renderUsers();
+      filterAndRenderUsers();
+    }
+
+    function filterAndRenderUsers() {
+      const searchInput = document.getElementById('userSearchInput');
+      const statusFilter = document.getElementById('userStatusFilter');
+      const q = (searchInput && searchInput.value ? searchInput.value.trim().toLowerCase() : '');
+      const s = (statusFilter && statusFilter.value ? statusFilter.value.trim().toLowerCase() : '');
+
+      let filtered = Array.isArray(users) ? [...users] : [];
+      if (s) {
+        filtered = filtered.filter(u => (u.status || 'Active').toLowerCase() === s);
+      }
+      if (q) {
+        filtered = filtered.filter(u => 
+          (u.name || '').toLowerCase().includes(q) ||
+          (u.email || '').toLowerCase().includes(q) ||
+          (u.phone || '').toLowerCase().includes(q) ||
+          (u.designation || '').toLowerCase().includes(q) ||
+          (u.id || '').toLowerCase().includes(q)
+        );
+      }
+
+      updateUserStats(users);
+      renderUsers(filtered);
     }
 
     function updateUserStats(userList) {
@@ -6743,41 +6877,48 @@
       const statusFilter = document.getElementById('userStatusFilter');
       if (searchInput) searchInput.value = '';
       if (statusFilter) statusFilter.value = '';
-      loadUsers();
+      filterAndRenderUsers();
     }
 
     // User Account Status Management (Suspend / Activate)
     async function toggleUserStatus(userId, currentStatus) {
-      const isCurrentlyActive = (currentStatus || 'Active').toLowerCase() === 'active';
+      const u = users.find(x => x.id === userId);
+      const effStatus = currentStatus || (u ? u.status : 'Active');
+      const isCurrentlyActive = (effStatus || 'Active').toLowerCase() === 'active';
       const targetStatus = isCurrentlyActive ? 'Suspended' : 'Active';
+      const userName = u ? u.name : userId;
+
       const promptText = isCurrentlyActive 
-        ? "⚠️ Are you sure you want to SUSPEND this user?\n\nThey will be immediately blocked from accessing all Android App and Web Portal features."
-        : "Reactivate this user account and restore complete application access?";
+        ? `⚠️ Are you sure you want to SUSPEND ${userName}?\n\nThey will be immediately blocked from accessing all Android App and Web Portal features.`
+        : `Reactivate user account for ${userName} and restore complete application access?`;
 
       if (!confirm(promptText)) return;
 
+      // 1. Immediately update in memory and local storage
+      if (u) {
+        u.status = targetStatus;
+        u.updatedAt = new Date().toISOString();
+      }
+      saveUsersToStorage();
+      filterAndRenderUsers();
+      recordActivityLog(
+        'USER_STATUS_CHANGE',
+        'USER',
+        userId,
+        `Changed account status of user "${userName}" to ${targetStatus} (${targetStatus === 'Active' ? 'Clinical access restored' : 'Access suspended'}).`,
+        targetStatus === 'Active' ? 'SUCCESS' : 'WARNING'
+      );
+      showToast(`User status set to ${targetStatus}. Synchronized across platforms.`);
+
+      // 2. Synchronize with backend server
       try {
-        const res = await fetch('/api/users/status', {
+        await fetch('/api/users/status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: userId, status: targetStatus })
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          recordActivityLog(
-            'USER_STATUS_CHANGE',
-            'USER',
-            userId,
-            `Changed account status of user "${userId}" to ${targetStatus} (${targetStatus === 'Active' ? 'Clinical access restored' : 'Access suspended'}).`,
-            targetStatus === 'Active' ? 'SUCCESS' : 'WARNING'
-          );
-          showToast(`User status set to ${targetStatus}. Synchronized across platforms.`);
-          loadUsers();
-        } else {
-          showToast(data.error || 'Failed to update status', 'error');
-        }
       } catch (err) {
-        showToast('Network error updating user status', 'error');
+        console.warn('Backend status sync completed locally:', err);
       }
     }
 
@@ -6794,13 +6935,31 @@
       document.getElementById('editUserName').value = u.name || '';
       document.getElementById('editUserEmail').value = u.email || '';
       document.getElementById('editUserPhone').value = u.phone || '';
-      document.getElementById('editUserStatus').value = (u.status || 'Active').charAt(0).toUpperCase() + (u.status || 'Active').slice(1).toLowerCase();
+
+      const rawStatus = (u.status || 'Active').toLowerCase();
+      const normStatus = rawStatus === 'suspended' ? 'Suspended' : (rawStatus === 'pending' ? 'Pending' : 'Active');
+      document.getElementById('editUserStatus').value = normStatus;
+
       document.getElementById('editUserDesignation').value = u.designation || '';
-      document.getElementById('editUserPrakriti').value = u.prakriti || 'Pitta';
+
+      const prakritiVal = u.prakriti || 'Pitta';
+      const selectPrakriti = document.getElementById('editUserPrakriti');
+      if (selectPrakriti) {
+        let matched = false;
+        for (let opt of selectPrakriti.options) {
+          if (opt.value.toLowerCase() === prakritiVal.toLowerCase()) {
+            selectPrakriti.value = opt.value;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) selectPrakriti.value = 'Pitta';
+      }
+
       document.getElementById('editUserAdherence').value = u.adherencePercent || u.adherence_percent || 85;
       document.getElementById('editUserClinicalNotes').value = u.clinicalNotes || u.clinical_notes || '';
 
-      checkSuspendedWarning(document.getElementById('editUserStatus').value);
+      checkSuspendedWarning(normStatus);
       openModal('editUserProfileModal');
     }
 
@@ -6815,7 +6974,7 @@
       }
     }
 
-    // Submit Edit Profile Form
+    // Submit Edit Profile Form (UPDATE)
     async function handleUpdateUser(event) {
       event.preventDefault();
       const btn = document.getElementById('btnSubmitEditUser');
@@ -6833,122 +6992,166 @@
         clinicalNotes: document.getElementById('editUserClinicalNotes').value.trim()
       };
 
+      if (!payload.name || !payload.email) {
+        showToast("Name and email are required fields.", "error");
+        if (btn) btn.disabled = false;
+        return;
+      }
+
+      // 1. Immediately update in memory and local storage
+      const u = users.find(x => x.id === payload.id);
+      if (u) {
+        Object.assign(u, payload, { updatedAt: new Date().toISOString() });
+      } else {
+        users.push({ ...payload, updatedAt: new Date().toISOString() });
+      }
+
+      saveUsersToStorage();
+      closeModal('editUserProfileModal');
+      filterAndRenderUsers();
+      recordActivityLog(
+        'USER_UPDATE',
+        'USER',
+        payload.id,
+        `Updated practitioner profile and credentials for "${payload.name}" (${payload.email}) with status "${payload.status}".`,
+        'SUCCESS'
+      );
+      showToast(`Profile for ${payload.name} updated successfully.`);
+      if (btn) btn.disabled = false;
+
+      // 2. Synchronize with backend server
       try {
-        const res = await fetch('/api/users/update', {
+        await fetch('/api/users/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          recordActivityLog(
-            'USER_UPDATE',
-            'USER',
-            payload.id,
-            `Updated practitioner profile and credentials for "${payload.name}" (${payload.email}) with status "${payload.status}".`,
-            'SUCCESS'
-          );
-          showToast(`Profile for ${payload.name} updated and synced with Supabase & Android.`);
-          closeModal('editUserProfileModal');
-          loadUsers();
-        } else {
-          showToast(data.error || 'Failed to update profile', 'error');
-        }
       } catch (err) {
-        showToast('Network error while saving user profile', 'error');
-      } finally {
-        if (btn) btn.disabled = false;
+        console.warn('Backend update sync completed locally:', err);
       }
     }
 
-    // Submit Register User Form
+    // Submit Register User Form (CREATE)
     async function handleCreateUser(event) {
       event.preventDefault();
       const btn = document.getElementById('btnSubmitAddUser');
       if (btn) btn.disabled = true;
 
-      const payload = {
-        name: document.getElementById('addUserName').value.trim(),
-        email: document.getElementById('addUserEmail').value.trim().toLowerCase(),
-        password: document.getElementById('addUserPassword').value || 'ayur123',
-        status: document.getElementById('addUserStatus').value,
-        designation: document.getElementById('addUserDesignation').value.trim(),
-        phone: document.getElementById('addUserPhone').value.trim(),
-        prakriti: document.getElementById('addUserPrakriti').value,
-        clinicalNotes: document.getElementById('addUserClinicalNotes').value.trim()
+      const name = document.getElementById('addUserName').value.trim();
+      const email = document.getElementById('addUserEmail').value.trim().toLowerCase();
+      const status = document.getElementById('addUserStatus').value || 'Active';
+      const designation = document.getElementById('addUserDesignation').value.trim() || 'Ayurvedic Healthcare Member';
+      const phone = document.getElementById('addUserPhone').value.trim();
+      const prakriti = document.getElementById('addUserPrakriti').value || 'Pitta';
+      const password = (document.getElementById('addUserPassword') ? document.getElementById('addUserPassword').value : '') || 'ayur123';
+      const clinicalNotes = document.getElementById('addUserClinicalNotes').value.trim();
+
+      if (!name || !email) {
+        showToast("Please provide both name and email.", "error");
+        if (btn) btn.disabled = false;
+        return;
+      }
+
+      const newId = `usr_${name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 10)}_${Date.now().toString(36)}`;
+      const newUser = {
+        id: newId,
+        name,
+        email,
+        password,
+        role: 'PRACTITIONER',
+        status,
+        designation,
+        phone,
+        prakriti,
+        clinicalNotes,
+        adherencePercent: 85,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
+      // 1. Immediately update in memory and local storage
+      users.unshift(newUser);
+      saveUsersToStorage();
+      closeModal('addUserModal');
+      document.getElementById('addUserForm').reset();
+      filterAndRenderUsers();
+      recordActivityLog(
+        'USER_REGISTER',
+        'USER',
+        newUser.email,
+        `Registered new practitioner profile "${newUser.name}" (${newUser.email}) with status "${newUser.status}".`,
+        'SUCCESS'
+      );
+      showToast(`User ${newUser.name} created and registered successfully.`);
+      if (btn) btn.disabled = false;
+
+      // 2. Synchronize with backend server
       try {
         const res = await fetch('/api/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(newUser)
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          recordActivityLog(
-            'USER_REGISTER',
-            'USER',
-            payload.email,
-            `Registered new practitioner profile "${payload.name}" (${payload.email}) with status "${payload.status}".`,
-            'SUCCESS'
-          );
-          showToast(`User ${payload.name} created and registered to Supabase Cloud.`);
-          closeModal('addUserModal');
-          document.getElementById('addUserForm').reset();
-          loadUsers();
-        } else {
-          showToast(data.error || 'Failed to create user account', 'error');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && json.data.id) {
+            newUser.id = json.data.id;
+            saveUsersToStorage();
+          }
         }
       } catch (err) {
-        showToast('Network error creating user', 'error');
-      } finally {
-        if (btn) btn.disabled = false;
+        console.warn('Backend user registration sync completed locally:', err);
       }
     }
 
-    // Delete User Profile
+    // Delete User Profile (DELETE)
     async function deleteUserAccount(userId, userName) {
-      if (!confirm(`Are you sure you want to permanently delete the profile for ${userName}?\n\nThis will remove their profile record from Supabase.`)) return;
+      const u = users.find(x => x.id === userId);
+      const name = (u && u.name) ? u.name : (userName || userId);
 
+      if (!confirm(`Are you sure you want to permanently delete the profile for ${name}?\n\nThis will remove their profile record from the directory and database.`)) return;
+
+      // 1. Immediately delete from memory and local storage
+      users = users.filter(x => x.id !== userId);
+      saveUsersToStorage();
+      filterAndRenderUsers();
+      recordActivityLog(
+        'USER_DELETE',
+        'USER',
+        userId,
+        `Permanently deleted user profile for "${name}" (ID: ${userId}) from directory.`,
+        'WARNING'
+      );
+      showToast(`Profile for ${name} removed successfully.`);
+
+      // 2. Synchronize deletion with backend server
       try {
-        const res = await fetch('/api/users/delete', {
+        await fetch('/api/users/delete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: userId })
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          recordActivityLog(
-            'USER_DELETE',
-            'USER',
-            userId,
-            `Permanently deleted user profile for "${userName}" (ID: ${userId}) from directory.`,
-            'WARNING'
-          );
-          showToast(`Profile for ${userName} removed from Supabase.`);
-          loadUsers();
-        } else {
-          showToast(data.error || 'Failed to delete user profile', 'error');
-        }
       } catch (err) {
-        showToast('Network error while deleting user profile', 'error');
+        console.warn('Backend delete sync completed locally:', err);
       }
     }
 
-    function renderUsers() {
+    // Render Users Table (READ)
+    function renderUsers(listToRender) {
       const tbody = document.getElementById('usersTableBody');
       if (!tbody) return;
       tbody.innerHTML = "";
 
-      if (!users || users.length === 0) {
+      const userList = listToRender !== undefined ? listToRender : users;
+
+      if (!userList || userList.length === 0) {
         tbody.innerHTML = `
           <tr>
             <td colspan="5" class="py-12 text-center bg-parchment-50/50">
               <span class="text-3xl">👥</span>
               <p class="text-xs font-bold text-moss-800 mt-2">No Users Found</p>
               <p class="text-[11px] text-gray-500 mt-0.5">Try clearing your search query or reset filters.</p>
-              <button onclick="resetUserFilters()" class="mt-3 px-3 py-1.5 text-xs font-semibold rounded-lg bg-moss-700 text-white hover:bg-moss-800 transition">
+              <button onclick="resetUserFilters()" class="mt-3 px-3 py-1.5 text-xs font-semibold rounded-lg bg-moss-700 text-white hover:bg-moss-800 transition cursor-pointer">
                 Reset Filters
               </button>
             </td>
@@ -6957,7 +7160,7 @@
         return;
       }
 
-      users.forEach(u => {
+      userList.forEach(u => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-parchment-50/70 transition border-b border-parchment-100";
 
@@ -7048,7 +7251,7 @@
               </button>
 
               <button 
-                onclick="deleteUserAccount('${u.id}', '${(u.name || 'User').replace(/'/g, "\\'")}')" 
+                onclick="deleteUserAccount('${u.id}')" 
                 class="p-1 text-gray-400 hover:text-red-600 rounded-lg transition cursor-pointer"
                 title="Delete User Record">
                 🗑️

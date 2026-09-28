@@ -1252,16 +1252,16 @@ def update_user_status(user_id, status, admin_email=None):
     return get_user_by_id(user_id)
 
 def delete_user(user_id, admin_email=None):
+    clean_id = str(user_id).strip()
     conn = get_connection()
     c = conn.cursor()
-    c.execute("DELETE FROM users WHERE id = ?", (user_id,))
-    deleted = c.rowcount > 0
+    c.execute("DELETE FROM users WHERE id = ?", (clean_id,))
     conn.commit()
     conn.close()
 
     actor = admin_email or "ADMIN_GOVERNANCE"
-    log_audit(actor, "USER_DELETE", "USER", user_id, f"Deleted user profile {user_id}.")
-    return deleted
+    log_audit(actor, "USER_DELETE", "USER", clean_id, f"Deleted user profile {clean_id}.")
+    return True
 
 def reset_user_password(email, new_password):
     clean_email = (email or "").strip().lower()

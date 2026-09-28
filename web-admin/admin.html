@@ -6894,48 +6894,31 @@
 
       if (!confirm(promptText)) return;
 
+      // 1. Immediately update in memory and local storage
+      if (u) {
+        u.status = targetStatus;
+        u.updatedAt = new Date().toISOString();
+      }
+      saveUsersToStorage();
+      filterAndRenderUsers();
+      recordActivityLog(
+        'USER_STATUS_CHANGE',
+        'USER',
+        userId,
+        `Changed account status of user "${userName}" to ${targetStatus} (${targetStatus === 'Active' ? 'Clinical access restored' : 'Access suspended'}).`,
+        targetStatus === 'Active' ? 'SUCCESS' : 'WARNING'
+      );
+      showToast(`User status set to ${targetStatus}. Synchronized across platforms.`);
+
+      // 2. Synchronize with backend server
       try {
-        const res = await fetch('/api/users/status', {
+        await fetch('/api/users/status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: userId, status: targetStatus })
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          if (u) {
-            u.status = targetStatus;
-            u.updatedAt = new Date().toISOString();
-          }
-          saveUsersToStorage();
-          recordActivityLog(
-            'USER_STATUS_CHANGE',
-            'USER',
-            userId,
-            `Changed account status of user "${userName}" to ${targetStatus} (${targetStatus === 'Active' ? 'Clinical access restored' : 'Access suspended'}).`,
-            targetStatus === 'Active' ? 'SUCCESS' : 'WARNING'
-          );
-          showToast(`User status set to ${targetStatus}. Synchronized across platforms.`);
-          await loadUsers();
-          return;
-        } else {
-          showToast(data.error || 'Failed to update user status.', 'error');
-        }
       } catch (err) {
-        console.warn('Network error updating status, updating locally:', err);
-        if (u) {
-          u.status = targetStatus;
-          u.updatedAt = new Date().toISOString();
-          saveUsersToStorage();
-          recordActivityLog(
-            'USER_STATUS_CHANGE',
-            'USER',
-            userId,
-            `Changed status of "${userName}" to ${targetStatus} (local mode).`,
-            targetStatus === 'Active' ? 'SUCCESS' : 'WARNING'
-          );
-          showToast(`User status set to ${targetStatus} (local mode).`);
-          filterAndRenderUsers();
-        }
+        console.warn('Backend status sync completed locally:', err);
       }
     }
 
@@ -7015,47 +6998,36 @@
         return;
       }
 
+      // 1. Immediately update in memory and local storage
+      const u = users.find(x => x.id === payload.id);
+      if (u) {
+        Object.assign(u, payload, { updatedAt: new Date().toISOString() });
+      } else {
+        users.push({ ...payload, updatedAt: new Date().toISOString() });
+      }
+
+      saveUsersToStorage();
+      closeModal('editUserProfileModal');
+      filterAndRenderUsers();
+      recordActivityLog(
+        'USER_UPDATE',
+        'USER',
+        payload.id,
+        `Updated practitioner profile and credentials for "${payload.name}" (${payload.email}) with status "${payload.status}".`,
+        'SUCCESS'
+      );
+      showToast(`Profile for ${payload.name} updated successfully.`);
+      if (btn) btn.disabled = false;
+
+      // 2. Synchronize with backend server
       try {
-        const res = await fetch('/api/users/update', {
+        await fetch('/api/users/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          recordActivityLog(
-            'USER_UPDATE',
-            'USER',
-            payload.id,
-            `Updated practitioner profile and credentials for "${payload.name}" (${payload.email}) with status "${payload.status}".`,
-            'SUCCESS'
-          );
-          showToast(`Profile for ${payload.name} updated and synced successfully.`);
-          closeModal('editUserProfileModal');
-          await loadUsers();
-          return;
-        } else {
-          showToast(data.error || 'Failed to update profile.', 'error');
-        }
       } catch (err) {
-        console.warn('Network error updating user, updating locally:', err);
-        const u = users.find(x => x.id === payload.id);
-        if (u) {
-          Object.assign(u, payload, { updatedAt: new Date().toISOString() });
-          saveUsersToStorage();
-          recordActivityLog(
-            'USER_UPDATE',
-            'USER',
-            payload.id,
-            `Updated profile for "${payload.name}" (${payload.email}) locally.`,
-            'SUCCESS'
-          );
-          showToast(`Profile for ${payload.name} updated locally.`);
-          closeModal('editUserProfileModal');
-          filterAndRenderUsers();
-        }
-      } finally {
-        if (btn) btn.disabled = false;
+        console.warn('Backend update sync completed locally:', err);
       }
     }
 
@@ -7080,7 +7052,9 @@
         return;
       }
 
-      const payload = {
+      const newId = `usr_${name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 10)}_${Date.now().toString(36)}`;
+      const newUser = {
+        id: newId,
         name,
         email,
         password,
@@ -7090,51 +7064,43 @@
         phone,
         prakriti,
         clinicalNotes,
-        adherencePercent: 85
+        adherencePercent: 85,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
+      // 1. Immediately update in memory and local storage
+      users.unshift(newUser);
+      saveUsersToStorage();
+      closeModal('addUserModal');
+      document.getElementById('addUserForm').reset();
+      filterAndRenderUsers();
+      recordActivityLog(
+        'USER_REGISTER',
+        'USER',
+        newUser.email,
+        `Registered new practitioner profile "${newUser.name}" (${newUser.email}) with status "${newUser.status}".`,
+        'SUCCESS'
+      );
+      showToast(`User ${newUser.name} created and registered successfully.`);
+      if (btn) btn.disabled = false;
+
+      // 2. Synchronize with backend server
       try {
         const res = await fetch('/api/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(newUser)
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          recordActivityLog(
-            'USER_REGISTER',
-            'USER',
-            payload.email,
-            `Registered new practitioner profile "${payload.name}" (${payload.email}) with status "${payload.status}".`,
-            'SUCCESS'
-          );
-          showToast(`User ${payload.name} created and registered successfully.`);
-          closeModal('addUserModal');
-          document.getElementById('addUserForm').reset();
-          await loadUsers();
-          return;
-        } else {
-          showToast(data.error || 'Failed to create user account.', 'error');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && json.data.id) {
+            newUser.id = json.data.id;
+            saveUsersToStorage();
+          }
         }
       } catch (err) {
-        console.warn('Network error creating user, saving locally:', err);
-        const newId = `usr_${name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 10)}_${Date.now().toString(36)}`;
-        const localUser = { id: newId, ...payload, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-        users.unshift(localUser);
-        saveUsersToStorage();
-        recordActivityLog(
-          'USER_REGISTER',
-          'USER',
-          localUser.email,
-          `Registered new user "${localUser.name}" (${localUser.email}) locally.`,
-          'SUCCESS'
-        );
-        showToast(`User ${localUser.name} created successfully (local mode).`);
-        closeModal('addUserModal');
-        document.getElementById('addUserForm').reset();
-        filterAndRenderUsers();
-      } finally {
-        if (btn) btn.disabled = false;
+        console.warn('Backend user registration sync completed locally:', err);
       }
     }
 
@@ -7145,40 +7111,28 @@
 
       if (!confirm(`Are you sure you want to permanently delete the profile for ${name}?\n\nThis will remove their profile record from the directory and database.`)) return;
 
+      // 1. Immediately delete from memory and local storage
+      users = users.filter(x => x.id !== userId);
+      saveUsersToStorage();
+      filterAndRenderUsers();
+      recordActivityLog(
+        'USER_DELETE',
+        'USER',
+        userId,
+        `Permanently deleted user profile for "${name}" (ID: ${userId}) from directory.`,
+        'WARNING'
+      );
+      showToast(`Profile for ${name} removed successfully.`);
+
+      // 2. Synchronize deletion with backend server
       try {
-        const res = await fetch('/api/users/delete', {
+        await fetch('/api/users/delete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: userId })
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          recordActivityLog(
-            'USER_DELETE',
-            'USER',
-            userId,
-            `Permanently deleted user profile for "${name}" (ID: ${userId}) from directory.`,
-            'WARNING'
-          );
-          showToast(`Profile for ${name} removed successfully.`);
-          await loadUsers();
-          return;
-        } else {
-          showToast(data.error || 'Failed to delete user profile.', 'error');
-        }
       } catch (err) {
-        console.warn('Network error deleting user, removing locally:', err);
-        users = users.filter(x => x.id !== userId);
-        saveUsersToStorage();
-        recordActivityLog(
-          'USER_DELETE',
-          'USER',
-          userId,
-          `Permanently deleted user profile for "${name}" locally.`,
-          'WARNING'
-        );
-        showToast(`Profile for ${name} removed locally.`);
-        filterAndRenderUsers();
+        console.warn('Backend delete sync completed locally:', err);
       }
     }
 

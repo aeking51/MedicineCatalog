@@ -856,7 +856,7 @@ const ModuleViews = {
                   ${isConnected ? 'Connected to Supabase Cloud' : isConfigured ? 'Connected (Pending Table Schema)' : 'Not Connected to Supabase'}
                 </h3>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${isConnected ? 'bg-emerald-100 text-emerald-800' : isConfigured ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600'}">
-                  ${isConnected ? 'Live PostgreSQL' : isConfigured ? 'Setup Required' : 'Local SQLite Only'}
+                  ${isConnected ? 'Live PostgreSQL' : isConfigured ? 'Setup Required' : 'Cloud Setup Required'}
                 </span>
               </div>
               <p class="text-xs text-gray-600 mt-0.5">${status ? (status.message || status.error || 'Configure your Supabase credentials below to connect your cloud database.') : 'Configure credentials below.'}</p>
@@ -899,10 +899,10 @@ const ModuleViews = {
 
             <div class="pt-5 border-t border-gray-100 space-y-3">
               <h3 class="font-serif text-sm font-bold text-[#0F382C]">One-Click Migration</h3>
-              <p class="text-xs text-gray-500">Push all categories, botanical ingredients, and master formulations currently stored in local SQLite directly into your Supabase tables.</p>
+              <p class="text-xs text-gray-500">Push all categories, botanical ingredients, and master formulations directly into your Supabase tables.</p>
               <button onclick="App.triggerSupabaseMigration()" id="btn-migrate-sb" class="w-full py-3 px-4 rounded-xl bg-[#DFB15B] hover:bg-[#9A7B38] text-[#0F382C] hover:text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                <span>Migrate All Local Data to Supabase</span>
+                <span>Synchronize All Master Data to Supabase</span>
               </button>
             </div>
           </div>
@@ -942,15 +942,15 @@ const ModuleViews = {
               <div class="flex items-start gap-2.5">
                 <span class="w-5 h-5 rounded-full bg-white border border-gray-300 flex items-center justify-center text-[10px] font-bold text-gray-700 shrink-0 mt-0.5">4</span>
                 <div>
-                  <p class="font-semibold text-gray-900">Click "Migrate All Local Data"</p>
+                  <p class="font-semibold text-gray-900">Click "Synchronize All Master Data"</p>
                   <p class="text-gray-500 mt-0.5">Your formulations will instantly sync to your cloud PostgreSQL database.</p>
                 </div>
               </div>
             </div>
 
             <div class="p-3.5 rounded-xl bg-white border border-gray-200 text-[11px] text-gray-600 space-y-1">
-              <p class="font-semibold text-gray-900">💡 Zero Downtime Fallback</p>
-              <p>The system automatically falls back to local SQLite whenever internet connectivity is interrupted, ensuring your catalogue is always accessible.</p>
+              <p class="font-semibold text-gray-900">💡 Central Cloud Database</p>
+              <p>Supabase PostgreSQL is the central single source of truth across the website admin panel and mobile application.</p>
             </div>
           </div>
         </div>

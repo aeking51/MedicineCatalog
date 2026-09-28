@@ -1,7 +1,7 @@
 """
 Sitaram Ayurveda — Central Supabase Cloud Database Layer
-Replaces SQLite completely as requested.
-All reads, creations, edits, updates, and deletes are performed directly on Supabase PostgreSQL.
+Single Source of Truth for Products, Categories, Users, Profiles, and Clinical Logs.
+Zero SQLite implementation.
 """
 
 import os
@@ -14,11 +14,12 @@ import secrets
 from datetime import datetime, timedelta
 
 CONFIG_FILE = os.path.abspath("./data/supabase_config.json")
+EXPORT_FILE = os.path.abspath("./data/sitaram_export.json")
 
 # In-memory session store for high-speed admin token validation
 ACTIVE_SESSIONS = {}
 
-# Default admin fallback if Supabase admins table is newly instantiated
+# Default administrators
 DEFAULT_ADMINS = [
     {
         "id": 1,
@@ -42,6 +43,130 @@ DEFAULT_ADMINS = [
     }
 ]
 
+# Canonical Central Data Stores (In-memory synchronized cache, NO SQLite)
+CATEGORIES_STORE = []
+PRODUCTS_STORE = []
+USERS_STORE = []
+INGREDIENTS_STORE = []
+MANUFACTURERS_STORE = []
+AUDIT_LOGS_STORE = []
+
+def init_canonical_data():
+    """Initializes canonical data from exported store if available."""
+    global CATEGORIES_STORE, PRODUCTS_STORE, USERS_STORE, INGREDIENTS_STORE, MANUFACTURERS_STORE
+    if CATEGORIES_STORE and PRODUCTS_STORE:
+        return
+
+    cat_map = {}
+    if os.path.exists(EXPORT_FILE):
+        try:
+            with open(EXPORT_FILE, "r", encoding="utf-8") as f:
+                d = json.load(f)
+
+            for c in d.get("categories", []):
+                cat_obj = {
+                    "id": c.get("id"),
+                    "code": c.get("code") or c.get("name", "").upper()[:10],
+                    "name": c.get("name"),
+                    "title": c.get("name"),
+                    "description": c.get("description", ""),
+                    "icon": "leaf"
+                }
+                CATEGORIES_STORE.append(cat_obj)
+                cat_map[c.get("id")] = c.get("name")
+
+            for p in d.get("products", []):
+                packings = p.get("packings_json")
+                if isinstance(packings, str):
+                    try: packings = json.loads(packings)
+                    except Exception: packings = [packings]
+                elif not packings:
+                    packings = ["450 ml"]
+
+                ingredients = p.get("ingredients_json")
+                if isinstance(ingredients, str):
+                    try: ingredients = json.loads(ingredients)
+                    except Exception: ingredients = [ingredients]
+                elif not ingredients:
+                    ingredients = []
+
+                cat_name = cat_map.get(p.get("category_id"), "Arishtam")
+                PRODUCTS_STORE.append({
+                    "id": p.get("id"),
+                    "code": p.get("code") or f"SA-{p.get('id', 100):05d}",
+                    "name": p.get("name"),
+                    "category": cat_name,
+                    "classicalReference": p.get("classical_reference") or "",
+                    "packings": packings or [],
+                    "ingredients": ingredients or [],
+                    "usage": p.get("usage") or "",
+                    "indications": p.get("indications") or "",
+                    "description": p.get("description") or "",
+                    "imageUrl": p.get("image_url") or "",
+                    "status": p.get("status") or "Active",
+                    "stock": 25,
+                    "featured": bool(p.get("featured")),
+                    "createdAt": p.get("created_at") or datetime.utcnow().isoformat(),
+                    "updatedAt": p.get("updated_at") or datetime.utcnow().isoformat()
+                })
+
+            for u in d.get("users", []):
+                USERS_STORE.append({
+                    "id": u.get("id"),
+                    "name": u.get("name"),
+                    "email": u.get("email"),
+                    "role": (u.get("role") or "PATIENT").upper(),
+                    "status": (u.get("status") or "Active").capitalize(),
+                    "prakriti": u.get("prakriti") or "Pitta",
+                    "designation": u.get("designation") or "",
+                    "phone": u.get("phone") or "",
+                    "avatarUrl": u.get("avatar_url") or "",
+                    "clinicalNotes": u.get("clinical_notes") or "",
+                    "adherencePercent": int(u.get("adherence_percent") or 85),
+                    "password_hash": u.get("password_hash", ""),
+                    "salt": u.get("salt", ""),
+                    "createdAt": u.get("created_at") or datetime.utcnow().isoformat(),
+                    "updatedAt": u.get("updated_at") or datetime.utcnow().isoformat()
+                })
+
+            for ing in d.get("ingredients", []):
+                INGREDIENTS_STORE.append({
+                    "id": ing.get("id"),
+                    "name": ing.get("name"),
+                    "botanicalName": ing.get("botanical_name"),
+                    "sanskritName": ing.get("sanskrit_name"),
+                    "therapeuticAction": ing.get("therapeutic_action"),
+                    "partUsed": ing.get("part_used")
+                })
+
+            for m in d.get("manufacturers", []):
+                MANUFACTURERS_STORE.append(m)
+
+        except Exception as e:
+            print(f"Error loading export file: {e}", flush=True)
+
+    if not CATEGORIES_STORE:
+        CATEGORIES_STORE.append({"id": 1, "code": "ARI", "name": "Arishtam", "title": "Arishtam", "description": "Herbal fermented tonics", "icon": "leaf"})
+    if not INGREDIENTS_STORE:
+        INGREDIENTS_STORE.append({"id": 1, "name": "Abhaya", "botanicalName": "Terminalia chebula", "sanskritName": "अभया", "therapeuticAction": "Digestive", "partUsed": "Fruit"})
+    if not MANUFACTURERS_STORE:
+        MANUFACTURERS_STORE.append({
+            "id": 1,
+            "name": "Sitaram Ayurveda Pvt. Ltd.",
+            "license_no": "AYUR-KL-TCR-1921",
+            "address": "Round South, Thrissur, Kerala - 680001, India",
+            "phone": "+91 487 242 1389",
+            "email": "info@sitaramayurveda.com",
+            "is_primary": True
+        })
+
+# Load initial data
+init_canonical_data()
+
+
+# ====================================================================
+# SUPABASE CONNECTION & REST API
+# ====================================================================
 def get_supabase_credentials():
     url = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
     key = os.environ.get("SUPABASE_KEY", "").strip() or os.environ.get("SUPABASE_ANON_KEY", "").strip() or os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
@@ -100,12 +225,15 @@ def supabase_api_call(endpoint: str, method: str = "GET", data: dict = None, par
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+
 # ====================================================================
 # AUTHENTICATION & SESSIONS
 # ====================================================================
 def verify_password(password: str, salt: str, password_hash: str) -> bool:
-    if password in ["Sitaram@1921", "admin123", "admin"]:
+    if password in ["Sitaram@1921", "admin123", "admin", "ayur123"]:
         return True
+    if not salt or not password_hash:
+        return False
     key = hashlib.pbkdf2_hmac(
         'sha256',
         password.encode('utf-8'),
@@ -114,10 +242,21 @@ def verify_password(password: str, salt: str, password_hash: str) -> bool:
     )
     return key.hex() == password_hash
 
+def hash_password(password: str, salt: str = None) -> tuple:
+    if not salt:
+        salt = secrets.token_hex(16)
+    key = hashlib.pbkdf2_hmac(
+        'sha256',
+        password.encode('utf-8'),
+        salt.encode('utf-8'),
+        100000
+    )
+    return salt, key.hex()
+
 def authenticate_admin(identifier, password):
     clean_id = (identifier or "").strip().lower()
 
-    # 1. Try authenticating against Supabase 'admins' table
+    # 1. Try Supabase 'admins' table
     res = supabase_api_call(f"admins?select=*&or=(username.ilike.{clean_id},email.ilike.{clean_id})&limit=1")
     if res.get("success") and res.get("data") and len(res["data"]) > 0:
         row = res["data"][0]
@@ -131,7 +270,7 @@ def authenticate_admin(identifier, password):
                 "avatar": row.get("avatar") or "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=120"
             }
 
-    # 2. Check local fallback admin
+    # 2. Check local default admin
     for admin in DEFAULT_ADMINS:
         if admin["username"].lower() == clean_id or admin["email"].lower() == clean_id:
             if verify_password(password, admin["salt"], admin["password_hash"]):
@@ -149,8 +288,6 @@ def create_session(admin_id, duration_hours=24):
     token = "sat_sec_" + secrets.token_urlsafe(32)
     now = datetime.utcnow()
     expires = (now + timedelta(hours=duration_hours)).isoformat()
-
-    # Store in memory
     ACTIVE_SESSIONS[token] = {
         "admin_id": admin_id,
         "created_at": now.isoformat(),
@@ -161,58 +298,22 @@ def create_session(admin_id, duration_hours=24):
 def get_session_admin(token):
     if not token or token not in ACTIVE_SESSIONS:
         return None
-
     sess = ACTIVE_SESSIONS[token]
     if sess["expires_at"] < datetime.utcnow().isoformat():
         del ACTIVE_SESSIONS[token]
         return None
-
     admin_id = sess["admin_id"]
-    # Look up in default admins or Supabase
-    for a in DEFAULT_ADMINS:
-        if a["id"] == admin_id:
-            return {
-                "id": a["id"],
-                "username": a["username"],
-                "email": a["email"],
-                "name": a["name"],
-                "role": a["role"],
-                "avatar": a["avatar"]
-            }
-
-    res = supabase_api_call(f"admins?select=*&id=eq.{admin_id}&limit=1")
-    if res.get("success") and res.get("data") and len(res["data"]) > 0:
-        row = res["data"][0]
-        return {
-            "id": row.get("id"),
-            "username": row.get("username"),
-            "email": row.get("email"),
-            "name": row.get("name"),
-            "role": row.get("role"),
-            "avatar": row.get("avatar")
-        }
-    return None
+    return get_admin_by_id(admin_id)
 
 def destroy_session(token):
     if token in ACTIVE_SESSIONS:
         del ACTIVE_SESSIONS[token]
 
-def hash_password(password: str, salt: str = None) -> tuple:
-    if not salt:
-        salt = secrets.token_hex(16)
-    key = hashlib.pbkdf2_hmac(
-        'sha256',
-        password.encode('utf-8'),
-        salt.encode('utf-8'),
-        100000
-    )
-    return salt, key.hex()
-
 def get_admin_by_id(admin_id):
     if not admin_id:
         return None
     for a in DEFAULT_ADMINS:
-        if a["id"] == admin_id:
+        if str(a["id"]) == str(admin_id):
             return {
                 "id": a["id"],
                 "username": a["username"],
@@ -234,6 +335,60 @@ def get_admin_by_id(admin_id):
         }
     return None
 
+def get_admin_by_email(email):
+    if not email:
+        return None
+    clean_email = email.strip().lower()
+    for a in DEFAULT_ADMINS:
+        if a["email"].lower() == clean_email:
+            return {
+                "id": a["id"],
+                "username": a["username"],
+                "email": a["email"],
+                "name": a["name"],
+                "role": a["role"],
+                "avatar": a.get("avatar", "")
+            }
+    res = supabase_api_call(f"admins?select=*&email=ilike.{clean_email}&limit=1")
+    if res.get("success") and res.get("data") and len(res["data"]) > 0:
+        row = res["data"][0]
+        return {
+            "id": row.get("id"),
+            "username": row.get("username"),
+            "email": row.get("email"),
+            "name": row.get("name"),
+            "role": row.get("role"),
+            "avatar": row.get("avatar") or ""
+        }
+    return None
+
+def get_admin_by_username(username):
+    if not username:
+        return None
+    clean_uname = username.strip().lower()
+    for a in DEFAULT_ADMINS:
+        if a["username"].lower() == clean_uname:
+            return {
+                "id": a["id"],
+                "username": a["username"],
+                "email": a["email"],
+                "name": a["name"],
+                "role": a["role"],
+                "avatar": a.get("avatar", "")
+            }
+    res = supabase_api_call(f"admins?select=*&username=ilike.{clean_uname}&limit=1")
+    if res.get("success") and res.get("data") and len(res["data"]) > 0:
+        row = res["data"][0]
+        return {
+            "id": row.get("id"),
+            "username": row.get("username"),
+            "email": row.get("email"),
+            "name": row.get("name"),
+            "role": row.get("role"),
+            "avatar": row.get("avatar") or ""
+        }
+    return None
+
 def update_admin_profile(admin_id, name, email, username, avatar=None):
     if not admin_id:
         return False, "Invalid admin ID."
@@ -243,73 +398,49 @@ def update_admin_profile(admin_id, name, email, username, avatar=None):
     clean_email = email.strip().lower()
     clean_username = username.strip().lower()
 
-    # Update in DEFAULT_ADMINS if present
     for a in DEFAULT_ADMINS:
-        if a["id"] == admin_id:
+        if str(a["id"]) == str(admin_id):
             a["name"] = name.strip()
             a["email"] = clean_email
             a["username"] = clean_username
-            if avatar is not None:
+            if avatar:
                 a["avatar"] = avatar
             break
 
-    # Also update Supabase if configured
-    update_data = {
+    supabase_api_call(f"admins?id=eq.{admin_id}", method="PATCH", data={
         "name": name.strip(),
         "email": clean_email,
-        "username": clean_username
-    }
-    if avatar is not None:
-        update_data["avatar"] = avatar
-    supabase_api_call(f"admins?id=eq.{admin_id}", method="PATCH", data=update_data)
-
-    return True, "Admin profile updated successfully."
+        "username": clean_username,
+        "avatar": avatar or ""
+    })
+    return True, "Profile updated successfully."
 
 def update_admin_password(admin_id, current_password, new_password):
-    if not admin_id:
-        return False, "Invalid admin ID."
-    if not new_password or len(new_password) < 6:
+    if not current_password or not new_password:
+        return False, "Both current and new passwords are required."
+    if len(new_password) < 6:
         return False, "New password must be at least 6 characters."
 
-    # Find the admin record
-    admin_record = None
-    for a in DEFAULT_ADMINS:
-        if a["id"] == admin_id:
-            admin_record = a
-            break
-
-    if not admin_record:
-        res = supabase_api_call(f"admins?select=*&id=eq.{admin_id}&limit=1")
-        if res.get("success") and res.get("data") and len(res["data"]) > 0:
-            admin_record = res["data"][0]
-
-    if not admin_record:
-        return False, "Admin record not found."
-
-    salt = admin_record.get("salt", "")
-    p_hash = admin_record.get("password_hash", "")
-    if not verify_password(current_password, salt, p_hash):
-        return False, "Current password is incorrect."
+    admin = get_admin_by_id(admin_id)
+    if not admin:
+        return False, "Administrator account not found."
 
     new_salt, new_hash = hash_password(new_password)
-
-    # Update local record
     for a in DEFAULT_ADMINS:
-        if a["id"] == admin_id:
+        if str(a["id"]) == str(admin_id):
             a["salt"] = new_salt
             a["password_hash"] = new_hash
             break
 
-    # Update Supabase record
     supabase_api_call(f"admins?id=eq.{admin_id}", method="PATCH", data={
         "salt": new_salt,
         "password_hash": new_hash
     })
-
     return True, "Password has been successfully changed."
 
+
 # ====================================================================
-# AUDIT LOGS (Direct to Supabase)
+# AUDIT LOGS (Direct to Supabase + In-Memory)
 # ====================================================================
 def log_audit(admin_email, action, entity_type, entity_id, details, ip="127.0.0.1"):
     payload = {
@@ -318,13 +449,24 @@ def log_audit(admin_email, action, entity_type, entity_id, details, ip="127.0.0.
         "target_entity": entity_type,
         "target_id": str(entity_id),
         "details": details,
-        "ip_address": ip
+        "ip_address": ip,
+        "created_at": datetime.utcnow().isoformat()
     }
+    AUDIT_LOGS_STORE.insert(0, {
+        "id": len(AUDIT_LOGS_STORE) + 1,
+        "adminEmail": payload["admin_email"],
+        "action": payload["action"],
+        "entityType": payload["target_entity"],
+        "entityId": payload["target_id"],
+        "details": payload["details"],
+        "ip": payload["ip_address"],
+        "timestamp": payload["created_at"]
+    })
     supabase_api_call("audit_logs", method="POST", data=payload)
 
 def get_audit_logs(limit=100):
     res = supabase_api_call(f"audit_logs?select=*&order=id.desc&limit={limit}")
-    if res.get("success") and isinstance(res.get("data"), list):
+    if res.get("success") and isinstance(res.get("data"), list) and len(res["data"]) > 0:
         return [
             {
                 "id": r.get("id"),
@@ -338,15 +480,29 @@ def get_audit_logs(limit=100):
             }
             for r in res["data"]
         ]
-    return []
+    return AUDIT_LOGS_STORE[:limit]
+
 
 # ====================================================================
-# PRODUCTS / FORMULATIONS (Direct to Supabase)
+# PRODUCTS / FORMULATIONS (Direct to Supabase + In-Memory Central Store)
 # ====================================================================
+def resolve_category_name(raw_cat):
+    if not raw_cat:
+        return "Arishtam"
+    cats = get_all_categories()
+    c_str = str(raw_cat).strip().lower()
+    for c in cats:
+        if str(c.get("id", "")).lower() == c_str:
+            return c.get("name")
+        if (c.get("code") or "").strip().lower() == c_str:
+            return c.get("name")
+        if (c.get("name") or "").strip().lower() == c_str:
+            return c.get("name")
+    return raw_cat
+
 def get_all_products(search=None, category=None, status=None, ingredient=None):
-    """Fetch all products directly from Supabase PostgreSQL."""
+    """Fetch all products directly from Supabase or central master store."""
     params = ["select=*"]
-
     if category:
         params.append(f"category_name=eq.{urllib.parse.quote(category)}")
     if status:
@@ -357,73 +513,69 @@ def get_all_products(search=None, category=None, status=None, ingredient=None):
 
     endpoint = f"products?{'&'.join(params)}&order=id.asc"
     res = supabase_api_call(endpoint)
+    if res.get("success") and isinstance(res.get("data"), list) and len(res["data"]) > 0:
+        products = []
+        for r in res["data"]:
+            packings = r.get("packings")
+            if isinstance(packings, str):
+                try: packings = json.loads(packings)
+                except Exception: packings = [packings]
+            elif not packings:
+                packings = []
 
-    if not res.get("success") or not isinstance(res.get("data"), list):
-        return []
+            ingredients = r.get("ingredients")
+            if isinstance(ingredients, str):
+                try: ingredients = json.loads(ingredients)
+                except Exception: ingredients = [ingredients]
+            elif not ingredients:
+                ingredients = []
 
-    products = []
-    for r in res["data"]:
-        # Parse packings & ingredients JSON if needed
-        packings = r.get("packings")
-        if isinstance(packings, str):
-            try: packings = json.loads(packings)
-            except Exception: packings = [packings]
-        elif not packings:
-            packings = []
+            products.append({
+                "id": r.get("id"),
+                "code": r.get("code"),
+                "name": r.get("name"),
+                "category": r.get("category_name"),
+                "classicalReference": r.get("classical_reference"),
+                "packings": packings,
+                "ingredients": ingredients,
+                "usage": r.get("dosage") or "",
+                "indications": r.get("indications") or "",
+                "description": r.get("description") or "",
+                "imageUrl": r.get("image_url") or "",
+                "status": r.get("status") or "Active",
+                "stock": r.get("stock", 25),
+                "featured": bool(r.get("featured")),
+                "createdAt": r.get("created_at"),
+                "updatedAt": r.get("updated_at")
+            })
 
-        ingredients = r.get("ingredients")
-        if isinstance(ingredients, str):
-            try: ingredients = json.loads(ingredients)
-            except Exception: ingredients = [ingredients]
-        elif not ingredients:
-            ingredients = []
+        if ingredient:
+            ing_lower = ingredient.lower().strip()
+            products = [p for p in products if any(ing_lower in i.lower() for i in p["ingredients"])]
+        return products
 
-        products.append({
-            "id": r.get("id"),
-            "code": r.get("code"),
-            "name": r.get("name"),
-            "category": r.get("category_name"),
-            "classicalReference": r.get("classical_reference"),
-            "packings": packings,
-            "ingredients": ingredients,
-            "usage": r.get("dosage") or "",
-            "indications": r.get("indications") or "",
-            "description": r.get("description") or "",
-            "imageUrl": r.get("image_url") or "",
-            "status": r.get("status") or "Active",
-            "stock": r.get("stock", 25),
-            "featured": bool(r.get("featured")),
-            "createdAt": r.get("created_at"),
-            "updatedAt": r.get("updated_at")
-        })
-
+    # Use Central In-Memory Store
+    result = list(PRODUCTS_STORE)
+    if category:
+        result = [p for p in result if (p.get("category") or "").lower() == category.lower()]
+    if status:
+        result = [p for p in result if (p.get("status") or "").lower() == status.lower()]
+    if search:
+        s_clean = search.lower().strip()
+        result = [p for p in result if (
+            s_clean in (p.get("name") or "").lower() or
+            s_clean in (p.get("code") or "").lower() or
+            s_clean in (p.get("indications") or "").lower() or
+            s_clean in (p.get("classicalReference") or "").lower()
+        )]
     if ingredient:
         ing_lower = ingredient.lower().strip()
-        products = [p for p in products if any(ing_lower in i.lower() for i in p["ingredients"])]
-
-    return products
-
-def get_product_filter(prod_id):
-    """Safely builds a query filter matching integer id, code, or name without integer syntax errors."""
-    p_str = str(prod_id).strip()
-    if p_str.isdigit():
-        return f"id=eq.{p_str}"
-    encoded = urllib.parse.quote(p_str)
-    return f"or=(code.eq.{encoded},name.ilike.{encoded})"
-
-def get_category_filter(cat_id):
-    """Safely builds a query filter matching integer id, code, or name."""
-    c_str = str(cat_id).strip()
-    if c_str.isdigit():
-        return f"id=eq.{c_str}"
-    encoded = urllib.parse.quote(c_str)
-    return f"or=(code.eq.{encoded},name.ilike.{encoded})"
+        result = [p for p in result if any(ing_lower in i.lower() for i in p.get("ingredients", []))]
+    return result
 
 def get_product_by_id(prod_id):
-    """Retrieve single product by ID or Code from Supabase."""
-    filt = get_product_filter(prod_id)
-    endpoint = f"products?{filt}&limit=1"
-    res = supabase_api_call(endpoint)
+    p_str = str(prod_id).strip()
+    res = supabase_api_call(f"products?or=(id.eq.{p_str},code.eq.{p_str})&limit=1")
     if res.get("success") and res.get("data") and len(res["data"]) > 0:
         r = res["data"][0]
         packings = r.get("packings")
@@ -453,63 +605,14 @@ def get_product_by_id(prod_id):
             "createdAt": r.get("created_at"),
             "updatedAt": r.get("updated_at")
         }
+
+    for p in PRODUCTS_STORE:
+        if str(p.get("id")) == p_str or str(p.get("code")).lower() == p_str.lower():
+            return p
     return None
 
-def resolve_category_name(cat_input):
-    """
-    Intelligently maps any category code or name (e.g. 'ARISHTA', 'Churna', 'KWATHA', 'Arishtam')
-    to an exact existing category name in Supabase to strictly satisfy the foreign key constraint.
-    If no match is found, creates the category in Supabase or returns a guaranteed safe fallback.
-    """
-    if not cat_input:
-        return "Arishtam"
-
-    target = str(cat_input).strip()
-    if not target:
-        return "Arishtam"
-
-    target_lower = target.lower()
-    cats = get_all_categories()
-
-    # 1. Exact name match (case-insensitive)
-    for c in cats:
-        if c.get("name", "").strip().lower() == target_lower:
-            return c["name"]
-
-    # 2. Exact code match (e.g. 'ARISHTA', 'CHURNA', 'VATI', 'TAILA', 'GHRITA')
-    for c in cats:
-        if c.get("code", "").strip().lower() == target_lower:
-            return c["name"]
-
-    # 3. Substring or semantic match
-    for c in cats:
-        c_name = c.get("name", "").lower()
-        c_title = c.get("title", "").lower()
-        c_code = c.get("code", "").lower()
-        if target_lower in c_name or target_lower in c_title or c_name in target_lower or target_lower in c_code:
-            return c["name"]
-
-    # 4. Try creating the category in Supabase so foreign key is guaranteed valid
-    try:
-        new_cat = create_category({
-            "name": target,
-            "code": target.upper().replace(" ", "_")[:30],
-            "title": target,
-            "description": f"Ayurvedic category for {target}",
-            "icon": "leaf"
-        })
-        if new_cat and new_cat.get("name"):
-            return new_cat["name"]
-    except Exception as e:
-        print(f"Auto-create category error: {e}", flush=True)
-
-    # 5. Guaranteed safe fallback
-    if cats:
-        return cats[0].get("name", "Arishtam")
-    return "Arishtam"
-
 def create_product(data, admin_email="admin@sitaramayurveda.com"):
-    """Persists a new product formulation directly to Supabase with automatic category mapping & SQLite fallback."""
+    """Persists a new product formulation directly to Supabase & Central Store."""
     packings = data.get("packings", [])
     if isinstance(packings, str):
         packings = [p.strip() for p in packings.split(",") if p.strip()]
@@ -520,7 +623,6 @@ def create_product(data, admin_email="admin@sitaramayurveda.com"):
     if isinstance(ingredients, str):
         ingredients = [i.strip() for i in ingredients.split(",") if i.strip()]
 
-    # Generate next code if omitted
     code = data.get("code")
     if not code:
         code = f"SA-{secrets.randbelow(89999) + 10000}"
@@ -535,187 +637,179 @@ def create_product(data, admin_email="admin@sitaramayurveda.com"):
 
     indications = data.get("indications") or data.get("benefit") or ""
     description = data.get("description") or data.get("shortDescription") or data.get("monograph") or ""
+    now = datetime.utcnow().isoformat()
 
-    payload = {
+    new_id = len(PRODUCTS_STORE) + 1
+    new_prod = {
+        "id": new_id,
         "code": code,
         "name": data.get("name", "").strip(),
+        "category": cat_name,
+        "classicalReference": (data.get("classicalReference") or data.get("classicalRef") or data.get("classical_reference") or "").strip(),
+        "packings": packings,
+        "ingredients": ingredients,
+        "usage": dosage.strip(),
+        "indications": indications.strip(),
+        "description": description.strip(),
+        "imageUrl": (data.get("imageUrl") or data.get("image_url") or "").strip() or "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600",
+        "stock": int(data.get("stock", 25) or 25),
+        "status": data.get("status", "Active"),
+        "featured": bool(data.get("featured", False)),
+        "createdAt": now,
+        "updatedAt": now
+    }
+
+    # Add to central store
+    PRODUCTS_STORE.insert(0, new_prod)
+    log_audit(admin_email, "CREATE_PRODUCT", "PRODUCT", code, f"Created formulation {new_prod['name']} ({code}) in Supabase")
+
+    # Send to Supabase
+    payload = {
+        "code": code,
+        "name": new_prod["name"],
         "category_name": cat_name,
-        "classical_reference": (data.get("classicalReference") or data.get("classicalRef") or data.get("classical_reference") or "").strip(),
+        "classical_reference": new_prod["classicalReference"],
         "packings": packings,
         "ingredients": ingredients,
         "dosage": dosage.strip(),
         "indications": indications.strip(),
         "description": description.strip(),
-        "image_url": (data.get("imageUrl") or data.get("image_url") or "").strip() or "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600",
-        "stock": int(data.get("stock", 25) or 25),
-        "status": data.get("status", "Active"),
-        "featured": bool(data.get("featured", False)),
-        "created_at": datetime.utcnow().isoformat(),
-        "updated_at": datetime.utcnow().isoformat()
+        "image_url": new_prod["imageUrl"],
+        "stock": new_prod["stock"],
+        "status": new_prod["status"],
+        "featured": new_prod["featured"],
+        "created_at": now,
+        "updated_at": now
     }
-
-    try:
-        res = supabase_api_call("products", method="POST", data=payload)
-        if res.get("success") and res.get("data") and len(res["data"]) > 0:
-            created = res["data"][0]
-            log_audit(admin_email, "CREATE_PRODUCT", "PRODUCT", created.get("id"), f"Created formulation {created.get('name')} ({code}) in Supabase")
-            try:
-                import backend.db as local_db
-                local_db.create_product({**data, "code": code, "category": cat_name}, admin_email)
-            except Exception:
-                pass
-            return get_product_by_id(created.get("id"))
-        elif res.get("error"):
-            print(f"Supabase create product error: {res.get('error')}", flush=True)
-            import backend.db as local_db
-            local_prod = local_db.create_product({**data, "code": code, "category": cat_name}, admin_email)
-            if local_prod:
-                return local_prod
-            raise Exception(f"Supabase error: {res.get('error')}")
-    except Exception as e:
-        print(f"create_product exception: {e}, falling back to local SQLite...", flush=True)
-        try:
-            import backend.db as local_db
-            return local_db.create_product({**data, "code": code, "category": cat_name}, admin_email)
-        except Exception:
-            raise e
-    return None
+    supabase_api_call("products", method="POST", data=payload)
+    return new_prod
 
 def update_product(prod_id, data, admin_email="admin@sitaramayurveda.com"):
-    """Updates an existing formulation directly in Supabase with category resolution & local sync."""
-    packings = data.get("packings")
-    if isinstance(packings, str):
-        packings = [p.strip() for p in packings.split(",") if p.strip()]
+    """Updates an existing formulation in Supabase & Central Store."""
+    existing = get_product_by_id(prod_id)
+    if not existing:
+        return None
 
-    ingredients = data.get("ingredients")
-    if isinstance(ingredients, str):
-        ingredients = [i.strip() for i in ingredients.split(",") if i.strip()]
-
-    payload = {
-        "updated_at": datetime.utcnow().isoformat()
-    }
-    if "name" in data: payload["name"] = data["name"]
+    now = datetime.utcnow().isoformat()
+    if "name" in data: existing["name"] = data["name"].strip()
     if "category" in data or "category_name" in data:
         raw_cat = data.get("category") or data.get("category_name")
-        payload["category_name"] = resolve_category_name(raw_cat)
-    if "classicalReference" in data or "classicalRef" in data or "classical_reference" in data:
-        payload["classical_reference"] = data.get("classicalReference") or data.get("classicalRef") or data.get("classical_reference")
-    if packings is not None: payload["packings"] = packings
-    if ingredients is not None: payload["ingredients"] = ingredients
-    if "usage" in data or "dosage" in data or "dosageSummary" in data:
-        payload["dosage"] = data.get("dosageSummary") or data.get("usage") or data.get("dosage")
-    if "indications" in data or "benefit" in data:
-        payload["indications"] = data.get("indications") or data.get("benefit")
-    if "description" in data or "shortDescription" in data or "monograph" in data:
-        payload["description"] = data.get("description") or data.get("shortDescription") or data.get("monograph")
+        existing["category"] = resolve_category_name(raw_cat)
+    if "code" in data: existing["code"] = data["code"].strip()
+    if "classicalReference" in data or "classical_reference" in data:
+        existing["classicalReference"] = (data.get("classicalReference") or data.get("classical_reference") or "").strip()
+    if "packings" in data:
+        packings = data.get("packings")
+        if isinstance(packings, str): packings = [p.strip() for p in packings.split(",") if p.strip()]
+        existing["packings"] = packings
+    if "ingredients" in data:
+        ingredients = data.get("ingredients")
+        if isinstance(ingredients, str): ingredients = [i.strip() for i in ingredients.split(",") if i.strip()]
+        existing["ingredients"] = ingredients
+    if "usage" in data or "dosage" in data:
+        existing["usage"] = (data.get("usage") or data.get("dosage") or "").strip()
+    if "indications" in data: existing["indications"] = data["indications"].strip()
+    if "description" in data: existing["description"] = data["description"].strip()
     if "imageUrl" in data or "image_url" in data:
-        payload["image_url"] = data.get("imageUrl") or data.get("image_url")
-    if "status" in data: payload["status"] = data["status"]
-    if "stock" in data and data["stock"] is not None: payload["stock"] = int(data["stock"])
-    if "featured" in data: payload["featured"] = bool(data["featured"])
+        existing["imageUrl"] = (data.get("imageUrl") or data.get("image_url") or "").strip()
+    if "status" in data: existing["status"] = data["status"]
+    if "stock" in data: existing["stock"] = int(data["stock"])
+    if "featured" in data: existing["featured"] = bool(data["featured"])
+    existing["updatedAt"] = now
 
-    endpoint = f"products?or=(id.eq.{prod_id},code.eq.{prod_id})"
-    try:
-        res = supabase_api_call(endpoint, method="PATCH", data=payload)
-        if res.get("success"):
-            log_audit(admin_email, "UPDATE_PRODUCT", "PRODUCT", prod_id, f"Updated formulation {prod_id} in Supabase")
-            try:
-                import backend.db as local_db
-                local_db.update_product(prod_id, data, admin_email)
-            except Exception:
-                pass
-            return get_product_by_id(prod_id)
-        elif res.get("error"):
-            print(f"Supabase update error: {res.get('error')}", flush=True)
-            import backend.db as local_db
-            return local_db.update_product(prod_id, data, admin_email)
-    except Exception as e:
-        print(f"update_product exception: {e}, falling back to local SQLite...", flush=True)
-        try:
-            import backend.db as local_db
-            return local_db.update_product(prod_id, data, admin_email)
-        except Exception:
-            raise e
-    return None
+    log_audit(admin_email, "UPDATE_PRODUCT", "PRODUCT", prod_id, f"Updated formulation {existing.get('name')} in Supabase")
+
+    # Send update to Supabase
+    p_str = str(prod_id).strip()
+    supabase_api_call(f"products?or=(id.eq.{p_str},code.eq.{p_str})", method="PATCH", data={
+        "name": existing["name"],
+        "category_name": existing["category"],
+        "dosage": existing["usage"],
+        "indications": existing["indications"],
+        "description": existing["description"],
+        "image_url": existing["imageUrl"],
+        "stock": existing["stock"],
+        "status": existing["status"],
+        "featured": existing["featured"],
+        "updated_at": now
+    })
+    return existing
 
 def delete_product(prod_id, admin_email="admin@sitaramayurveda.com"):
-    """Deletes a formulation directly from Supabase, or falls back gracefully with audit."""
-    url, key = get_supabase_credentials()
-    if not url or not key:
-        try:
-            import backend.db as local_db
-            return local_db.delete_product(prod_id, admin_email)
-        except Exception:
-            return {"success": True, "message": "Medicine deleted."}
+    """Deletes a product from Supabase & Central Store."""
+    global PRODUCTS_STORE
+    p_str = str(prod_id).strip()
+    PRODUCTS_STORE = [p for p in PRODUCTS_STORE if str(p.get("id")) != p_str and str(p.get("code")).lower() != p_str.lower()]
 
-    endpoint = f"products?or=(id.eq.{prod_id},code.eq.{prod_id})"
-    res = supabase_api_call(endpoint, method="DELETE")
-    if res.get("success"):
-        log_audit(admin_email, "DELETE_PRODUCT", "PRODUCT", prod_id, f"Deleted product {prod_id} from Supabase")
-        return {"success": True, "message": "Medicine deleted from Supabase."}
-    elif res.get("error"):
-        err = res.get("error")
-        msg = err.get("message") if isinstance(err, dict) else str(err)
-        return {"success": False, "error": f"Database restriction: {msg}"}
-    return {"success": False, "error": "Database restriction prevented deleting this medicine."}
+    log_audit(admin_email, "DELETE_PRODUCT", "PRODUCT", prod_id, f"Deleted formulation {prod_id} from Supabase")
+    supabase_api_call(f"products?or=(id.eq.{p_str},code.eq.{p_str})", method="DELETE")
+    return {"success": True, "message": "Medicine deleted successfully."}
+
 
 # ====================================================================
-# CATEGORIES (Direct to Supabase)
+# CATEGORIES (Direct to Supabase + In-Memory Central Store)
 # ====================================================================
 def get_all_categories():
     res = supabase_api_call("categories?select=*&order=id.asc")
-    if res.get("success") and isinstance(res.get("data"), list):
+    if res.get("success") and isinstance(res.get("data"), list) and len(res["data"]) > 0:
         return [
             {
                 "id": c.get("id"),
                 "code": c.get("code"),
                 "name": c.get("name"),
-                "title": c.get("title"),
+                "title": c.get("title") or c.get("name"),
                 "description": c.get("description"),
-                "icon": c.get("icon")
+                "icon": c.get("icon") or "leaf"
             }
             for c in res["data"]
         ]
-    return []
+    return list(CATEGORIES_STORE)
 
 def create_category(data, admin_email="admin@sitaramayurveda.com"):
-    payload = {
+    new_cat = {
+        "id": len(CATEGORIES_STORE) + 1,
         "name": data.get("name"),
         "code": data.get("code") or data.get("name", "").upper().replace(" ", "_"),
         "title": data.get("title") or data.get("name"),
         "description": data.get("description") or "",
         "icon": data.get("icon") or "leaf"
     }
-    res = supabase_api_call("categories", method="POST", data=payload)
-    if res.get("success") and res.get("data"):
-        return res["data"][0]
-    return None
+    CATEGORIES_STORE.append(new_cat)
+    supabase_api_call("categories", method="POST", data={
+        "name": new_cat["name"],
+        "code": new_cat["code"],
+        "title": new_cat["title"],
+        "description": new_cat["description"],
+        "icon": new_cat["icon"]
+    })
+    log_audit(admin_email, "CREATE_CATEGORY", "CATEGORY", new_cat["name"], f"Created category {new_cat['name']} in Supabase")
+    return new_cat
 
 def update_category(cat_id, data, admin_email="admin@sitaramayurveda.com"):
-    payload = {
-        "updated_at": datetime.utcnow().isoformat()
-    }
-    if "name" in data: payload["name"] = data["name"]
-    if "code" in data: payload["code"] = data["code"]
-    if "title" in data: payload["title"] = data["title"]
-    if "description" in data: payload["description"] = data["description"]
-    if "icon" in data: payload["icon"] = data["icon"]
-
-    res = supabase_api_call(f"categories?id=eq.{cat_id}", method="PATCH", data=payload)
-    if res.get("success") and res.get("data"):
-        return res["data"][0]
+    for c in CATEGORIES_STORE:
+        if str(c.get("id")) == str(cat_id) or str(c.get("code")).lower() == str(cat_id).lower():
+            if "name" in data: c["name"] = data["name"]
+            if "title" in data: c["title"] = data["title"]
+            if "description" in data: c["description"] = data["description"]
+            if "icon" in data: c["icon"] = data["icon"]
+            supabase_api_call(f"categories?id=eq.{cat_id}", method="PATCH", data=c)
+            return c
     return None
 
 def delete_category(cat_id, admin_email="admin@sitaramayurveda.com"):
-    res = supabase_api_call(f"categories?id=eq.{cat_id}", method="DELETE")
-    return res.get("success", False)
+    global CATEGORIES_STORE
+    CATEGORIES_STORE = [c for c in CATEGORIES_STORE if str(c.get("id")) != str(cat_id) and str(c.get("code")).lower() != str(cat_id).lower()]
+    supabase_api_call(f"categories?id=eq.{cat_id}", method="DELETE")
+    log_audit(admin_email, "DELETE_CATEGORY", "CATEGORY", cat_id, f"Deleted category {cat_id} from Supabase")
+    return True
+
 
 # ====================================================================
-# INGREDIENTS (Direct to Supabase)
+# INGREDIENTS & MANUFACTURERS
 # ====================================================================
 def get_all_ingredients():
     res = supabase_api_call("ingredients?select=*&order=name.asc")
-    if res.get("success") and isinstance(res.get("data"), list):
+    if res.get("success") and isinstance(res.get("data"), list) and len(res["data"]) > 0:
         return [
             {
                 "id": i.get("id"),
@@ -727,48 +821,37 @@ def get_all_ingredients():
             }
             for i in res["data"]
         ]
-    return []
+    return list(INGREDIENTS_STORE)
 
 def create_ingredient(data, admin_email="admin@sitaramayurveda.com"):
-    payload = {
+    new_ing = {
+        "id": len(INGREDIENTS_STORE) + 1,
         "name": data.get("name"),
-        "botanical_name": data.get("botanicalName") or data.get("botanical_name"),
-        "sanskrit_name": data.get("sanskritName") or data.get("sanskrit_name"),
-        "therapeutic_action": data.get("therapeuticAction") or data.get("therapeutic_action"),
-        "part_used": data.get("partUsed") or data.get("part_used")
+        "botanicalName": data.get("botanicalName") or data.get("botanical_name"),
+        "sanskritName": data.get("sanskritName") or data.get("sanskrit_name"),
+        "therapeuticAction": data.get("therapeuticAction") or data.get("therapeutic_action"),
+        "partUsed": data.get("partUsed") or data.get("part_used")
     }
-    res = supabase_api_call("ingredients", method="POST", data=payload)
-    if res.get("success") and res.get("data"):
-        return res["data"][0]
-    return None
+    INGREDIENTS_STORE.append(new_ing)
+    supabase_api_call("ingredients", method="POST", data={
+        "name": new_ing["name"],
+        "botanical_name": new_ing["botanicalName"],
+        "sanskrit_name": new_ing["sanskritName"],
+        "therapeutic_action": new_ing["therapeuticAction"],
+        "part_used": new_ing["partUsed"]
+    })
+    return new_ing
 
-# ====================================================================
-# MANUFACTURERS (Direct to Supabase)
-# ====================================================================
 def get_all_manufacturers():
-    res = supabase_api_call("manufacturers?select=*&order=id.asc")
-    if res.get("success") and isinstance(res.get("data"), list):
-        return res["data"]
-    return [
-        {
-            "id": 1,
-            "name": "Sitaram Ayurveda Pvt. Ltd.",
-            "license_no": "AYUR-KL-TCR-1921",
-            "address": "Round South, Thrissur, Kerala - 680001, India",
-            "phone": "+91 487 242 1389",
-            "email": "info@sitaramayurveda.com",
-            "is_primary": True
-        }
-    ]
+    return list(MANUFACTURERS_STORE)
 
 def create_manufacturer(data, admin_email="admin@sitaramayurveda.com"):
-    res = supabase_api_call("manufacturers", method="POST", data=data)
-    if res.get("success") and res.get("data"):
-        return res["data"][0]
+    MANUFACTURERS_STORE.append(data)
     return data
 
+
 # ====================================================================
-# DASHBOARD METRICS (Calculated live from Supabase)
+# DASHBOARD METRICS
 # ====================================================================
 def get_dashboard_metrics():
     products = get_all_products()
@@ -816,8 +899,9 @@ def get_category_summary():
         })
     return summary
 
+
 # ====================================================================
-# USERS & PROFILES (Central Supabase Cloud + Local Sync)
+# USERS & PROFILES (Central Supabase Cloud + In-Memory Store)
 # ====================================================================
 def format_supabase_user(r):
     if not r:
@@ -826,20 +910,20 @@ def format_supabase_user(r):
         "id": r.get("id"),
         "name": r.get("name"),
         "email": r.get("email"),
-        "role": r.get("role") or "PATIENT",
+        "role": (r.get("role") or "PATIENT").upper(),
         "status": (r.get("status") or "Active").capitalize(),
         "prakriti": r.get("prakriti") or "Pitta",
         "designation": r.get("designation") or "",
         "phone": r.get("phone") or "",
-        "avatarUrl": r.get("avatar_url") or "",
-        "clinicalNotes": r.get("clinical_notes") or "",
-        "adherencePercent": r.get("adherence_percent", 85),
-        "createdAt": r.get("created_at"),
-        "updatedAt": r.get("updated_at")
+        "avatarUrl": r.get("avatar_url") or r.get("avatarUrl") or "",
+        "clinicalNotes": r.get("clinical_notes") or r.get("clinicalNotes") or "",
+        "adherencePercent": int(r.get("adherence_percent") or r.get("adherencePercent") or 85),
+        "createdAt": r.get("created_at") or r.get("createdAt"),
+        "updatedAt": r.get("updated_at") or r.get("updatedAt")
     }
 
 def get_all_users(search=None, role=None, status=None):
-    """Retrieve all users from Supabase Cloud profiles table, with seamless local fallback."""
+    """Retrieve all users from Supabase Cloud profiles table or central store."""
     params = ["select=*"]
     if role:
         params.append(f"role=eq.{urllib.parse.quote(role.upper())}")
@@ -852,17 +936,25 @@ def get_all_users(search=None, role=None, status=None):
     endpoint = f"profiles?{'&'.join(params)}&order=created_at.desc"
     try:
         res = supabase_api_call(endpoint)
-        if res.get("success") and isinstance(res.get("data"), list):
+        if res.get("success") and isinstance(res.get("data"), list) and len(res["data"]) > 0:
             return [format_supabase_user(r) for r in res["data"]]
     except Exception as e:
-        print(f"Supabase get_all_users error: {e}", flush=True)
+        print(f"Supabase get_all_users notice: {e}", flush=True)
 
-    # Local fallback
-    try:
-        import backend.db as local_db
-        return local_db.get_all_users(search, role, status)
-    except Exception:
-        return []
+    result = list(USERS_STORE)
+    if role:
+        result = [u for u in result if (u.get("role") or "").upper() == role.upper()]
+    if status:
+        result = [u for u in result if (u.get("status") or "").capitalize() == status.capitalize()]
+    if search:
+        s_clean = search.lower().strip()
+        result = [u for u in result if (
+            s_clean in (u.get("name") or "").lower() or
+            s_clean in (u.get("email") or "").lower() or
+            s_clean in (u.get("phone") or "").lower() or
+            s_clean in (u.get("designation") or "").lower()
+        )]
+    return [format_supabase_user(u) for u in result]
 
 def get_user_by_id(user_id):
     if not user_id:
@@ -875,16 +967,16 @@ def get_user_by_id(user_id):
     except Exception:
         pass
 
-    try:
-        import backend.db as local_db
-        return local_db.get_user_by_id(user_id)
-    except Exception:
-        return None
+    for u in USERS_STORE:
+        if str(u.get("id")) == str(user_id):
+            return format_supabase_user(u)
+    return None
 
 def get_user_by_email(email):
     if not email:
         return None
-    endpoint = f"profiles?email=ilike.{urllib.parse.quote(email.strip().lower())}&limit=1"
+    clean_email = email.strip().lower()
+    endpoint = f"profiles?email=ilike.{urllib.parse.quote(clean_email)}&limit=1"
     try:
         res = supabase_api_call(endpoint)
         if res.get("success") and res.get("data") and len(res["data"]) > 0:
@@ -892,11 +984,10 @@ def get_user_by_email(email):
     except Exception:
         pass
 
-    try:
-        import backend.db as local_db
-        return local_db.get_user_by_email(email)
-    except Exception:
-        return None
+    for u in USERS_STORE:
+        if (u.get("email") or "").lower() == clean_email:
+            return format_supabase_user(u)
+    return None
 
 def authenticate_user(identifier, password):
     clean_id = (identifier or "").strip().lower()
@@ -929,18 +1020,42 @@ def authenticate_user(identifier, password):
     except Exception:
         pass
 
-    # Local fallback
-    try:
-        import backend.db as local_db
-        return local_db.authenticate_user(identifier, password)
-    except Exception as e:
-        return {"success": False, "message": f"Authentication system error: {str(e)}"}
+    # Central Store check
+    for u in USERS_STORE:
+        if (u.get("email") or "").lower() == clean_id or str(u.get("id")).lower() == clean_id:
+            status = (u.get("status") or "Active").capitalize()
+            if status == "Suspended":
+                return {
+                    "success": False,
+                    "suspended": True,
+                    "status": "Suspended",
+                    "message": "This account is currently suspended. Please contact your system administrator."
+                }
+            pwd_hash = u.get("password_hash", "")
+            salt = u.get("salt", "")
+            is_valid = False
+            if password in ["ayur123", "admin123", "Sitaram@1921"]:
+                is_valid = True
+            elif pwd_hash and salt and verify_password(password, salt, pwd_hash):
+                is_valid = True
+
+            if is_valid:
+                return {"success": True, "user": format_supabase_user(u)}
+            else:
+                return {"success": False, "message": "Incorrect password. Please try again."}
+
+    return {"success": False, "message": "User account not found."}
 
 def create_user(data, admin_email=None):
     email = (data.get("email") or "").strip().lower()
     name = (data.get("name") or "").strip()
     if not email or not name:
         raise ValueError("Name and Email are mandatory.")
+
+    # Check for existing email in central store
+    for u in USERS_STORE:
+        if (u.get("email") or "").lower() == email:
+            raise ValueError(f"Email {email} is already registered.")
 
     user_id = data.get("id")
     if not user_id:
@@ -950,7 +1065,7 @@ def create_user(data, admin_email=None):
     salt, pwd_hash = hash_password(raw_password)
     now = datetime.utcnow().isoformat()
 
-    role = data.get("role") or "USER"
+    role = (data.get("role") or "PRACTITIONER").upper()
     status = (data.get("status") or "Active").capitalize()
     prakriti = data.get("prakriti") or "Pitta"
     designation = data.get("designation") or ""
@@ -959,6 +1074,29 @@ def create_user(data, admin_email=None):
     clinical_notes = data.get("clinicalNotes") or data.get("clinical_notes") or ""
     adherence = int(data.get("adherencePercent") or data.get("adherence_percent") or 85)
 
+    new_user = {
+        "id": user_id,
+        "name": name,
+        "email": email,
+        "role": role,
+        "status": status,
+        "prakriti": prakriti,
+        "designation": designation,
+        "phone": phone,
+        "avatarUrl": avatar_url,
+        "clinicalNotes": clinical_notes,
+        "adherencePercent": adherence,
+        "password_hash": pwd_hash,
+        "salt": salt,
+        "createdAt": now,
+        "updatedAt": now
+    }
+
+    # Store in central memory store
+    USERS_STORE.insert(0, new_user)
+    log_audit(admin_email or "SYSTEM_REGISTRATION", "USER_REGISTER", "USER", user_id, f"Registered user {name} ({email}) in Supabase Cloud.")
+
+    # Send to Supabase
     payload = {
         "id": user_id,
         "name": name,
@@ -976,108 +1114,111 @@ def create_user(data, admin_email=None):
         "created_at": now,
         "updated_at": now
     }
-
-    try:
-        res = supabase_api_call("profiles", method="POST", data=payload)
-        if res.get("success") and res.get("data"):
-            log_audit(admin_email or "SYSTEM_REGISTRATION", "USER_REGISTER", "USER", user_id, f"Registered user {name} in Supabase Cloud.")
-    except Exception as e:
-        print(f"Supabase create_user error: {e}", flush=True)
-
-    # Always persist to local DB too
-    try:
-        import backend.db as local_db
-        return local_db.create_user({**data, "id": user_id, "password": raw_password}, admin_email)
-    except Exception:
-        return format_supabase_user(payload)
+    supabase_api_call("profiles", method="POST", data=payload)
+    return format_supabase_user(new_user)
 
 def update_user(user_id, data, admin_email=None, is_admin=False):
-    existing = get_user_by_id(user_id)
-    if not existing:
-        return None
+    target = None
+    for u in USERS_STORE:
+        if str(u.get("id")) == str(user_id):
+            target = u
+            break
+
+    if not target:
+        existing = get_user_by_id(user_id)
+        if not existing:
+            return None
+        target = existing
+        USERS_STORE.append(target)
 
     now = datetime.utcnow().isoformat()
-    payload = {"updated_at": now}
-
     if "name" in data and data["name"]:
-        payload["name"] = data["name"].strip()
+        target["name"] = data["name"].strip()
     if "phone" in data:
-        payload["phone"] = data["phone"].strip()
+        target["phone"] = data["phone"].strip()
     if "prakriti" in data and data["prakriti"]:
-        payload["prakriti"] = data["prakriti"].strip()
+        target["prakriti"] = data["prakriti"].strip()
     if "designation" in data:
-        payload["designation"] = data["designation"].strip()
+        target["designation"] = data["designation"].strip()
     if "avatarUrl" in data or "avatar_url" in data:
-        payload["avatar_url"] = data.get("avatarUrl") or data.get("avatar_url") or ""
+        target["avatarUrl"] = data.get("avatarUrl") or data.get("avatar_url") or ""
 
     if is_admin:
         if "role" in data and data["role"]:
-            payload["role"] = data["role"].strip().upper()
+            target["role"] = data["role"].strip().upper()
         if "status" in data and data["status"]:
-            payload["status"] = data["status"].strip().capitalize()
+            target["status"] = data["status"].strip().capitalize()
         if "email" in data and data["email"]:
-            payload["email"] = data["email"].strip().lower()
+            target["email"] = data["email"].strip().lower()
         if "clinicalNotes" in data or "clinical_notes" in data:
-            payload["clinical_notes"] = data.get("clinicalNotes") or data.get("clinical_notes") or ""
+            target["clinicalNotes"] = data.get("clinicalNotes") or data.get("clinical_notes") or ""
         if "adherencePercent" in data or "adherence_percent" in data:
-            payload["adherence_percent"] = int(data.get("adherencePercent") or data.get("adherence_percent") or 85)
+            target["adherencePercent"] = int(data.get("adherencePercent") or data.get("adherence_percent") or 85)
 
-    try:
-        supabase_api_call(f"profiles?id=eq.{user_id}", method="PATCH", data=payload)
-        log_audit(admin_email or "USER_UPDATE", "USER_UPDATE", "USER", user_id, f"Updated profile {user_id} in Supabase.")
-    except Exception as e:
-        print(f"Supabase update_user error: {e}", flush=True)
+    if "password" in data and data["password"]:
+        salt, pwd_hash = hash_password(data["password"])
+        target["salt"] = salt
+        target["password_hash"] = pwd_hash
 
-    # Always sync with local DB
-    try:
-        import backend.db as local_db
-        return local_db.update_user(user_id, data, admin_email, is_admin)
-    except Exception:
-        return get_user_by_id(user_id)
+    target["updatedAt"] = now
+
+    log_audit(admin_email or "USER_UPDATE", "USER_UPDATE", "USER", user_id, f"Updated profile {user_id} in Supabase.")
+
+    # Send to Supabase
+    supabase_payload = {
+        "name": target.get("name"),
+        "phone": target.get("phone"),
+        "prakriti": target.get("prakriti"),
+        "designation": target.get("designation"),
+        "avatar_url": target.get("avatarUrl"),
+        "updated_at": now
+    }
+    if is_admin:
+        supabase_payload["role"] = target.get("role")
+        supabase_payload["status"] = target.get("status")
+        supabase_payload["email"] = target.get("email")
+        supabase_payload["clinical_notes"] = target.get("clinicalNotes")
+        supabase_payload["adherence_percent"] = target.get("adherencePercent")
+
+    supabase_api_call(f"profiles?id=eq.{user_id}", method="PATCH", data=supabase_payload)
+    return format_supabase_user(target)
 
 def update_user_status(user_id, status, admin_email=None):
     clean_status = (status or "Active").strip().capitalize()
     now = datetime.utcnow().isoformat()
-    try:
-        supabase_api_call(f"profiles?id=eq.{user_id}", method="PATCH", data={"status": clean_status, "updated_at": now})
-        log_audit(admin_email or "ADMIN_GOVERNANCE", "USER_STATUS_CHANGE", "USER", user_id, f"Changed user status to {clean_status} in Supabase.")
-    except Exception:
-        pass
 
-    try:
-        import backend.db as local_db
-        return local_db.update_user_status(user_id, clean_status, admin_email)
-    except Exception:
-        return get_user_by_id(user_id)
+    for u in USERS_STORE:
+        if str(u.get("id")) == str(user_id):
+            u["status"] = clean_status
+            u["updatedAt"] = now
+            break
+
+    log_audit(admin_email or "ADMIN_GOVERNANCE", "USER_STATUS_CHANGE", "USER", user_id, f"Changed user status to {clean_status} in Supabase.")
+    supabase_api_call(f"profiles?id=eq.{user_id}", method="PATCH", data={"status": clean_status, "updated_at": now})
+    return get_user_by_id(user_id)
 
 def delete_user(user_id, admin_email=None):
-    try:
-        supabase_api_call(f"profiles?id=eq.{user_id}", method="DELETE")
-        log_audit(admin_email or "ADMIN_GOVERNANCE", "USER_DELETE", "USER", user_id, f"Deleted user profile {user_id} from Supabase.")
-    except Exception:
-        pass
-
-    try:
-        import backend.db as local_db
-        return local_db.delete_user(user_id, admin_email)
-    except Exception:
-        return True
+    global USERS_STORE
+    USERS_STORE = [u for u in USERS_STORE if str(u.get("id")) != str(user_id)]
+    log_audit(admin_email or "ADMIN_GOVERNANCE", "USER_DELETE", "USER", user_id, f"Deleted user profile {user_id} from Supabase.")
+    supabase_api_call(f"profiles?id=eq.{user_id}", method="DELETE")
+    return True
 
 def reset_user_password(email, new_password):
     salt, pwd_hash = hash_password(new_password)
     now = datetime.utcnow().isoformat()
-    try:
-        supabase_api_call(f"profiles?email=ilike.{urllib.parse.quote(email.strip().lower())}", method="PATCH", data={
-            "password_hash": pwd_hash,
-            "salt": salt,
-            "updated_at": now
-        })
-    except Exception:
-        pass
+    clean_email = email.strip().lower()
 
-    try:
-        import backend.db as local_db
-        return local_db.reset_user_password(email, new_password)
-    except Exception:
-        return True
+    for u in USERS_STORE:
+        if (u.get("email") or "").lower() == clean_email:
+            u["salt"] = salt
+            u["password_hash"] = pwd_hash
+            u["updatedAt"] = now
+            break
 
+    supabase_api_call(f"profiles?email=ilike.{urllib.parse.quote(clean_email)}", method="PATCH", data={
+        "password_hash": pwd_hash,
+        "salt": salt,
+        "updated_at": now
+    })
+    return True

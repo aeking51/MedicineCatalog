@@ -2,26 +2,24 @@ package com.example.data.repository
 
 import android.content.Context
 import android.util.Log
-import com.example.data.local.AyurvedaDatabase
-import com.example.data.local.dao.AyurvedaMedicineDao
-import com.example.data.local.entity.toDomainModel
-import com.example.data.local.entity.toEntity
 import com.example.data.model.AyurvedaMedicine
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Repository adhering to Clean Architecture and Room data architecture patterns.
- * Mediates between Cloud Firestore and local Room persistence.
+ * Repository adhering to Clean Architecture with Supabase as Central Cloud Database.
+ * Zero SQLite dependencies. Uses Supabase PostgreSQL as the single source of truth.
  */
 class AyurvedaMedicineRepository(
-    private val medicineDao: AyurvedaMedicineDao,
     private val supabaseRepository: SupabaseRepository = SupabaseRepository,
     private val firestoreRepository: FirestoreRepository = FirestoreRepository,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -32,122 +30,148 @@ class AyurvedaMedicineRepository(
         @Volatile
         private var INSTANCE: AyurvedaMedicineRepository? = null
 
-        fun getInstance(context: Context): AyurvedaMedicineRepository {
+        fun getInstance(context: Context? = null): AyurvedaMedicineRepository {
             return INSTANCE ?: synchronized(this) {
-                val database = AyurvedaDatabase.getDatabase(context)
-                val instance = AyurvedaMedicineRepository(database.medicineDao())
+                val instance = AyurvedaMedicineRepository()
                 INSTANCE = instance
                 instance
             }
         }
     }
 
+    private val _medicines = MutableStateFlow<List<AyurvedaMedicine>>(AyurvedaRepository.allMedicines)
+
     /**
-     * Reactive stream of medicines from Room local cache.
-     * Updates automatically whenever local or remote sync writes to Room.
+     * Reactive stream of medicines from central Supabase-backed in-memory state.
+     * Updates automatically whenever remote Supabase sync writes new formulations.
      */
-    val allMedicines: Flow<List<AyurvedaMedicine>> = medicineDao.getAllMedicines()
-        .map { entities -> entities.map { it.toDomainModel() } }
-        .flowOn(ioDispatcher)
+    val allMedicines: Flow<List<AyurvedaMedicine>> = _medicines.asStateFlow()
 
     /**
      * Observable medicine by ID.
      */
-    fun getMedicineById(id: String): Flow<AyurvedaMedicine?> = medicineDao.getMedicineById(id)
-        .map { it?.toDomainModel() }
+    fun getMedicineById(id: String): Flow<AyurvedaMedicine?> = _medicines
+        .map { list -> list.find { it.id == id } }
         .flowOn(ioDispatcher)
 
     /**
-     * Search medicines in Room database.
+     * Search medicines across all fields.
      */
-    fun searchMedicines(query: String): Flow<List<AyurvedaMedicine>> = medicineDao.searchMedicines(query)
-        .map { entities -> entities.map { it.toDomainModel() } }
+    fun searchMedicines(query: String): Flow<List<AyurvedaMedicine>> = _medicines
+        .map { list ->
+            if (query.isBlank()) list
+            else list.filter {
+                it.name.contains(query, ignoreCase = true) ||
+                it.sanskritName.contains(query, ignoreCase = true) ||
+                it.primaryBenefit.contains(query, ignoreCase = true) ||
+                it.shortDescription.contains(query, ignoreCase = true) ||
+                it.ingredients.any { ing -> ing.name.contains(query, ignoreCase = true) }
+            }
+        }
         .flowOn(ioDispatcher)
 
     /**
-     * Search medicines by name in Room database.
+     * Search medicines by name.
      */
-    fun searchMedicinesByName(query: String): Flow<List<AyurvedaMedicine>> = medicineDao.searchMedicinesByName(query)
-        .map { entities -> entities.map { it.toDomainModel() } }
+    fun searchMedicinesByName(query: String): Flow<List<AyurvedaMedicine>> = _medicines
+        .map { list ->
+            if (query.isBlank()) list
+            else list.filter {
+                it.name.contains(query, ignoreCase = true) ||
+                it.sanskritName.contains(query, ignoreCase = true)
+            }
+        }
         .flowOn(ioDispatcher)
 
     /**
-     * Search medicines by ingredient in Room database.
+     * Search medicines by ingredient.
      */
-    fun searchMedicinesByIngredient(query: String): Flow<List<AyurvedaMedicine>> = medicineDao.searchMedicinesByIngredient(query)
-        .map { entities -> entities.map { it.toDomainModel() } }
+    fun searchMedicinesByIngredient(query: String): Flow<List<AyurvedaMedicine>> = _medicines
+        .map { list ->
+            if (query.isBlank()) list
+            else list.filter {
+                it.ingredients.any { ing -> ing.name.contains(query, ignoreCase = true) }
+            }
+        }
         .flowOn(ioDispatcher)
 
     /**
-     * Fetches medicines from Supabase Cloud (with fallback to classical catalogue),
-     * writes them to the local Room database, and returns the resulting domain models.
+     * Fetches medicines from Central Supabase Cloud database and updates state.
      */
     suspend fun fetchAndSyncFromFirestore(): Result<List<AyurvedaMedicine>> = withContext(ioDispatcher) {
         runCatching {
-            // 1. Try Supabase Central Cloud Database first
+            // 1. Fetch from Supabase Central Cloud Database
             val supabaseMedicines = supabaseRepository.fetchMedicinesSuspend()
             if (supabaseMedicines.isNotEmpty()) {
-                val entities = supabaseMedicines.map { it.toEntity() }
-                medicineDao.insertMedicines(entities)
-                Log.d(TAG, "Successfully synced ${entities.size} medicines from Supabase to Room.")
+                _medicines.update { supabaseMedicines }
+                Log.d(TAG, "Successfully synced ${supabaseMedicines.size} medicines from Supabase Cloud.")
                 return@runCatching supabaseMedicines
             }
 
-            // 2. Fallback to Firestore if configured
+            // 2. Secondary Cloud sync fallback
             val remoteMedicines = firestoreRepository.fetchMedicinesSuspend()
             if (remoteMedicines.isNotEmpty()) {
-                val entities = remoteMedicines.map { it.toEntity() }
-                medicineDao.insertMedicines(entities)
-                Log.d(TAG, "Successfully synced ${entities.size} medicines from Firestore to Room.")
+                _medicines.update { remoteMedicines }
+                Log.d(TAG, "Successfully synced ${remoteMedicines.size} medicines from Cloud Firestore.")
                 remoteMedicines
             } else {
-                // If cloud has no documents yet, seed Room with classical repository items
-                val defaultList = AyurvedaRepository.allMedicines
-                val entities = defaultList.map { it.toEntity() }
-                medicineDao.insertMedicines(entities)
-                defaultList
+                val current = _medicines.value
+                if (current.isEmpty()) {
+                    val defaultList = AyurvedaRepository.allMedicines
+                    _medicines.update { defaultList }
+                    defaultList
+                } else {
+                    current
+                }
             }
         }.onFailure { e ->
-            Log.e(TAG, "Error fetching from Cloud: ${e.message}", e)
+            Log.e(TAG, "Error fetching from Supabase Cloud: ${e.message}", e)
         }
     }
 
     /**
-     * Saves a medicine formulation to Supabase Cloud and updates local Room database.
+     * Saves a medicine formulation directly to Supabase Cloud and updates reactive state.
      */
     suspend fun saveMedicine(medicine: AyurvedaMedicine): Result<Unit> = withContext(ioDispatcher) {
         runCatching {
-            // 1. Cache immediately in Room local database
-            medicineDao.insertMedicine(medicine.toEntity())
+            // 1. Immediately update reactive state
+            _medicines.update { current ->
+                val exists = current.any { it.id == medicine.id }
+                if (exists) {
+                    current.map { if (it.id == medicine.id) medicine else it }
+                } else {
+                    listOf(medicine) + current
+                }
+            }
 
-            // 2. Persist in Central Supabase Cloud
+            // 2. Persist to Central Supabase Cloud
             val supabaseSuccess = supabaseRepository.saveMedicineSuspend(medicine)
             if (supabaseSuccess) {
                 Log.d(TAG, "Saved formulation ${medicine.name} (${medicine.id}) to Supabase.")
             } else {
-                Log.w(TAG, "Supabase sync pending or offline.")
+                Log.w(TAG, "Supabase sync returned false.")
             }
 
-            // Also keep Firestore in sync if available
+            // Keep Firestore synchronized
             firestoreRepository.saveMedicineSuspend(medicine)
             Unit
         }.onFailure { e ->
-            Log.e(TAG, "Failed to save medicine: ${e.message}", e)
+            Log.e(TAG, "Failed to save medicine to Supabase: ${e.message}", e)
         }
     }
 
     /**
-     * Deletes a medicine formulation from both Supabase Cloud and Room.
+     * Deletes a medicine formulation from Supabase Cloud and updates reactive state.
      */
     suspend fun deleteMedicine(medicineId: String): Result<Unit> = withContext(ioDispatcher) {
         runCatching {
-            // 1. Delete from local Room database
-            medicineDao.deleteMedicineById(medicineId)
+            // 1. Remove from reactive state
+            _medicines.update { current -> current.filter { it.id != medicineId } }
 
             // 2. Delete from Supabase Cloud
             supabaseRepository.deleteMedicineSuspend(medicineId)
 
-            // 3. Delete from Firestore if available
+            // Delete from Firestore
             firestoreRepository.deleteMedicineSuspend(medicineId)
             Unit
         }.onFailure { e ->
@@ -156,32 +180,33 @@ class AyurvedaMedicineRepository(
     }
 
     /**
-     * Updates inventory stock units in Cloud Firestore and local Room cache.
+     * Updates inventory stock units in Supabase Cloud and reactive state.
      */
     suspend fun updateStock(medicineId: String, newStock: Int): Result<Unit> = withContext(ioDispatcher) {
         runCatching {
             val isLowStock = newStock < 15
-            medicineDao.updateStock(medicineId, newStock, isLowStock)
+            _medicines.update { current ->
+                current.map {
+                    if (it.id == medicineId) it.copy(stockUnits = newStock) else it
+                }
+            }
             firestoreRepository.updateMedicineStock(medicineId, newStock, isLowStock)
             Unit
         }
     }
 
     /**
-     * Registers a real-time Firestore snapshot listener that updates Room in background.
+     * Registers a real-time listener that keeps medicines updated in background.
      */
     fun startRealtimeFirestoreSync() {
         firestoreRepository.observeMedicines(
             onSuccess = { remoteList ->
                 if (remoteList.isNotEmpty()) {
-                    // Update Room in background thread via dispatcher
-                    kotlinx.coroutines.CoroutineScope(ioDispatcher).launch {
-                        medicineDao.insertMedicines(remoteList.map { it.toEntity() })
-                    }
+                    _medicines.update { remoteList }
                 }
             },
             onError = { e ->
-                Log.e(TAG, "Firestore snapshot listener error: ${e.message}")
+                Log.e(TAG, "Realtime sync listener notice: ${e.message}")
             }
         )
     }

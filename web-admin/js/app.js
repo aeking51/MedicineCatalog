@@ -1972,10 +1972,10 @@ class AdminApp {
       const res = await fetch('/api/dashboard/metrics');
       if (res.ok) {
         if (badge) {
-          badge.innerText = 'Connected & Live (SQLite + Session Auth)';
+          badge.innerText = 'Connected & Live (Supabase + Session Auth)';
           badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800';
         }
-        this.showToast('Central SQLite database connection verified healthy!', 'success');
+        this.showToast('Central Supabase database connection verified healthy!', 'success');
       } else {
         throw new Error('Server returned ' + res.status);
       }
@@ -2804,7 +2804,7 @@ class AdminApp {
 
   async triggerSupabaseMigration() {
     const btn = document.getElementById('btn-migrate-sb');
-    if (!confirm('This will upload all formulations and categories from local SQLite into your Supabase database. Proceed?')) {
+    if (!confirm('This will synchronize all master formulations and categories directly into your Supabase database. Proceed?')) {
       return;
     }
 

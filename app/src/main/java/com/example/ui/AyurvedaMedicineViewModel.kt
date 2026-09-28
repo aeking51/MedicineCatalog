@@ -46,8 +46,8 @@ data class MedicineUiState(
 )
 
 /**
- * ViewModel adhering to Room and Clean Data Architecture guidelines.
- * Handles fetching, caching, saving, and querying Ayurveda medicine data with Firestore and Room.
+ * ViewModel adhering to Supabase Central Cloud Data Architecture guidelines.
+ * Handles fetching, caching, saving, and querying Ayurveda medicine data with Supabase Cloud.
  */
 class AyurvedaMedicineViewModel(
     application: Application,

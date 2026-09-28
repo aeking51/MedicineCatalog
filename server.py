@@ -498,11 +498,7 @@ class SitaramAdminHandler(http.server.BaseHTTPRequestHandler):
                 body = self.read_json_body()
                 email = (body.get("email", "")).strip().lower()
 
-                conn = db.get_connection()
-                c = conn.cursor()
-                c.execute("SELECT id, name, email FROM admins WHERE lower(email) = ?", (email,))
-                admin_row = c.fetchone()
-                conn.close()
+                admin_row = db.get_admin_by_email(email)
 
                 if admin_row:
                     client_ip = self.client_address[0] if self.client_address else "127.0.0.1"
@@ -871,7 +867,7 @@ class SitaramAdminHandler(http.server.BaseHTTPRequestHandler):
                 return
 
             elif path == "/api/supabase/migrate":
-                res = supabase_sync.migrate_sqlite_to_supabase()
+                res = supabase_sync.sync_master_catalogue_to_supabase()
                 self.send_json(200, res)
                 return
 

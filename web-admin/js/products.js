@@ -412,7 +412,7 @@ const ProductViews = {
 
               <div>
                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Product Name *</label>
-                <input type="text" id="f-name" required value="${p.name}" placeholder="e.g. Abhayarishtam" class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1B4D3E] focus:border-[#1B4D3E]">
+                <input type="text" id="f-name" required value="${p.name}" placeholder="e.g. Medicine Name" class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1B4D3E] focus:border-[#1B4D3E]">
               </div>
 
               <div>

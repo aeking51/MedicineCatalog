@@ -54,7 +54,7 @@ AUDIT_LOGS_STORE = []
 def init_canonical_data():
     """Initializes canonical data from exported store if available."""
     global CATEGORIES_STORE, PRODUCTS_STORE, USERS_STORE, INGREDIENTS_STORE, MANUFACTURERS_STORE
-    if CATEGORIES_STORE and PRODUCTS_STORE:
+    if CATEGORIES_STORE:
         return
 
     cat_map = {}
@@ -75,59 +75,10 @@ def init_canonical_data():
                 CATEGORIES_STORE.append(cat_obj)
                 cat_map[c.get("id")] = c.get("name")
 
-            for p in d.get("products", []):
-                packings = p.get("packings_json")
-                if isinstance(packings, str):
-                    try: packings = json.loads(packings)
-                    except Exception: packings = [packings]
-                elif not packings:
-                    packings = ["450 ml"]
-
-                ingredients = p.get("ingredients_json")
-                if isinstance(ingredients, str):
-                    try: ingredients = json.loads(ingredients)
-                    except Exception: ingredients = [ingredients]
-                elif not ingredients:
-                    ingredients = []
-
-                cat_name = cat_map.get(p.get("category_id"), "Arishtam")
-                PRODUCTS_STORE.append({
-                    "id": p.get("id"),
-                    "code": p.get("code") or f"SA-{p.get('id', 100):05d}",
-                    "name": p.get("name"),
-                    "category": cat_name,
-                    "classicalReference": p.get("classical_reference") or "",
-                    "packings": packings or [],
-                    "ingredients": ingredients or [],
-                    "usage": p.get("usage") or "",
-                    "indications": p.get("indications") or "",
-                    "description": p.get("description") or "",
-                    "imageUrl": p.get("image_url") or "",
-                    "status": p.get("status") or "Active",
-                    "stock": 25,
-                    "featured": bool(p.get("featured")),
-                    "createdAt": p.get("created_at") or datetime.utcnow().isoformat(),
-                    "updatedAt": p.get("updated_at") or datetime.utcnow().isoformat()
-                })
-
-            for u in d.get("users", []):
-                USERS_STORE.append({
-                    "id": u.get("id"),
-                    "name": u.get("name"),
-                    "email": u.get("email"),
-                    "role": (u.get("role") or "PATIENT").upper(),
-                    "status": (u.get("status") or "Active").capitalize(),
-                    "prakriti": u.get("prakriti") or "Pitta",
-                    "designation": u.get("designation") or "",
-                    "phone": u.get("phone") or "",
-                    "avatarUrl": u.get("avatar_url") or "",
-                    "clinicalNotes": u.get("clinical_notes") or "",
-                    "adherencePercent": int(u.get("adherence_percent") or 85),
-                    "password_hash": u.get("password_hash", ""),
-                    "salt": u.get("salt", ""),
-                    "createdAt": u.get("created_at") or datetime.utcnow().isoformat(),
-                    "updatedAt": u.get("updated_at") or datetime.utcnow().isoformat()
-                })
+            # Products and users must only come from Supabase cloud database
+            # No dummy, sample, or demonstration products or users are loaded
+            PRODUCTS_STORE.clear()
+            USERS_STORE.clear()
 
             for ing in d.get("ingredients", []):
                 INGREDIENTS_STORE.append({
@@ -513,7 +464,7 @@ def get_all_products(search=None, category=None, status=None, ingredient=None):
 
     endpoint = f"products?{'&'.join(params)}&order=id.asc"
     res = supabase_api_call(endpoint)
-    if res.get("success") and isinstance(res.get("data"), list) and len(res["data"]) > 0:
+    if res.get("success") and isinstance(res.get("data"), list):
         products = []
         for r in res["data"]:
             packings = r.get("packings")
@@ -857,10 +808,12 @@ def get_dashboard_metrics():
     products = get_all_products()
     categories = get_all_categories()
     ingredients = get_all_ingredients()
+    users = get_all_users()
 
     active_count = sum(1 for p in products if p.get("status") == "Active")
     inactive_count = sum(1 for p in products if p.get("status") == "Inactive")
     featured_count = sum(1 for p in products if p.get("featured"))
+    active_users = sum(1 for u in users if (u.get("status") or "").lower() == "active")
 
     return {
         "totalProducts": len(products),
@@ -869,6 +822,8 @@ def get_dashboard_metrics():
         "featuredProducts": featured_count,
         "totalCategories": len(categories) or 24,
         "totalIngredients": len(ingredients) or 6,
+        "totalUsers": len(users),
+        "activeUsers": active_users,
         "updatedAt": datetime.utcnow().isoformat()
     }
 
@@ -936,7 +891,7 @@ def get_all_users(search=None, role=None, status=None):
     endpoint = f"profiles?{'&'.join(params)}&order=created_at.desc"
     try:
         res = supabase_api_call(endpoint)
-        if res.get("success") and isinstance(res.get("data"), list) and len(res["data"]) > 0:
+        if res.get("success") and isinstance(res.get("data"), list):
             return [format_supabase_user(r) for r in res["data"]]
     except Exception as e:
         print(f"Supabase get_all_users notice: {e}", flush=True)

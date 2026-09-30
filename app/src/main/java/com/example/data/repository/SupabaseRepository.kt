@@ -48,87 +48,10 @@ object SupabaseRepository {
     val isCloudConfigured: Boolean
         get() = getActiveUrl().isNotBlank() && getActiveKey().isNotBlank()
 
-    fun parseMedicineFromJson(obj: JSONObject): AyurvedaMedicine {
-        val id = obj.optString("code").ifBlank { obj.optString("id", "MED-${System.currentTimeMillis()}") }
-        val name = obj.optString("name", "Ayurvedic Formulation")
-        val catName = obj.optString("category_name").ifBlank { obj.optString("category", "Churna") }
-        val classicalRef = obj.optString("classical_reference").ifBlank { obj.optString("classicalReference", "Classical Text") }
-        val dosageText = obj.optString("dosage").ifBlank { obj.optString("usage", "As directed by physician") }
-        val indications = obj.optString("indications", "")
-        val description = obj.optString("description", "")
-        val photoUrl = obj.optString("image_url").ifBlank { obj.optString("imageUrl", "") }
-        val stock = obj.optInt("stock", 25)
-
-        // Parse packings
-        val packingsList = mutableListOf<String>()
-        val packingsJson = obj.opt("packings")
-        if (packingsJson is JSONArray) {
-            for (p in 0 until packingsJson.length()) {
-                packingsList.add(packingsJson.optString(p))
-            }
-        }
-
-        // Parse ingredients
-        val ingredientsList = mutableListOf<AyurvedaIngredient>()
-        val ingJson = obj.opt("ingredients")
-        if (ingJson is JSONArray) {
-            for (j in 0 until ingJson.length()) {
-                val ingItem = ingJson.opt(j)
-                if (ingItem is JSONObject) {
-                    ingredientsList.add(
-                        AyurvedaIngredient(
-                            name = ingItem.optString("name").ifBlank { ingItem.optString("sanskrit", "Herb") },
-                            botanicalName = ingItem.optString("botanicalName").ifBlank { ingItem.optString("botanical", "") }
-                        )
-                    )
-                } else {
-                    ingredientsList.add(AyurvedaIngredient(name = ingItem.toString()))
-                }
-            }
-        }
-
-        val categoryEnum = mapCategory(catName)
-        val sanskritName = obj.optString("sanskrit_name").ifBlank { obj.optString("sanskritName").ifBlank { name } }
-        val resolvedPhoto = if (photoUrl.isNotBlank() && (photoUrl.startsWith("http://") || photoUrl.startsWith("https://"))) {
-            photoUrl
-        } else {
-            com.example.ui.components.ClassicalPhotoPresets.getPresetForCategory(categoryEnum)
-        }
-
-        val goals = mutableListOf<com.example.data.model.HealthGoal>()
-        val goalsJson = obj.opt("health_goals") ?: obj.opt("healthGoals")
-        if (goalsJson is JSONArray) {
-            for (g in 0 until goalsJson.length()) {
-                try {
-                    val gStr = goalsJson.optString(g).uppercase()
-                    goals.add(com.example.data.model.HealthGoal.valueOf(gStr))
-                } catch (_: Exception) {}
-            }
-        }
-
-        return AyurvedaMedicine(
-            id = id,
-            name = name,
-            sanskritName = sanskritName,
-            category = categoryEnum,
-            ingredients = ingredientsList,
-            dosageInstructions = dosageText,
-            healthGoals = goals,
-            shortDescription = description.ifBlank { "$name is a classical Ayurvedic formulation ($catName)." },
-            primaryBenefit = indications.ifBlank { "Promotes holistic balance & vitality" },
-            indications = indications.split(",").map { it.trim() }.filter { it.isNotBlank() },
-            classicalReference = classicalRef,
-            packing = packingsList.joinToString(", ").ifBlank { "Standard Unit" },
-            photoUrl = resolvedPhoto,
-            stockUnits = stock
-        )
-    }
-
     /**
-     * Fetch formulations from Supabase products table or central gateway.
+     * Fetch formulations from Supabase products table.
      */
     suspend fun fetchMedicinesSuspend(): List<AyurvedaMedicine> = withContext(Dispatchers.IO) {
-        // 1. Direct Supabase PostgREST query
         try {
             val endpoint = "${getActiveUrl()}/rest/v1/products?select=*&order=id.asc"
             val url = URL(endpoint)
@@ -138,8 +61,8 @@ object SupabaseRepository {
                 setRequestProperty("apikey", currentKey)
                 setRequestProperty("Authorization", "Bearer $currentKey")
                 setRequestProperty("Accept", "application/json")
-                connectTimeout = 4000
-                readTimeout = 4000
+                connectTimeout = 15000
+                readTimeout = 15000
             }
 
             val responseCode = conn.responseCode
@@ -150,50 +73,87 @@ object SupabaseRepository {
 
                 val jsonArray = JSONArray(body)
                 val medicines = mutableListOf<AyurvedaMedicine>()
+
                 for (i in 0 until jsonArray.length()) {
-                    medicines.add(parseMedicineFromJson(jsonArray.getJSONObject(i)))
+                    val obj = jsonArray.getJSONObject(i)
+                    val id = obj.optString("code").ifBlank { obj.optString("id", "MED-$i") }
+                    val name = obj.optString("name", "Ayurvedic Formulation")
+                    val catName = obj.optString("category_name", "Churna")
+                    val classicalRef = obj.optString("classical_reference", "Classical Text")
+                    val dosageText = obj.optString("dosage", "As directed by physician")
+                    val indications = obj.optString("indications", "")
+                    val description = obj.optString("description", "")
+                    val photoUrl = obj.optString("image_url", "")
+                    val stock = obj.optInt("stock", 25)
+
+                    // Parse packings
+                    val packingsList = mutableListOf<String>()
+                    val packingsJson = obj.opt("packings")
+                    if (packingsJson is JSONArray) {
+                        for (p in 0 until packingsJson.length()) {
+                            packingsList.add(packingsJson.optString(p))
+                        }
+                    }
+
+                    // Parse ingredients
+                    val ingredientsList = mutableListOf<AyurvedaIngredient>()
+                    val ingJson = obj.opt("ingredients")
+                    if (ingJson is JSONArray) {
+                        for (j in 0 until ingJson.length()) {
+                            val ingItem = ingJson.optString(j)
+                            ingredientsList.add(AyurvedaIngredient(name = ingItem))
+                        }
+                    }
+
+                    val categoryEnum = mapCategory(catName)
+                    val sanskritName = obj.optString("sanskrit_name").ifBlank { obj.optString("sanskritName").ifBlank { name } }
+                    val resolvedPhoto = if (photoUrl.isNotBlank() && (photoUrl.startsWith("http://") || photoUrl.startsWith("https://"))) {
+                        photoUrl
+                    } else {
+                        com.example.ui.components.ClassicalPhotoPresets.getPresetForCategory(categoryEnum)
+                    }
+
+                    val goals = mutableListOf<com.example.data.model.HealthGoal>()
+                    val goalsJson = obj.opt("health_goals") ?: obj.opt("healthGoals")
+                    if (goalsJson is JSONArray) {
+                        for (g in 0 until goalsJson.length()) {
+                            try {
+                                val gStr = goalsJson.optString(g).uppercase()
+                                goals.add(com.example.data.model.HealthGoal.valueOf(gStr))
+                            } catch (_: Exception) {}
+                        }
+                    }
+
+                    medicines.add(
+                        AyurvedaMedicine(
+                            id = id,
+                            name = name,
+                            sanskritName = sanskritName,
+                            category = categoryEnum,
+                            ingredients = ingredientsList,
+                            dosageInstructions = dosageText,
+                            healthGoals = goals,
+                            shortDescription = description.ifBlank { "$name is a classical Ayurvedic formulation ($catName)." },
+                            primaryBenefit = indications.ifBlank { "Promotes holistic balance & vitality" },
+                            indications = indications.split(",").map { it.trim() }.filter { it.isNotBlank() },
+                            classicalReference = classicalRef,
+                            packing = packingsList.joinToString(", ").ifBlank { "Standard Unit" },
+                            photoUrl = resolvedPhoto,
+                            stockUnits = stock
+                        )
+                    )
                 }
-                if (medicines.isNotEmpty()) {
-                    Log.d(TAG, "Successfully fetched ${medicines.size} formulations from Supabase Cloud.")
-                    return@withContext medicines
-                }
+
+                Log.d(TAG, "Successfully fetched ${medicines.size} formulations from Supabase Cloud.")
+                medicines
+            } else {
+                Log.w(TAG, "Supabase fetch returned HTTP $responseCode")
+                emptyList()
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
         } catch (e: Exception) {
-            Log.d(TAG, "Direct Supabase fetch fallback: ${e.message}")
+            Log.e(TAG, "Error connecting to Supabase: ${e.message}", e)
+            emptyList()
         }
-
-        // 2. Gateway fallback to server
-        for (gw in SERVER_GATEWAYS) {
-            try {
-                val url = URL("$gw/api/products")
-                val conn = (url.openConnection() as HttpURLConnection).apply {
-                    requestMethod = "GET"
-                    setRequestProperty("Accept", "application/json")
-                    connectTimeout = 3000
-                    readTimeout = 3000
-                }
-                if (conn.responseCode in 200..299) {
-                    val body = conn.inputStream.bufferedReader().use { it.readText() }
-                    val json = JSONObject(body)
-                    val arr = json.optJSONArray("data") ?: JSONArray()
-                    val medicines = mutableListOf<AyurvedaMedicine>()
-                    for (i in 0 until arr.length()) {
-                        medicines.add(parseMedicineFromJson(arr.getJSONObject(i)))
-                    }
-                    if (medicines.isNotEmpty()) {
-                        Log.d(TAG, "Fetched ${medicines.size} formulations from gateway $gw")
-                        return@withContext medicines
-                    }
-                }
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (_: Exception) {}
-        }
-
-        // 3. Central repository defaults
-        AyurvedaRepository.allMedicines
     }
 
     /**
@@ -409,13 +369,9 @@ object SupabaseRepository {
                 for (i in 0 until jsonArray.length()) {
                     list.add(parseUserFromJson(jsonArray.getJSONObject(i)))
                 }
-                if (list.isNotEmpty()) {
-                    Log.d(TAG, "Fetched ${list.size} users directly from Supabase Cloud profiles.")
-                    return@withContext list
-                }
+                Log.d(TAG, "Fetched ${list.size} users directly from Supabase Cloud profiles.")
+                return@withContext list
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
         } catch (e: Exception) {
             Log.d(TAG, "Direct Supabase user fetch fallback: ${e.message}")
         }
@@ -439,14 +395,10 @@ object SupabaseRepository {
                         for (i in 0 until arr.length()) {
                             list.add(parseUserFromJson(arr.getJSONObject(i)))
                         }
-                        if (list.isNotEmpty()) {
-                            Log.d(TAG, "Fetched ${list.size} users from gateway $gw")
-                            return@withContext list
-                        }
+                        Log.d(TAG, "Fetched ${list.size} users from gateway $gw")
+                        return@withContext list
                     }
                 }
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
             } catch (_: Exception) {}
         }
 

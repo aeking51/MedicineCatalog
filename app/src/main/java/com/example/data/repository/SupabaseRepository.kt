@@ -158,6 +158,8 @@ object SupabaseRepository {
                     return@withContext medicines
                 }
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.d(TAG, "Direct Supabase fetch fallback: ${e.message}")
         }
@@ -185,6 +187,8 @@ object SupabaseRepository {
                         return@withContext medicines
                     }
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (_: Exception) {}
         }
 
@@ -405,9 +409,13 @@ object SupabaseRepository {
                 for (i in 0 until jsonArray.length()) {
                     list.add(parseUserFromJson(jsonArray.getJSONObject(i)))
                 }
-                Log.d(TAG, "Fetched ${list.size} users directly from Supabase Cloud profiles.")
-                return@withContext list
+                if (list.isNotEmpty()) {
+                    Log.d(TAG, "Fetched ${list.size} users directly from Supabase Cloud profiles.")
+                    return@withContext list
+                }
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.d(TAG, "Direct Supabase user fetch fallback: ${e.message}")
         }
@@ -431,10 +439,14 @@ object SupabaseRepository {
                         for (i in 0 until arr.length()) {
                             list.add(parseUserFromJson(arr.getJSONObject(i)))
                         }
-                        Log.d(TAG, "Fetched ${list.size} users from gateway $gw")
-                        return@withContext list
+                        if (list.isNotEmpty()) {
+                            Log.d(TAG, "Fetched ${list.size} users from gateway $gw")
+                            return@withContext list
+                        }
                     }
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (_: Exception) {}
         }
 

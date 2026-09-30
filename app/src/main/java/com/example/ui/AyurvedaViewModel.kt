@@ -279,6 +279,8 @@ class AyurvedaViewModel : ViewModel() {
                     )
                 }
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e("AyurvedaVM", "Supabase user sync error: ${e.message}")
         }
@@ -352,11 +354,11 @@ class AyurvedaViewModel : ViewModel() {
     fun fetchCatalogueFromDatabase(debounce: Long = 300L) {
         catalogueFetchJob?.cancel()
         _uiState.update { it.copy(isCatalogueLoading = true) }
-        catalogueFetchJob = viewModelScope.launch {
-            if (debounce > 0L) {
-                delay(debounce)
-            }
+        val thisJob = viewModelScope.launch {
             try {
+                if (debounce > 0L) {
+                    delay(debounce)
+                }
                 val cloudMedicines = withContext(Dispatchers.IO) {
                     SupabaseRepository.fetchMedicinesSuspend()
                 }
@@ -372,12 +374,18 @@ class AyurvedaViewModel : ViewModel() {
                     }
                     Log.d("AyurvedaViewModel", "Loaded ${cloudMedicines.size} formulations from Supabase cloud.")
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                // Expected when user changes search query or tabs rapidly; do not log as error
+                throw e
             } catch (e: Exception) {
                 Log.e("AyurvedaViewModel", "Error syncing catalogue from Supabase: ${e.message}", e)
             } finally {
-                _uiState.update { it.copy(isCatalogueLoading = false) }
+                if (catalogueFetchJob == null || catalogueFetchJob?.isActive != true || catalogueFetchJob == coroutineContext[Job]) {
+                    _uiState.update { it.copy(isCatalogueLoading = false) }
+                }
             }
         }
+        catalogueFetchJob = thisJob
     }
 
     fun selectMedicine(medicine: AyurvedaMedicine?) {
